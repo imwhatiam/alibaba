@@ -17,58 +17,62 @@ from seahub.avatar.util import get_primary_avatar, get_default_avatar_url, \
 from seahub.utils import get_service_url
 from seahub.settings import SITE_ROOT, AVATAR_FILE_STORAGE
 
+from seahub.avatar.util import get_alibaba_user_avatar_url
+
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 register = template.Library()
 
-@cache_result
+# @cache_result
 @register.simple_tag
 def avatar_url(user, size=AVATAR_DEFAULT_SIZE):
-    avatar = get_primary_avatar(user, size=size)
-    if avatar:
-        url = avatar.avatar_url(size)
-    else:
-        if AVATAR_GRAVATAR_BACKUP:
-            params = {'s': str(size)}
-            if AVATAR_GRAVATAR_DEFAULT:
-                params['d'] = AVATAR_GRAVATAR_DEFAULT
-            return "http://www.gravatar.com/avatar/%s/?%s" % (
-                hashlib.md5(user.email).hexdigest(),
-                urllib.urlencode(params))
-        else:
-            url = get_default_avatar_url()
+#    avatar = get_primary_avatar(user, size=size)
+#    if avatar:
+#        url = avatar.avatar_url(size)
+#    else:
+#        if AVATAR_GRAVATAR_BACKUP:
+#            params = {'s': str(size)}
+#            if AVATAR_GRAVATAR_DEFAULT:
+#                params['d'] = AVATAR_GRAVATAR_DEFAULT
+#            return "http://www.gravatar.com/avatar/%s/?%s" % (
+#                hashlib.md5(user.email).hexdigest(),
+#                urllib.urlencode(params))
+#        else:
+#            url = get_default_avatar_url()
+#
+#    # when store avatars in the media directory
+#    if not AVATAR_FILE_STORAGE:
+#        return url
+#
+#    if SITE_ROOT != '/':
+#        return '/%s/%s' % (SITE_ROOT.strip('/'), url.strip('/'))
+#    else:
+#        return url
+    return get_alibaba_user_avatar_url(user, size=size)
 
-    # when store avatars in the media directory
-    if not AVATAR_FILE_STORAGE:
-        return url
-
-    if SITE_ROOT != '/':
-        return '/%s/%s' % (SITE_ROOT.strip('/'), url.strip('/'))
-    else:
-        return url
-
-@cache_result
+# @cache_result
 def api_avatar_url(user, size=AVATAR_DEFAULT_SIZE):
-    service_url = get_service_url()
-    service_url = service_url.rstrip('/')
-
-    # when store avatars in the media directory
-    if not AVATAR_FILE_STORAGE:
-        # urlparse('https://192.157.12.3:89/demo')
-        # ParseResult(scheme='https', netloc='192.157.12.3:89', path='/demo', params='', query='', fragment='')
-        parse_result = urlparse(service_url)
-        service_url = '%s://%s' % (parse_result[0], parse_result[1])
-
-    avatar = get_primary_avatar(user, size=size)
-    if avatar:
-        url = avatar.avatar_url(size)
-        date_uploaded = avatar.date_uploaded
-        # /media/avatars/6/9/5011f01afac2a506b9544c5ce21a0a/resized/32/109af9901c0fd38ab39d018f5cd4baf6.png
-        return service_url + url, False, date_uploaded
-    else:
-        # /media/avatars/default.png
-        return service_url + get_default_avatar_url(), True, None
+#    service_url = get_service_url()
+#    service_url = service_url.rstrip('/')
+#
+#    # when store avatars in the media directory
+#    if not AVATAR_FILE_STORAGE:
+#        # urlparse('https://192.157.12.3:89/demo')
+#        # ParseResult(scheme='https', netloc='192.157.12.3:89', path='/demo', params='', query='', fragment='')
+#        parse_result = urlparse(service_url)
+#        service_url = '%s://%s' % (parse_result[0], parse_result[1])
+#
+#    avatar = get_primary_avatar(user, size=size)
+#    if avatar:
+#        url = avatar.avatar_url(size)
+#        date_uploaded = avatar.date_uploaded
+#        # /media/avatars/6/9/5011f01afac2a506b9544c5ce21a0a/resized/32/109af9901c0fd38ab39d018f5cd4baf6.png
+#        return service_url + url, False, date_uploaded
+#    else:
+#        # /media/avatars/default.png
+#        return service_url + get_default_avatar_url(), True, None
+    return get_alibaba_user_avatar_url(user, size=size), True, None
 
 @cache_result
 @register.simple_tag
