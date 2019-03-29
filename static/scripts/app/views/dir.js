@@ -559,6 +559,7 @@ define([
             renderToolbar: function() {
                 var dir = this.dir;
                 var data = {
+                    is_address_book_group_admin: this.is_address_book_group_admin,
                     user_perm: dir.user_perm,
                     no_quota: dir.no_quota,
                     encrypted: dir.encrypted,
