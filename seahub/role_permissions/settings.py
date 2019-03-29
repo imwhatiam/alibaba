@@ -27,6 +27,7 @@ DEFAULT_ENABLED_ROLE_PERMISSIONS = {
         'storage_ids': [],
         'role_quota': '',
         'share_link_count_limit': -1,
+        'can_share_repo': True,
     },
     GUEST_USER: {
         'can_add_repo': False,
@@ -46,6 +47,7 @@ DEFAULT_ENABLED_ROLE_PERMISSIONS = {
         'storage_ids': [],
         'role_quota': '',
         'share_link_count_limit': -1,
+        'can_share_repo': False,
     },
 }
 

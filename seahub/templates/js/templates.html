@@ -92,7 +92,9 @@
     <td><span class="repo-name-span"><a href="#my-libs/lib/<%= id %>" class="normal"><%- name %></a></span></td>
     <td class="repo-op-td">
         <div class="op-container">
+            <% if (app.pageOptions.can_share_repo || app.pageOptions.can_generate_share_link || app.pageOptions.can_generate_upload_link) { %>
             <a href="#" class="sf2-icon-share sf2-x repo-share-btn op-icon vh" title="{% trans "Share" %}" aria-label="{% trans "Share" %}"></a>
+            <% } %>
             <a href="#" class="sf2-icon-delete sf2-x repo-delete-btn op-icon vh" title="{% trans "Delete" %}" aria-label="{% trans "Delete" %}"></a>
             <div class="sf-dropdown sf-dropdown-inline">
                 <a href="#" class="sf2-icon-caret-down more-op-icon op-icon vh sf-dropdown-toggle" title="{% trans "More Operations" %}" aria-label="{% trans "More Operations" %}"></a>
@@ -146,7 +148,9 @@
                 <div class="mobile-menu-mask"></div>
                 <div class="mobile-menu-content">
                     <ul>
+                        <% if (app.pageOptions.can_share_repo || app.pageOptions.can_generate_share_link || app.pageOptions.can_generate_upload_link) { %>
                         <li><a href="#" class="repo-share-btn op">{% trans "Share" %}</a></li>
+                        <% } %>
                         <li><a href="#" class="repo-delete-btn op">{% trans "Delete" %}</a></li>
                         <li><a class="op js-repo-rename" href="#">{% trans "Rename" %}</a></li>
                         <li><a class="op js-repo-transfer" href="#">{% trans "Transfer" %}</a></li>
@@ -258,8 +262,11 @@
     <td class="repo-op-td">
         <% if (app.pageOptions.is_pro) { %>
             <% if (!is_group_owned_repo) { %>
+                <% if (app.pageOptions.can_share_repo || app.pageOptions.can_generate_share_link || app.pageOptions.can_generate_upload_link) { %>
                 <% if (is_repo_owner || is_admin) { %>
+
                     <a href="#" class="sf2-icon-share sf2-x repo-share-btn op-icon vh" title="{% trans "Share" %}" aria-label="{% trans "Share" %}"></a>
+                <% } %>
                 <% } %>
                 <% if (is_staff || is_repo_owner || is_admin) { %>
                     <a href="#" class="sf2-icon-x3 sf2-x cancel-share op-icon vh" title="{% trans "Unshare" %}" aria-label="{% trans "Unshare" %}"></a>
@@ -488,9 +495,11 @@
     </div>
     <% } %>
 
-    <% if (is_address_book_group_admin && !encrypted && (app.pageOptions.can_generate_share_link || app.pageOptions.can_generate_upload_link || is_repo_owner || is_admin)) { %>
+    <% if (app.pageOptions.can_share_repo || app.pageOptions.can_generate_share_link || app.pageOptions.can_generate_upload_link) { %>
+    <% if (is_address_book_group_admin && !encrypted && (is_repo_owner || is_admin)) { %>
     <button class="btn-white hidden-sm-down" id="share-cur-dir">{% trans "Share" %}</button>
     <span class="sf2-icon-share hidden-md-up mobile-icon" id="share-cur-dir" aria-label="{% trans "Share" %}"></span>
+    <% } %>
     <% } %>
     </div><!-- div#cur-dir-ops ends here -->
 
@@ -584,9 +593,10 @@
             <div class="displayed-op">
 
                 <a class="op-icon download sf2-icon-download sf2-x vh download-dir" href="#" title="{% trans "Download" %}" aria-label="{% trans "Download" %}"></a>
-
-                <% if (!repo_encrypted && (can_generate_share_link || can_generate_upload_link || is_repo_owner || is_admin)) { %>
+                <% if (app.pageOptions.can_share_repo || app.pageOptions.can_generate_share_link || app.pageOptions.can_generate_upload_link) { %>
+                <% if (!repo_encrypted && (is_repo_owner || is_admin)) { %>
                     <a href="#" class="op-icon share sf2-icon-share sf2-x vh" title="{% trans "Share" %}" aria-label="{% trans "Share" %}"></a>
+                <% } %>
                 <% } %>
                 <% if (dirent.perm == 'rw') { %>
                     <a href="#" class="op-icon delete sf2-icon-delete sf2-x vh" title="{% trans "Delete" %}" aria-label="{% trans "Delete" %}"></a>
@@ -662,8 +672,10 @@
                 <div class="mobile-menu-content">
                     <ul>
                         <li><a class="op download download-dir" href="#">{% trans "Download" %}</a></li>
-                        <% if (!repo_encrypted && (can_generate_share_link || can_generate_upload_link || is_repo_owner || is_admin)) { %>
+                        <% if (app.pageOptions.can_share_repo || app.pageOptions.can_generate_share_link || app.pageOptions.can_generate_upload_link) { %>
+                        <% if (!repo_encrypted && (is_repo_owner || is_admin)) { %>
                         <li><a href="#" class="op share">{% trans "Share" %}</a></li>
+                        <% } %>
                         <% } %>
                         <% if (dirent.perm == 'rw') { %>
                         <li><a href="#" class="op delete">{% trans "Delete" %}</a></li>
@@ -1021,8 +1033,10 @@
         <ul>
             <li><a class="op download-dir" href="#">{% trans "Download" %}</a></li>
 
-            <% if (!repo_encrypted && (can_generate_share_link || can_generate_upload_link || is_repo_owner || is_admin)) { %>
+            <% if (app.pageOptions.can_share_repo || app.pageOptions.can_generate_share_link || app.pageOptions.can_generate_upload_link) { %>
+            <% if (!repo_encrypted && (is_repo_owner || is_admin)) { %>
             <li><a class="op share" href="#">{% trans "Share" %}</a></li>
+            <% } %>
             <% } %>
 
             <% if (dirent.perm == 'rw') { %>

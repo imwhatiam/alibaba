@@ -203,6 +203,9 @@ class UserPermissions(object):
     def share_link_count_limit(self):
         return get_enabled_role_permissions_by_role(self.user.role).get('share_link_count_limit', -1)
 
+    def can_share_repo(self):
+        return get_enabled_role_permissions_by_role(self.user.role).get('can_share_repo', True)
+
 class AdminPermissions(object):
     def __init__(self, user):
         self.user = user

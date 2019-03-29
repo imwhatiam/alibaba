@@ -57,7 +57,7 @@
             <li class="tab" id="share-admin-nav">
                 <a href="#" class="ellipsis" title="{% trans "Share Admin" %}"><span class="toggle-icon icon-caret-left fright" aria-hidden="true"></span><span aria-hidden="true" class="sf2-icon-wrench"></span>{% trans "Share Admin" %}</a>
                 <ul class="hide">
-                    {% if user.permissions.can_add_repo %}
+                    {% if user.permissions.can_add_repo and user.permissions.can_share_repo %}
                     <li>
                         <a href="{{ SITE_ROOT }}#share-admin-libs/"><span aria-hidden="true" class="sharp">#</span>{% trans "Libraries" %}</a>
                     </li>
