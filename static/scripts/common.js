@@ -130,6 +130,8 @@ define([
                 case 'group-owned-library-group-folder-permission': return siteRoot + 'api/v2.1/group-owned-libraries/' + options.repo_id + '/group-folder-permission/';
                 case 'group-owned-library-user-share-in-library': return siteRoot + 'api/v2.1/group-owned-libraries/user-share-in-libraries/' + options.repo_id + '/';
 
+                case 'share_upload_link_count': return siteRoot + 'api/v2.1/share-upload-link-count/';
+
                 // Share admin
                 case 'share_admin_repos': return siteRoot + 'api/v2.1/shared-repos/';
                 case 'share_admin_repo': return siteRoot + 'api/v2.1/shared-repos/' + options.repo_id + '/';
@@ -138,7 +140,6 @@ define([
                 case 'share_admin_share_link': return siteRoot + 'api/v2.1/share-links/' + options.token + '/';
                 case 'share_admin_upload_links': return siteRoot + 'api/v2.1/upload-links/';
                 case 'share_admin_upload_link': return siteRoot + 'api/v2.1/upload-links/' + options.token + '/';
-
                 // Links
                 case 'send_shared_download_link': return siteRoot + 'share/link/send/';
                 case 'send_shared_upload_link': return siteRoot + 'share/upload_link/send/';

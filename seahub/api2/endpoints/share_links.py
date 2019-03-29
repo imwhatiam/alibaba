@@ -31,6 +31,8 @@ from seahub.constants import PERMISSION_READ_WRITE
 from seahub.settings import SHARE_LINK_EXPIRE_DAYS_MAX, \
         SHARE_LINK_EXPIRE_DAYS_MIN, SHARE_LINK_LOGIN_REQUIRED
 
+from seahub.api2.endpoints.share_upload_link_count import get_share_upload_link_count
+
 logger = logging.getLogger(__name__)
 
 
@@ -205,6 +207,13 @@ class ShareLinks(APIView):
         Permission checking:
         1. default(NOT guest) user;
         """
+
+        username = request.user.username
+        link_count = get_share_upload_link_count(username)
+        count_limit = request.user.permissions.share_link_count_limit()
+        if count_limit > 0 and link_count >= count_limit:
+            error_msg = _('The number of links has exceeded the limit.')
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
         # argument check
         repo_id = request.data.get('repo_id', None)

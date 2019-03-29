@@ -24,6 +24,8 @@ from seahub.utils import gen_shared_upload_link, gen_file_upload_url
 from seahub.views import check_folder_permission
 from seahub.utils.timeutils import datetime_to_isoformat_timestr
 
+from seahub.api2.endpoints.share_upload_link_count import get_share_upload_link_count
+
 logger = logging.getLogger(__name__)
 
 def get_upload_link_info(uls):
@@ -126,6 +128,13 @@ class UploadLinks(APIView):
         1. default(NOT guest) user;
         2. user with 'rw' permission;
         """
+
+        username = request.user.username
+        link_count = get_share_upload_link_count(username)
+        count_limit = request.user.permissions.share_link_count_limit()
+        if count_limit > 0 and link_count >= count_limit:
+            error_msg = _('The number of links has exceeded the limit.')
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
         # argument check
         repo_id = request.data.get('repo_id', None)

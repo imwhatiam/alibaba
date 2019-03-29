@@ -34,6 +34,7 @@ from seahub.api2.endpoints.address_book.members import AddressBookGroupsSearchMe
 
 from seahub.api2.endpoints.group_members import GroupMembers, GroupMembersBulk, GroupMember
 from seahub.api2.endpoints.search_group import SearchGroup
+from seahub.api2.endpoints.share_upload_link_count import ShareUploadLinkCount
 from seahub.api2.endpoints.share_links import ShareLinks, ShareLink, \
         ShareLinkOnlineOfficeLock
 from seahub.api2.endpoints.shared_folders import SharedFolders
@@ -260,6 +261,9 @@ urlpatterns = [
     url(r'^api/v2.1/upload-links/$', UploadLinks.as_view(), name='api-v2.1-upload-links'),
     url(r'^api/v2.1/upload-links/(?P<token>[a-f0-9]+)/$', UploadLink.as_view(), name='api-v2.1-upload-link'),
     url(r'^api/v2.1/upload-links/(?P<token>[a-f0-9]+)/upload/$', UploadLinkUpload.as_view(), name='api-v2.1-upload-link-upload'),
+
+    url(r'^api/v2.1/share-upload-link-count/$',
+            ShareUploadLinkCount.as_view(), name='api-v2.1-share-upload-link-count'),
 
     ## user::revision-tags
     url(r'^api/v2.1/revision-tags/tagged-items/$', TaggedItemsView.as_view(), name='api-v2.1-revision-tags-tagged-items'),

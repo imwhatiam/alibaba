@@ -56,25 +56,64 @@ define([
 
             this.$("#share-tabs").tabs();
 
-            if (!this.repo_encrypted && app.pageOptions.can_generate_share_link) {
-                this.downloadLinkPanelInit();
-            }
-            if (this.is_dir) {
-                if (this.user_perm == 'rw' && !this.repo_encrypted && app.pageOptions.can_generate_upload_link) {
-                    this.uploadLinkPanelInit();
-                }
-                if (this.enable_dir_private_share) {
-                    this.dirUserSharePanelInit();
-                    this.dirGroupSharePanelInit();
-
-                    var _this = this;
-                    $(document).on('click', function(e) {
-                        var target = e.target || event.srcElement;
-                        if (!_this.$('.perm-edit-icon, .perm-toggle-select').is(target)) {
-                            _this.$('.perm').removeClass('hide');
-                            _this.$('.perm-toggle-select').addClass('hide');
+            this.share_link_count_exceeds_limit = false;
+            this.share_link_count = 0;
+            if (app.pageOptions.share_link_count_limit > 0) {
+                var _this = this;
+                $.ajax({
+                    url: Common.getUrl({name: 'share_upload_link_count'}),
+                    cache: false,
+                    dataType: 'json',
+                    success: function(data) {
+                        _this.share_link_count = data.count;
+                        if (data.count >= app.pageOptions.share_link_count_limit) {
+                            _this.share_link_count_exceeds_limit = true;
                         }
-                    });
+                    },
+                    complete: function() {
+                        if (!_this.repo_encrypted && app.pageOptions.can_generate_share_link) {
+                            _this.downloadLinkPanelInit();
+                        }
+                        if (_this.is_dir) {
+                            if (_this.user_perm == 'rw' && !_this.repo_encrypted && app.pageOptions.can_generate_upload_link) {
+                                _this.uploadLinkPanelInit();
+                            }
+                            if (_this.enable_dir_private_share) {
+                                _this.dirUserSharePanelInit();
+                                _this.dirGroupSharePanelInit();
+
+                                $(document).on('click', function(e) {
+                                    var target = e.target || event.srcElement;
+                                    if (!_this.$('.perm-edit-icon, .perm-toggle-select').is(target)) {
+                                        _this.$('.perm').removeClass('hide');
+                                        _this.$('.perm-toggle-select').addClass('hide');
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+            } else {
+                if (!this.repo_encrypted && app.pageOptions.can_generate_share_link) {
+                    this.downloadLinkPanelInit();
+                }
+                if (this.is_dir) {
+                    if (this.user_perm == 'rw' && !this.repo_encrypted && app.pageOptions.can_generate_upload_link) {
+                        this.uploadLinkPanelInit();
+                    }
+                    if (this.enable_dir_private_share) {
+                        this.dirUserSharePanelInit();
+                        this.dirGroupSharePanelInit();
+
+                        var _this = this;
+                        $(document).on('click', function(e) {
+                            var target = e.target || event.srcElement;
+                            if (!_this.$('.perm-edit-icon, .perm-toggle-select').is(target)) {
+                                _this.$('.perm').removeClass('hide');
+                                _this.$('.perm-toggle-select').addClass('hide');
+                             }
+                        });
+                    }
                 }
             }
         },
@@ -247,7 +286,11 @@ define([
                         var link_data = data[0];
                         _this.renderDownloadLink(link_data);
                     } else {
-                        _this.$('#generate-download-link-form').removeClass('hide');
+                        if (_this.share_link_count_exceeds_limit) {
+                            _this.$('#download-link-share .share-link-count-exceeds-limit').removeClass('hide');
+                        } else {
+                            _this.$('#generate-download-link-form').removeClass('hide');
+                        }
                      }
                 },
                 error: function(xhr, textStatus, errorThrown) {
@@ -584,8 +627,16 @@ define([
                 beforeSend: Common.prepareCSRFToken,
                 dataType: 'json',
                 success: function(data) {
-                    _this.$('#generate-download-link-form').removeClass('hide');
                     _this.$('#download-link-operations').addClass('hide');
+
+                    if (_this.share_link_count > app.pageOptions.share_link_count_limit) {
+                        _this.share_link_count -= 1;
+                        _this.$('#download-link-share .share-link-count-exceeds-limit').removeClass('hide');
+                        _this.$('#generate-download-link-form').addClass('hide');
+                    } else {
+                        _this.$('#download-link-share .share-link-count-exceeds-limit').addClass('hide');
+                        _this.$('#generate-download-link-form').removeClass('hide');
+                    }
                 },
                 complete: function() {
                     _this.deleteDownloadLinkCancel();
@@ -618,10 +669,15 @@ define([
                     if (data.length == 1) {
                         var link_data = data[0];
                         _this.renderUploadLink(link_data);
+                        $('.tip', $panel).show();
                     } else {
-                        _this.$('#generate-upload-link-form').removeClass('hide');
+                        if (_this.share_link_count_exceeds_limit) {
+                            _this.$('#dir-upload-link-share .share-link-count-exceeds-limit').removeClass('hide');
+                        } else {
+                            _this.$('#generate-upload-link-form').removeClass('hide');
+                            $('.tip', $panel).show();
+                        }
                     }
-                    $('.tip', $panel).show();
                 },
                 error: function(xhr, textStatus, errorThrown) {
                     var err_msg = Common.prepareAjaxErrorMsg(xhr);
@@ -684,8 +740,16 @@ define([
                 beforeSend: Common.prepareCSRFToken,
                 dataType: 'json',
                 success: function(data) {
-                    _this.$('#generate-upload-link-form').removeClass('hide');
                     _this.$('#upload-link-operations').addClass('hide');
+
+                    if (_this.share_link_count > app.pageOptions.share_link_count_limit) {
+                        _this.share_link_count -= 1;
+                        _this.$('#dir-upload-link-share .share-link-count-exceeds-limit').removeClass('hide');
+                        _this.$('#generate-upload-link-form').addClass('hide');
+                    } else {
+                        _this.$('#dir-upload-link-share .share-link-count-exceeds-limit').addClass('hide');
+                        _this.$('#generate-upload-link-form').removeClass('hide');
+                    }
                 }
             });
         },
