@@ -29,7 +29,8 @@ from seahub.utils.timeutils import datetime_to_isoformat_timestr
 from seahub.constants import PERMISSION_READ_WRITE
 
 from seahub.settings import SHARE_LINK_EXPIRE_DAYS_MAX, \
-        SHARE_LINK_EXPIRE_DAYS_MIN, SHARE_LINK_LOGIN_REQUIRED
+        SHARE_LINK_EXPIRE_DAYS_MIN, SHARE_LINK_LOGIN_REQUIRED, \
+        SHARE_LINK_EXPIRE_DAYS_DEFAULT
 
 from seahub.api2.endpoints.share_upload_link_count import get_share_upload_link_count
 
@@ -234,7 +235,12 @@ class ShareLinks(APIView):
         try:
             expire_days = int(request.data.get('expire_days', 0))
         except ValueError:
-            expire_days = 0
+            error_msg = 'expire_days invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        if expire_days <= 0:
+            if SHARE_LINK_EXPIRE_DAYS_DEFAULT > 0:
+                expire_days = SHARE_LINK_EXPIRE_DAYS_DEFAULT
 
         if SHARE_LINK_EXPIRE_DAYS_MIN > 0:
             if expire_days < SHARE_LINK_EXPIRE_DAYS_MIN:
