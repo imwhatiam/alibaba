@@ -97,6 +97,7 @@ from seahub.settings import THUMBNAIL_EXTENSION, THUMBNAIL_ROOT, \
     ENABLE_RESET_ENCRYPTED_REPO_PASSWORD, SHARE_LINK_EXPIRE_DAYS_MAX, \
         SHARE_LINK_EXPIRE_DAYS_MIN, SHARE_LINK_EXPIRE_DAYS_DEFAULT
 
+from seahub.api2.endpoints.share_upload_link_count import get_share_upload_link_count
 
 try:
     from seahub.settings import CLOUD_MODE
@@ -3098,6 +3099,12 @@ class FileSharedLinkView(APIView):
         username = request.user.username
         password = request.data.get('password', None)
         share_type = request.data.get('share_type', 'download')
+
+        link_count = get_share_upload_link_count(username)
+        count_limit = request.user.permissions.share_link_count_limit()
+        if count_limit > 0 and link_count >= count_limit:
+            error_msg = _('The number of links has exceeded the limit.')
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
         if password and len(password) < config.SHARE_LINK_PASSWORD_MIN_LENGTH:
             return api_error(status.HTTP_400_BAD_REQUEST, 'Password is too short')
