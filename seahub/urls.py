@@ -42,6 +42,8 @@ from seahub.api2.endpoints.shared_folders import SharedFolders
 from seahub.api2.endpoints.shared_repos import SharedRepos, SharedRepo
 from seahub.api2.endpoints.upload_links import UploadLinks, UploadLink, \
         UploadLinkUpload
+from seahub.api2.endpoints.alpha_box_repos import AlphaBoxRepos, \
+        AlphaBoxReposCount, AlphaBoxReposSearch, AlphaBoxRepo
 from seahub.api2.endpoints.repos_batch import ReposBatchView, \
         ReposBatchCopyDirView, ReposBatchCreateDirView, \
         ReposBatchCopyItemView, ReposBatchMoveItemView, \
@@ -558,6 +560,12 @@ urlpatterns = [
     url(r'^api/v2.1/admin/work-weixin/departments/(?P<department_id>\d+)/members/$', AdminWorkWeixinDepartmentMembers.as_view(), name='api-v2.1-admin-work-weixin-department-members'),
     url(r'^api/v2.1/admin/work-weixin/users/batch/$', AdminWorkWeixinUsersBatch.as_view(), name='api-v2.1-admin-work-weixin-users'),
     url(r'^api/v2.1/admin/work-weixin/departments/import/$', AdminWorkWeixinDepartmentsImport.as_view(), name='api-v2.1-admin-work-weixin-department-import'),
+
+    ## icourt
+    url(r'^api/v2.1/alpha-box-repos/$', AlphaBoxRepos.as_view(), name='api-v2.1-alpha-box-repos'),
+    url(r'^api/v2.1/alpha-box-repos/(?P<repo_id>[-0-9a-f]{36})/$', AlphaBoxRepo.as_view(), name='api-v2.1-alpha-box-repo'),
+    url(r'^api/v2.1/alpha-box-repos/count/$', AlphaBoxReposCount.as_view(), name='api-v2.1-alpha-box-repos-count'),
+    url(r'^api/v2.1/alpha-box-repos/search/$', AlphaBoxReposSearch.as_view(), name='api-v2.1-alpha-box-repos-search'),
 
     ### system admin ###
     url(r'^sysadmin/$', sysadmin, name='sysadmin'),
