@@ -7,6 +7,7 @@ repo_deleted = django.dispatch.Signal(providing_args=["org_id", "operator", "rep
 repo_transfer = django.dispatch.Signal(providing_args=["org_id", "repo_owner", "to_user", "repo_id", "repo_name"])
 clean_up_repo_trash = django.dispatch.Signal(providing_args=["org_id", "operator", "repo_id", "repo_name", "repo_owner", "days"])
 repo_restored = django.dispatch.Signal(providing_args=["repo_id", "operator"])
+clean_up_repo_trash_item = django.dispatch.Signal(providing_args=["org_id", "operator", "repo_id", "repo_name", "filepath", "is_dir"])
 upload_file_successful = django.dispatch.Signal(providing_args=["repo_id", "file_path", "owner"])
 comment_file_successful = django.dispatch.Signal(providing_args=["repo", "file_path", "comment", "author", "notify_users"])
 institution_deleted = django.dispatch.Signal(providing_args=["inst_name"])

@@ -1,10 +1,11 @@
 # Copyright (c) 2012-2016 Seafile Ltd.
 
+import time
 import logging
 import settings
 import datetime
 
-from seaserv import seafile_api, get_org_id_by_repo_id
+from seaserv import seafile_api, get_org_id_by_repo_id, send_message
 logger = logging.getLogger(__name__)
 
 try:
@@ -64,7 +65,6 @@ try:
     def repo_deleted_cb(sender, **kwargs):
         """When a repo is deleted, an event would be added to every user in all
         groups to which this repo is shared.
-
         """
         org_id = kwargs['org_id']
         operator = kwargs['operator']
@@ -102,6 +102,11 @@ try:
     def clean_up_repo_trash_cb(sender, **kwargs):
         """When a repo trash is deleted, the operator will be recorded.
         """
+
+        for k in kwargs:
+            if isinstance(kwargs[k], unicode):
+                kwargs[k] = kwargs[k].encode('utf-8')
+
         org_id = kwargs['org_id']
         operator = kwargs['operator']
         repo_id = kwargs['repo_id']
@@ -167,6 +172,26 @@ try:
         session = SeafEventsSession()
         seafevents.save_user_activity(session, record)
         session.close()
+
+    def clean_up_repo_trash_item_cb(sender, **kwargs):
+        """When a repo trash is deleted, the operator will be recorded.
+        """
+        for k in kwargs:
+            if isinstance(kwargs[k], unicode):
+                kwargs[k] = kwargs[k].encode('utf-8')
+
+        operator = kwargs['operator']
+        repo_id = kwargs['repo_id']
+        filepath = kwargs['filepath']
+        repo_name = kwargs['repo_name']
+        etype = 'clean-up-repo-trash-item'
+        date = int(time.time())
+        is_dir = kwargs['is_dir']
+
+        try:
+            send_message('seahub.stats', '%s\t%s\t%s\t%s\t%s\t%d\t%s' % (etype, repo_id, repo_name, operator, filepath, date, is_dir))
+        except Exception as e:
+            logger.error('Error when sending %s message: %s' % (etype, e))
 except ImportError:
 
     def repo_created_cb(sender, **kwargs):
@@ -179,4 +204,7 @@ except ImportError:
         pass
 
     def clean_up_repo_trash_cb(sender, **kwargs):
+        pass
+
+    def clean_up_repo_trash_item_cb(sender, **kwargs):
         pass
