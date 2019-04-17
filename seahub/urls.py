@@ -75,6 +75,7 @@ from seahub.api2.endpoints.webdav_secret import WebdavSecretView
 # Admin
 from seahub.api2.endpoints.admin.revision_tag import AdminTaggedItemsView
 from seahub.api2.endpoints.admin.login_logs import LoginLogs, AdminLoginLogs
+from seahub.api2.endpoints.admin.file import AdminFileDetail
 from seahub.api2.endpoints.admin.file_audit import FileAudit
 from seahub.api2.endpoints.admin.file_update import FileUpdate
 from seahub.api2.endpoints.admin.perm_audit import PermAudit
@@ -351,6 +352,9 @@ urlpatterns = [
     url(r'^api/v2.1/admin/libraries/(?P<repo_id>[-0-9a-f]{36})/history-limit/$', AdminLibraryHistoryLimit.as_view(), name="api-v2.1-admin-library-history-limit"),
     url(r'^api/v2.1/admin/libraries/(?P<repo_id>[-0-9a-f]{36})/dirents/$', AdminLibraryDirents.as_view(), name='api-v2.1-admin-library-dirents'),
     url(r'^api/v2.1/admin/libraries/(?P<repo_id>[-0-9a-f]{36})/dirent/$', AdminLibraryDirent.as_view(), name='api-v2.1-admin-library-dirent'),
+
+    ## admin::file
+    url(r'^api/v2.1/admin/libraries/(?P<repo_id>[-0-9-a-f]{36})/file/detail/$', AdminFileDetail.as_view(), name='api-v2.1-admin-file-detail'),
 
     ## admin::system-library
     url(r'^api/v2.1/admin/system-library/$', AdminSystemLibrary.as_view(), name='api-v2.1-admin-system-library'),
