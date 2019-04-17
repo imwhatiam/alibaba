@@ -773,3 +773,12 @@ urlpatterns += [
     url(r'^weixin-work/3rd-app-install/callback/$',
         weixin_work_3rd_app_install_cb, name='weixin_work_3rd_app_install_cb'),
 ]
+
+if getattr(settings, 'ENABLE_ICOURT_LOGIN', False):
+    from seahub_extra.icourt_auth.views import *
+    urlpatterns += [
+        url(r'^api2/weixin-login/$', API2WeixinLogin.as_view(), name='api2_weixin_login'),
+        url(r'^accounts/weixin-login/$', weixin_login, name='weixin_login'),
+        url(r'^weixinlogin/$', weixin_login_callback, name='weixin_login_callback'),
+        url(r'^weixinlogin/newuser/$', weixin_login_newuser, name='weixin_login_newuser'),
+    ]
