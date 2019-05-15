@@ -630,7 +630,7 @@ class DirentListItem extends React.PureComponent {
               <img ref='drag_icon' src={`${siteRoot}${dirent.encoded_thumbnail_src}`} className="thumbnail cursor-pointer" onClick={this.onItemClick} alt="" /> :
               <img ref='drag_icon' src={iconUrl} width="24" alt='' />
             }
-            {dirent.is_locked && <img className="locked" src={mediaUrl + 'img/file-locked-32.png'} alt={gettext('locked')} title={lockedInfo}/>}
+            {(dirent.is_locked && (dirent.lock_owner != 'OnlineOffice')) && <img className="locked" src={mediaUrl + 'img/file-locked-32.png'} alt={gettext('locked')} title={lockedInfo}/>}
             <div ref="empty_content" style={{position: 'absolute', width: '1px', height: '1px'}}></div>
           </div>
         </td>

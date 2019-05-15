@@ -430,7 +430,7 @@ export const Utils = {
   getFolderOperationList: function(isRepoOwner, currentRepoInfo, dirent, isContextmenu) {
 
     let list = [];
-    const { SHARE, DOWNLOAD, DELETE, RENAME, MOVE, COPY, PERMISSION, OPEN_VIA_CLIENT } = TextTranslation;
+    const { SHARE, DOWNLOAD, DELETE, RENAME, MOVE, COPY, PERMISSION } = TextTranslation;
     const permission = dirent.permission;
 
     if (isContextmenu) {
@@ -452,7 +452,6 @@ export const Utils = {
       if (folderPermEnabled  && ((isRepoOwner && currentRepoInfo.has_been_shared_out) || currentRepoInfo.is_admin)) {
         list.push('Divider', PERMISSION);
       }
-      list.push('Divider', OPEN_VIA_CLIENT);
     }
 
     if (permission == 'r' && !currentRepoInfo.encrypted) {
@@ -465,7 +464,7 @@ export const Utils = {
   getFileOperationList: function(currentRepoInfo, dirent, isContextmenu) {
     let list = [];
     const { SHARE, DOWNLOAD, DELETE, RENAME, MOVE, COPY, TAGS, UNLOCK, LOCK, 
-      COMMENT, HISTORY, ACCESS_LOG, OPEN_VIA_CLIENT } = TextTranslation;
+      COMMENT, HISTORY, ACCESS_LOG } = TextTranslation;
     const permission = dirent.permission;
 
     if (isContextmenu) {
@@ -510,7 +509,6 @@ export const Utils = {
       if (isPro && fileAuditEnabled) {
         list.push(ACCESS_LOG);
       }   
-      list.push('Divider', OPEN_VIA_CLIENT);
     }
 
     if (permission == 'r') {
