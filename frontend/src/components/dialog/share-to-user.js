@@ -272,6 +272,7 @@ class ShareToUser extends React.Component {
 
   render() {
     let { sharedItems } = this.state;
+    let isZHCN = window.app.config.lang === 'zh-cn';
     return (
       <Fragment>
         <table>
@@ -289,7 +290,7 @@ class ShareToUser extends React.Component {
                   ref="userSelect"
                   isMulti={true}
                   className="reviewer-select"
-                  placeholder={gettext('Select users...')}
+                  placeholder={isZHCN ? '工号、姓名或者花名' : 'Employee ID, employee name or nick name'}
                   onSelectChange={this.handleSelectChange}
                 />
               </td>
