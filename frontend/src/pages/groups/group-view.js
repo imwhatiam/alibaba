@@ -18,7 +18,7 @@ import CreateDepartmentRepoDialog from '../../components/dialog/create-departmen
 import DismissGroupDialog from '../../components/dialog/dismiss-group-dialog';
 import RenameGroupDialog from '../../components/dialog/rename-group-dialog';
 import TransferGroupDialog from '../../components/dialog/transfer-group-dialog';
-// import ImportMembersDialog from '../../components/dialog/import-members-dialog';
+import ImportMembersDialog from '../../components/dialog/alibaba-import-members-dialog';
 import ManageMembersDialog from '../../components/dialog/manage-members-dialog';
 import LeaveGroupDialog from '../../components/dialog/leave-group-dialog';
 import SharedRepoListView from '../../components/shared-repo-list-view/shared-repo-list-view';
@@ -59,7 +59,7 @@ class GroupView extends React.Component {
       showRenameGroupDialog: false,
       showDismissGroupDialog: false,
       showTransferGroupDialog: false,
-      // showImportMembersDialog: false,
+      showImportMembersDialog: false,
       showManageMembersDialog: false,
       groupMembers: [],
       isShowDetails: false,
@@ -307,11 +307,11 @@ class GroupView extends React.Component {
     });
   }
 
-  // toggleImportMembersDialog= () => {
-  //   this.setState({
-  //     showImportMembersDialog: !this.state.showImportMembersDialog
-  //   });
-  // }
+  toggleImportMembersDialog= () => {
+    this.setState({
+      showImportMembersDialog: !this.state.showImportMembersDialog
+    });
+  }
 
   toggleManageMembersDialog = () => {
     this.setState({
@@ -406,6 +406,7 @@ class GroupView extends React.Component {
     if (isDepartmentGroup && currentGroup.group_quota) {
       useRate = currentGroup.group_quota_usage / currentGroup.group_quota * 100 + '%';
     }
+    let isZHCN = window.app.config.lang === 'zh-cn';
     return (
       <Fragment>
         <div className="main-panel-north border-left-show">
@@ -437,14 +438,6 @@ class GroupView extends React.Component {
                     {isDepartmentGroup && (
                       <Fragment>
                         <span className="department-group-icon fas fa-building" title={gettext('This is a special group representing a department.')}></span>
-                        {currentGroup.group_quota > 0 &&
-                          <span className="department-usage-container">
-                            <div className="department-usage">
-                              <span id="quota-bar" className="department-quota-bar"><span id="quota-usage" className="usage" style={{width: useRate}}></span></span>
-                              <span className="department-quota-info">{Utils.bytesToSize(currentGroup.group_quota_usage)} / {Utils.bytesToSize(currentGroup.group_quota)}</span>
-                            </div>
-                          </span>
-                        }
                       </Fragment>
                     )}
                   </div>
@@ -472,7 +465,7 @@ class GroupView extends React.Component {
                           }
                           {(this.state.isStaff || this.state.isOwner) &&
                           <ul className="sf-popover-list">
-                            {/* <li><a href="#" className="sf-popover-item" onClick={this.toggleImportMembersDialog} >{gettext('Import Members')}</a></li> */}
+                            <li><a href="#" className="sf-popover-item" onClick={this.toggleImportMembersDialog} >{isZHCN ? '导入成员' : 'Import Members'}</a></li>
                             <li><a href="#" className="sf-popover-item" onClick={this.toggleManageMembersDialog} >{gettext('Manage Members')}</a></li>
                           </ul>
                           }
@@ -603,13 +596,13 @@ class GroupView extends React.Component {
             onGroupChanged={this.props.onGroupChanged}
           />
         }
-        {/* this.state.showImportMembersDialog &&
+        { this.state.showImportMembersDialog &&
           <ImportMembersDialog
             toggleImportMembersDialog={this.toggleImportMembersDialog}
             groupID={this.props.groupID}
             onGroupChanged={this.props.onGroupChanged}
           />
-        */}
+        }
         {this.state.showManageMembersDialog &&
           <ManageMembersDialog
             toggleManageMembersDialog={this.toggleManageMembersDialog}
