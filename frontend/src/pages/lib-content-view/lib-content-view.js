@@ -986,7 +986,7 @@ class LibContentView extends React.Component {
           let name = Utils.getFileName(path);
           errMessage = gettext('Renaming {name} failed').replace('{name}', name);
         }
-        toaster.danger(errMessage);
+        toaster.danger(error.response.data.error_msg);
       });
     }
   }
