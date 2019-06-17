@@ -713,7 +713,7 @@ class LibContentView extends React.Component {
         asyncOperationProgress: 0,
         isCopyMoveProgressDialogShow: false,
       });
-      toaster.danger(errMessage);
+      toaster.danger(error.response.data.error_msg);
     });
   }
 
@@ -1026,7 +1026,7 @@ class LibContentView extends React.Component {
           let name = Utils.getFileName(path);
           errMessage = gettext('Failed to delete {name}').replace('{name}', name);
         }
-        toaster.danger(errMessage);
+        toaster.danger(error.response.data.error_msg);
       });
     }
   }
@@ -1090,7 +1090,7 @@ class LibContentView extends React.Component {
         errMessage = gettext('Failed to move {name}.');
         errMessage = errMessage.replace('{name}', dirName);
       }
-      toaster.danger(errMessage);
+      toaster.danger(error.response.data.error_msg);
     });
   }
 
