@@ -67,6 +67,8 @@ export const Utils = {
 
     'xls' : 'excel.png',
     'xlsx' : 'excel.png',
+    'xlsm' : 'excel.png',
+    'xlsb' : 'excel.png',
     'ods' : 'excel.png',
     'fods' : 'excel.png',
 
