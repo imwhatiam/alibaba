@@ -54,6 +54,7 @@ class MylibRepoMenu extends React.Component {
     let repo = this.props.repo;
     let showResetPasswordMenuItem = repo.encrypted && enableResetEncryptedRepoPassword && isEmailConfigured;
     let operations = ['Rename', 'Transfer', 'History Setting'];
+    operations = ['Rename', 'Transfer'];    //   alibaba custom hide History Setting button
     if (repo.encrypted) {
       operations.push('Change Password');
     }
