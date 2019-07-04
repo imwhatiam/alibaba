@@ -253,7 +253,7 @@ class AlibabaUserEditFileManager(models.Manager):
 
     def get_edit_info_by_unique_id(self, unique_id):
 
-        infos = self.filter(wopi_lock=unique_id)
+        infos = self.filter(wopi_unique_id=unique_id)
         if len(infos) > 0:
             return infos[0]
         else:
@@ -262,7 +262,7 @@ class AlibabaUserEditFileManager(models.Manager):
     def add_start_edit_info(self, username, repo_id, file_path, unique_id):
 
         info = self.model(user=username, repo_id=repo_id, path=file_path,
-                wopi_lock=unique_id)
+                wopi_unique_id=unique_id)
         info.save(using=self._db)
         return info
 
@@ -282,6 +282,7 @@ class AlibabaUserEditFile(models.Model):
     start_timestamp = models.DateTimeField(default=timezone.now)
     end_timestamp = models.DateTimeField(blank=True, null=True)
     wopi_lock = models.TextField()
+    wopi_unique_id = models.CharField(max_length=191, db_index=True)
 
     objects = AlibabaUserEditFileManager()
 
