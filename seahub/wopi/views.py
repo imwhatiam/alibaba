@@ -215,6 +215,8 @@ class WOPIFilesView(APIView):
         # hide save as button on view/edit file page
         result['UserCanNotWriteRelative'] = True
 
+        result['AllowExternalMarketplace'] = True
+
         return HttpResponse(json.dumps(result), status=200,
                             content_type=json_content_type)
 
