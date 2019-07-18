@@ -32,7 +32,7 @@ from seahub.role_permissions.utils import get_available_roles
 logger = logging.getLogger(__name__)
 json_content_type = 'application/json; charset=utf-8'
 
-def update_user_info(request, user):
+def update_user_info(request, user, org_id=None):
 
     # update basic user info
     password = request.data.get("password")
@@ -96,13 +96,12 @@ def update_user_info(request, user):
     quota_total_mb = request.data.get("quota_total")
     if quota_total_mb:
         quota_total = int(quota_total_mb) * get_file_size_unit('MB')
-        if is_org_context(request):
-            org_id = request.user.org.org_id
+        if org_id:
             seafile_api.set_org_user_quota(org_id, email, quota_total)
         else:
             seafile_api.set_user_quota(email, quota_total)
 
-def get_user_info(email):
+def get_user_info(email, org_id=None):
 
     user = User.objects.get(email=email)
     d_profile = DetailedProfile.objects.get_detailed_profile_by_user(email)
@@ -121,8 +120,12 @@ def get_user_info(email):
 
     info['department'] = d_profile.department if d_profile else ''
 
-    info['quota_total'] = seafile_api.get_user_quota(email)
-    info['quota_usage'] = seafile_api.get_user_self_usage(email)
+    if org_id:
+        info['quota_total'] = seafile_api.get_org_user_quota(org_id, email)
+        info['quota_usage'] = seafile_api.get_org_user_quota_usage(org_id, email)
+    else:
+        info['quota_total'] = seafile_api.get_user_quota(email)
+        info['quota_usage'] = seafile_api.get_user_self_usage(email)
 
     info['create_time'] = timestamp_to_isoformat_timestr(user.ctime)
 
@@ -228,15 +231,6 @@ class AdminUsers(APIView):
             if quota_total_mb < 0:
                 error_msg = "Space quota is too low (minimum value is 0)."
                 return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
-
-            if is_org_context(request):
-                org_id = request.user.org.org_id
-                org_quota_mb = seafile_api.get_org_quota(org_id) / \
-                        get_file_size_unit('MB')
-
-                if quota_total_mb > org_quota_mb:
-                    error_msg = 'Failed to set quota: maximum quota is %d MB' % org_quota_mb
-                    return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         try:
             User.objects.get(email=email)
@@ -366,8 +360,10 @@ class AdminUser(APIView):
                 error_msg = "Space quota is too low (minimum value is 0)."
                 return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
-            if is_org_context(request):
-                org_id = request.user.org.org_id
+            org_id = None
+            orgs = ccnet_api.get_orgs_by_user(email)
+            if orgs:
+                org_id = orgs[0].org_id
                 org_quota_mb = seafile_api.get_org_quota(org_id) / \
                         get_file_size_unit('MB')
 
@@ -383,13 +379,13 @@ class AdminUser(APIView):
             return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
         try:
-            update_user_info(request, user_obj)
+            update_user_info(request, user_obj, org_id)
         except Exception as e:
             logger.error(e)
             error_msg = 'Internal Server Error'
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
-        user_info = get_user_info(email)
+        user_info = get_user_info(email, org_id)
 
         return Response(user_info)
 
