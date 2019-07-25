@@ -775,6 +775,11 @@ if EVENTS_CONFIG_FILE:
     def get_file_upload_info(repo_id, path):
         with _get_seafevents_session() as session:
             return seafevents.get_file_upload_info(session, repo_id, path)
+
+    def get_file_operation_records(repo_id, path):
+        with _get_seafevents_session() as session:
+            return seafevents.get_file_operation_records(session, repo_id, path)
+
 else:
     EVENTS_ENABLED = False
     def get_user_events():
@@ -810,6 +815,8 @@ else:
     def get_virus_record_by_id(vid):
         pass
     def get_file_upload_info(repo_id, path):
+        pass
+    def get_file_operation_records(repo_id, path):
         pass
 
 def calc_file_path_hash(path, bits=12):
