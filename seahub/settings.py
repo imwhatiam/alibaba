@@ -533,10 +533,10 @@ def genpassword():
 INIT_PASSWD = genpassword
 
 # browser tab title
-SITE_TITLE = 'Private Seafile'
+SITE_TITLE = 'Ame file'
 
 # Base name used in email sending
-SITE_NAME = 'Seafile'
+SITE_NAME = 'Ame file'
 
 # Path to the license file(relative to the media path)
 LICENSE_PATH = os.path.join(PROJECT_ROOT, '../../seafile-license.txt')
@@ -546,10 +546,10 @@ LOGIN_BG_IMAGE_PATH = 'img/login-bg.jpg'
 
 # Path to the favicon file (relative to the media path)
 # tip: use a different name when modify it.
-FAVICON_PATH = 'img/favicon.ico'
+FAVICON_PATH = 'img/amefile-favicon.png'
 
 # Path to the Logo Imagefile (relative to the media path)
-LOGO_PATH = 'img/seafile-logo.png'
+LOGO_PATH = 'img/amefile-logo.png'
 # logo size. the unit is 'px'
 LOGO_WIDTH = ''
 LOGO_HEIGHT = 32
