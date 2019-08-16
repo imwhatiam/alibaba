@@ -5,6 +5,7 @@
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
 <title>{{ site_title }}</title>
+<meta name="data-spm" content="teamfile">
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <meta name="keywords" content="{% trans "File Collaboration Team Organization" %}" />
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -23,7 +24,7 @@
 {% if enable_branding_css %}<link rel="stylesheet" type="text/css" href="{% url 'custom_css' %}" />{% endif %}
 </head>
 
-<body>
+<body data-spm="libs">
     <div id="wrapper" role="application" class="{{ LANGUAGE_CODE }} h100 d-flex fd-col">
         <!--[if lt IE 10]>
         <p id="top-browser-tip" class="top-bar>{% trans "We no longer support this version of IE. Please upgrade it to version 10 or above." %} <span id="top-browser-tip-close" class="top-bar-click">{% trans "Close" %}</span></p>
@@ -126,6 +127,7 @@ var app = {
 };
 </script>
 <script src="{{ STATIC_URL }}scripts/i18n/{{ LANGUAGE_CODE }}/djangojs.js"></script>
+<script async src="//g.alicdn.com/platform/common/s/1.1/monitor/index.js" id="tb-beacon-aplus" exparams=""></script>
 
 {% block extra_script %}{% endblock %}
 

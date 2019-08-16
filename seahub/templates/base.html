@@ -4,6 +4,7 @@
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
 <title>{% block sub_title %}{% endblock %}{{ site_title }}</title>
+<meta name="data-spm" content="teamfile">
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <meta name="keywords" content="{% trans "File Collaboration Team Organization" %}" />
 {% block viewport %}
@@ -23,7 +24,7 @@
 {% if enable_branding_css %}<link rel="stylesheet" type="text/css" href="{% url 'custom_css' %}" />{% endif %}
 </head>
 
-<body>
+<body data-spm="libs">
     <div id="wrapper" class="{{ LANGUAGE_CODE }} d-flex fd-col h100">
         {% block info_bar_message %}
         {% if request.user.is_authenticated and request.cur_note %}
@@ -258,6 +259,7 @@ $('.js-close-side-nav').on('click', function() {
     return false;
 });
 </script>
+<script async src="//g.alicdn.com/platform/common/s/1.1/monitor/index.js" id="tb-beacon-aplus" exparams=""></script>
 {% block extra_script %}{% endblock %}
 </body>
 </html>
