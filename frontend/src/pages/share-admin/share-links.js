@@ -216,6 +216,17 @@ class Item extends Component {
     });
   }
 
+  viewStatus = (e) => {
+    e.preventDefault();
+    let strArray = this.props.item.verbose_status_str.split(';');
+    let ele = strArray.map((str, i) => {
+      return (
+        <li key={i}>{str}</li>
+      );
+    });
+    this.props.showVerifyStatusModal({content: ele});
+  }
+
   render() {
     const item = this.props.item;
     const { currentPermission, permissionOptions , isOpIconShown, isPermSelectDialogOpen, isLinkDialogOpen } = this.state;
