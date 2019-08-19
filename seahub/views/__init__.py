@@ -1274,4 +1274,6 @@ def react_fake_view(request, **kwargs):
         'folder_perm_enabled': folder_perm_enabled,
         'file_audit_enabled' : FILE_AUDIT_ENABLED,
         'custom_nav_items' : json.dumps(CUSTOM_NAV_ITEMS),
+        'share_link_min_file_size': getattr(settings, 'SHARE_LINK_MIN_FILE_SIZE', 15),
+        'file_audit_enabled' : FILE_AUDIT_ENABLED
     })
