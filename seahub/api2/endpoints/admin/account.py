@@ -283,6 +283,7 @@ class Account(APIView):
 
             # argument check for is_active
             is_active = request.data.get("is_active", None)
+            user_active_updated = False
             if is_active is not None:
                 try:
                     is_active = to_python_boolean(is_active)
