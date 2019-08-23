@@ -63,8 +63,8 @@ def login_required_ajax(function=None,redirect_field_name=None):
     """
     def _decorator(view_func):
         def _wrapped_view(request, *args, **kwargs):
-            if not request.is_ajax():
-                raise Http404
+#            if not request.is_ajax():
+#                raise Http404
 
             if request.user.is_authenticated():
                 return view_func(request, *args, **kwargs)
