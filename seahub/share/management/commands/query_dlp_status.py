@@ -15,7 +15,8 @@ from seahub.profile.models import Profile, DetailedProfile
 from seahub.share.models import FileShareApprovalStatus
 from seahub.share.constants import STATUS_VERIFING, STATUS_PASS, STATUS_VETO
 from seahub.share.signals import file_shared_link_verify
-from seahub.share.settings import DLP_SCAN_POINT, SHARE_LINK_BACKUP_LIBRARY
+from seahub.share.settings import DLP_SCAN_POINT, SHARE_LINK_BACKUP_LIBRARY, \
+        PINGAN_SHARE_LINK_BACKUP_LIBRARIES
 from seahub.share.share_link_checking import (
     email_reviser, email_verify_result)
 from seahub.utils import get_service_url, send_html_email
@@ -129,11 +130,24 @@ class Command(BaseCommand):
         return Profile.objects.get_user_language(username)
 
     def do_backup(self, fileshare):
+
         if SHARE_LINK_BACKUP_LIBRARY is None:
             logger.error('SHARE_LINK_BACKUP_LIBRARY is None, please create a backup library.')
             return
 
-        new_file = '%s-%s-%s' % (fileshare.username,
+        if PINGAN_SHARE_LINK_BACKUP_LIBRARIES is None:
+            logger.error('PINGAN_SHARE_LINK_BACKUP_LIBRARIES is None, please create backup libraries.')
+            return
+
+        username = fileshare.username
+        d_profile = DetailedProfile.objects.get_detailed_profile_by_user(username)
+        if d_profile and d_profile.company and \
+                d_profile.company in PINGAN_SHARE_LINK_BACKUP_LIBRARIES:
+            backup_repo_ip = PINGAN_SHARE_LINK_BACKUP_LIBRARIES[d_profile.company]
+        else:
+            backup_repo_ip = SHARE_LINK_BACKUP_LIBRARY
+
+        new_file = '%s-%s-%s' % (username,
                                  datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                                  os.path.basename(fileshare.path)
         )
@@ -141,10 +155,10 @@ class Command(BaseCommand):
         try:
             seafile_api.copy_file(
                 fileshare.repo_id, os.path.dirname(fileshare.path),
-                os.path.basename(fileshare.path), SHARE_LINK_BACKUP_LIBRARY, '/',
+                os.path.basename(fileshare.path), backup_repo_ip, '/',
                 new_file, '', need_progress=0)
-            print 'Backup to %s successfuly, name is %s.' % (SHARE_LINK_BACKUP_LIBRARY, new_file)
-            logger.info('Backup to %s successfuly, name is %s.' % (SHARE_LINK_BACKUP_LIBRARY, new_file))
+            print 'Backup to %s successfuly, name is %s.' % (backup_repo_ip, new_file)
+            logger.info('Backup to %s successfuly, name is %s.' % (backup_repo_ip, new_file))
         except Exception as e:
             logger.error('Failed to backup, %s' % e)
 
