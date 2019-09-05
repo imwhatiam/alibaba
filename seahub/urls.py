@@ -96,6 +96,7 @@ from seahub.api2.endpoints.public_repos_search import PublishedRepoSearchView
 from seahub.api2.endpoints.admin.revision_tag import AdminTaggedItemsView
 from seahub.api2.endpoints.admin.login_logs import LoginLogs, AdminLoginLogs
 from seahub.api2.endpoints.admin.file_audit import FileAudit
+from seahub.api2.endpoints.admin.share_link_file_audit import ShareLinkFileAudit
 from seahub.api2.endpoints.admin.file_update import FileUpdate
 from seahub.api2.endpoints.admin.perm_audit import PermAudit
 from seahub.api2.endpoints.admin.sysinfo import SysInfo
@@ -683,6 +684,7 @@ if getattr(settings, 'ENABLE_SYSADMIN_EXTRA', False):
         url(r'^sys/loginadmin/$', sys_login_admin, name='sys_login_admin'),
         url(r'^sys/loginadmin/export-excel/$', sys_login_admin_export_excel, name='sys_login_admin_export_excel'),
 
+        url(r'^api/v2.1/admin/logs/share-link-file-audit/$', ShareLinkFileAudit.as_view(), name='api-v2.1-admin-logs-share-link-file-audit'),
         url(r'^api/v2.1/admin/logs/file-audit/$', FileAudit.as_view(), name='api-v2.1-admin-logs-file-audit'),
         url(r'^sys/log/fileaudit/$', sys_log_file_audit, name='sys_log_file_audit'),
         url(r'^sys/log/emailaudit/$', sys_log_email_audit, name='sys_log_email_audit'),
