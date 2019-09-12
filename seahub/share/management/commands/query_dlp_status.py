@@ -13,7 +13,7 @@ from seaserv import seafile_api
 
 from seahub.profile.models import Profile, DetailedProfile
 from seahub.share.models import FileShareApprovalStatus
-from seahub.share.constants import STATUS_VERIFING, STATUS_PASS, STATUS_VETO
+from seahub.share.constants import STATUS_VERIFING, STATUS_PASS, STATUS_VETO, STATUS_BLOCK_HIGH_RISK
 from seahub.share.signals import file_shared_link_verify
 from seahub.share.settings import DLP_SCAN_POINT, SHARE_LINK_BACKUP_LIBRARY, \
         PINGAN_SHARE_LINK_BACKUP_LIBRARIES
@@ -81,7 +81,7 @@ class Command(BaseCommand):
 
     def do_query(self, query_list):
         for e in query_list:
-            status = self.query_dlp_status(e[0], e[2], [3])
+            status, message = self.query_dlp_status(e[0], e[2], [3])
             if status == 0:
                 # do nothing
                 pass
@@ -90,10 +90,15 @@ class Command(BaseCommand):
                     # set dlp status to pass
                     e[1].status = STATUS_PASS
                     print '%s pass dlp test' % e[0]
-                else:
+                elif status == 2:
                     # set dlp status to veto
                     e[1].status = STATUS_VETO
                     print '%s failed to pass dlp test' % e[0]
+                else:
+                    # set dlp status to veto
+                    e[1].status = STATUS_BLOCK_HIGH_RISK
+                    e[1].msg = message
+                    print '%s dlp block high risk' % e[0]
 
                 e[1].vtime = datetime.now()
                 e[1].save()
@@ -123,8 +128,8 @@ class Command(BaseCommand):
         """
         from .checkdlp import MSSQL
         ms = MSSQL()
-        result = ms.CheckDLP(partial_path, file_size, mtime)
-        return result
+        result, message = ms.CheckDLP(partial_path, file_size, mtime)
+        return result, message
 
     def get_user_language(self, username):
         return Profile.objects.get_user_language(username)
@@ -141,9 +146,11 @@ class Command(BaseCommand):
 
         username = fileshare.username
         d_profile = DetailedProfile.objects.get_detailed_profile_by_user(username)
-        if d_profile and d_profile.company and \
-                d_profile.company in PINGAN_SHARE_LINK_BACKUP_LIBRARIES:
-            backup_repo_ip = PINGAN_SHARE_LINK_BACKUP_LIBRARIES[d_profile.company]
+        if d_profile and d_profile.company:
+            company = d_profile.company
+            company_utf8 = company.encode('utf-8')
+            if company_utf8 in PINGAN_SHARE_LINK_BACKUP_LIBRARIES:
+                backup_repo_ip = PINGAN_SHARE_LINK_BACKUP_LIBRARIES[company_utf8]
         else:
             backup_repo_ip = SHARE_LINK_BACKUP_LIBRARY
 

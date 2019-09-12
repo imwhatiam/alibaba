@@ -24,7 +24,7 @@ import posixpath
 from seaserv import ccnet_api
 from seahub.base.templatetags.seahub_tags import email2nickname
 from seahub.profile.models import DetailedProfile
-from seahub.share.constants import STATUS_VERIFING, STATUS_PASS, STATUS_VETO
+from seahub.share.constants import STATUS_VERIFING, STATUS_PASS, STATUS_VETO, STATUS_BLOCK_HIGH_RISK
 from seahub.share.settings import ENABLE_FILESHARE_CHECK
 from seahub.utils import is_valid_email
 from seahub.utils.ip import get_remote_ip
@@ -1523,6 +1523,8 @@ class FileShareApprovalStatusManager(models.Manager):
                     if x.status == STATUS_VETO:
                         tmp_status = STATUS_VETO
                         break
+                    if x.status == STATUS_BLOCK_HIGH_RISK:
+                        tmp_status = STATUS_BLOCK_HIGH_RISK
                 status_list.append(tmp_status)
             else:
                 status_list.append(ele.status)
@@ -1532,6 +1534,8 @@ class FileShareApprovalStatusManager(models.Manager):
                 return STATUS_VERIFING
             if y == STATUS_VETO:
                 return STATUS_VETO
+            if y == STATUS_BLOCK_HIGH_RISK:
+                return STATUS_BLOCK_HIGH_RISK
         return STATUS_PASS
 
     def get_verbose_status(self, share_link):
@@ -1564,6 +1568,11 @@ class FileShareApprovalStatusManager(models.Manager):
                 dlp_msg = _('DLP veto at %s') % dlp_status.vtime.strftime('%Y-%m-%d')
             else:
                 dlp_msg = _('DLP veto')
+        elif dlp_status.status == STATUS_BLOCK_HIGH_RISK:
+            if dlp_status.vtime:
+                dlp_msg = _('DLP block high risk at %s') % dlp_status.vtime.strftime('%Y-%m-%d')
+            else:
+                dlp_msg = _('DLP block high risk')
         status_list.append((dlp_status.status, dlp_msg))
 
         # 2. add people status in the chain

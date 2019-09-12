@@ -1,6 +1,7 @@
 # coding=utf-8
 # !/usr/bin/env python
 
+import json
 import pymssql
 import ConfigParser
 
@@ -8,7 +9,7 @@ import ConfigParser
 class MSSQL:
     def __init__(self):
         cf = ConfigParser.ConfigParser()
-        cf.read("/wls/seafile/check-dlp/mssql.conf")
+        cf.read("/opt/seafile/check-dlp/mssql.conf")
         self.host = cf.get("DB", "host")
         self.user = cf.get("DB", "user")
         self.pwd = cf.get("DB", "pwd")
@@ -35,7 +36,7 @@ class MSSQL:
         try:
             if self.host == '':
                 return False
-            conn = pymssql.connect(host=self.host, user=self.user, password=self.pwd, database=self.db, timeout=1,
+            pymssql.connect(host=self.host, user=self.user, password=self.pwd, database=self.db, timeout=1,
                                    login_timeout=1, charset="utf8")
             return True
         except:
@@ -97,12 +98,12 @@ class MSSQL:
         """
         according filepath check DLP scan result
         """
-        result = 0
+        result = 0, 'not scan'
         #if 'huangminglong' in file_path:return 2;
         filepath = file_path.replace('/', '\\')
         # filepath=filepath1.replace('\'','\'\'')
         # input use /,replaced by \ for windows sql server
-        print 'windows path: ' + filepath
+        print('windows path: ' + filepath)
         filepath = self.sqlExcape(filepath)
         cur = self.__GetConnect()
         filepath1 = filepath.replace('\'', '\'\'')
@@ -113,23 +114,38 @@ class MSSQL:
         cur.execute(sql1.encode('utf-8'))
         resList1 = cur.fetchall()
         if int(resList1[0][0]) > 0:
-            result = 1
+            result = 1, 'ok'
 
             # sql2 = "select count(*) as cnt from [wbsn-data-security]..[PA_DSCVR_FILES] where FILEPATH like N'%" + filepath + "' and FILE_SIZE=%d and [POLICY_CATEGORIES] = 'block_sec; permit'" % filesize
         sql2 = "select count(*) as cnt from [wbsn-data-security]..[PA_DSCVR_FILES] where FILEPATH like N'%" + filepath1 + "' and charindex('block',[POLICY_CATEGORIES])>0 and FILE_SIZE=%d" % filesize
-        print sql2.encode('utf-8')
+        print(sql2.encode('utf-8'))
         cur.execute(sql2.encode('utf-8'))
         resList2 = cur.fetchall()
         if int(resList2[0][0]) > 0:
-            result = 2
+            result = 2, 'block'
+
+        sql3 = "select count(*) as cnt from [wbsn-data-security]..[PA_DSCVR_FILES] where FILEPATH like N'%" + filepath1 + "' and charindex('block_high_risk',[POLICY_CATEGORIES])>0 and FILE_SIZE=%d" % filesize
+        print(sql3.encode('utf-8'))
+        cur.execute(sql3.encode('utf-8'))
+        resList3 = cur.fetchall()
+        if int(resList3[0][0]) > 0:
+            sql4 = "SELECT [ID],[FILEPATH],[FILENAME],[POLICY_CATEGORIES],[FILE_SIZE],[TOTAL_MATCHES],[INSERT_DATE],[BREACH_CONTENT] FROM [wbsn-data-security].[dbo].[PA_DSCVR_FILES] where FILEPATH like N'%" + filepath1 + "' and charindex('block_high_risk',[POLICY_CATEGORIES])>0 and FILE_SIZE=%d" % filesize
+            print(sql4.encode('utf-8'))
+            cur.execute(sql4.encode('utf-8'))
+            resList4 = cur.fetchone()
+
+            dlp_msg = {}
+            dlp_msg['file_path'] = resList4[1]
+            dlp_msg['file_name'] = resList4[2]
+            dlp_msg['policy_categories'] = resList4[3]
+            dlp_msg['total_matches'] = resList4[5]
+            dlp_msg['breach_content'] = resList4[7]
+
+            result = 3, json.dumps(dlp_msg)
 
         self.conn.commit()
         self.conn.close()
-        # print filepath
-        # print filesize
-        print str(result) + ' (0 no scan,  1 scan ok, 2 scan not ok)'
-        ## result=1
-        ## just for test when DLP is not working
+        print(str(result) + ' (0 no scan,  1 scan ok, 2 scan not ok, 3 block high risk)')
         return result
 
     # Created by WANGZEXIN289
@@ -145,9 +161,9 @@ def main():
     ms = MSSQL()
     fp = 'pengjq@pingan.com.cn\\9e516f8c-741a-49c1-b8ae-00aaea2ec237_demo\\6.jpg'
     # \ is the shift char in python
-    print unicode(fp, 'utf-8')
+    print(unicode(fp, 'utf-8'))
     result = ms.CheckDLP(fp, 59792, 2015 - 6 - 11)
-    print result
+    print(result)
     # sqlquery="select * from [wbsn-data-security]..pa_dscvr_inc_breach_cnts"
     # sqlconn=MSSQL()
     # res=sqlconn.ExecQuery(sqlquery)
