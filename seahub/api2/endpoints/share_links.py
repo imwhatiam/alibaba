@@ -295,7 +295,7 @@ class ShareLinks(APIView):
                 error_msg = u"非法邮箱地址：%s" % e
                 return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
-        note = request.data.get('note', '')
+        note = request.data.get('note', '').strip()
         if not note:
             error_msg = _('Please enter note.')
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)

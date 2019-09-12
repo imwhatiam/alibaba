@@ -12,7 +12,7 @@ import Rename from '../rename';
 import ModalPortal from '../modal-portal';
 import MoveDirentDialog from '../dialog/move-dirent-dialog';
 import CopyDirentDialog from '../dialog/copy-dirent-dialog';
-import ShareDialog from '../dialog/share-dialog';
+import ShareDialogPingan from '../dialog/share-dialog-pingan';
 import ZipDownloadDialog from '../dialog/zip-download-dialog';
 import EditFileTagDialog from '../dialog/edit-filetag-dialog';
 import LibSubFolderPermissionDialog from '../dialog/lib-sub-folder-permission-dialog';
@@ -761,7 +761,7 @@ class DirentListItem extends React.Component {
         }
         {this.state.isShareDialogShow &&
           <ModalPortal>
-            <ShareDialog 
+            <ShareDialogPingan 
               itemType={dirent.type}
               itemName={dirent.name}
               itemPath={direntPath}

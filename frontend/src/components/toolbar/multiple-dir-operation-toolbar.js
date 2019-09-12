@@ -8,7 +8,7 @@ import URLDecorator from '../../utils/url-decorator';
 import TextTranslation from '../../utils/text-translation';
 import MoveDirentDialog from '../dialog/move-dirent-dialog';
 import CopyDirentDialog from '../dialog/copy-dirent-dialog';
-import ShareDialog from '../dialog/share-dialog';
+import ShareDialogPingan from '../dialog/share-dialog-pingan';
 import RelatedFileDialogs from '../dialog/related-file-dialogs';
 import EditFileTagDialog from '../dialog/edit-filetag-dialog';
 import ZipDownloadDialog from '../dialog/zip-download-dialog';
@@ -384,9 +384,9 @@ class MultipleDirOperationToolbar extends React.Component {
           <Fragment>
             {this.state.showShareDialog &&
               <ModalPortal>
-                <ShareDialog
-                  itemType={dirent.type}
-                  itemName={dirent.name}
+                <ShareDialogPingan
+                  itemType={this.props.selectedDirentList[0].type}
+                  itemName={this.props.selectedDirentList[0].name}
                   itemPath={direntPath}
                   userPerm={dirent.permission}
                   repoID={repoID}

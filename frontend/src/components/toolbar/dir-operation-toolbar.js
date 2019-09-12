@@ -6,7 +6,7 @@ import { gettext } from '../../utils/constants';
 import ModalPortal from '../modal-portal';
 import CreateFolder from '../../components/dialog/create-folder-dialog';
 import CreateFile from '../../components/dialog/create-file-dialog';
-import ShareDialog from '../../components/dialog/share-dialog';
+import ShareDialogPingan from '../../components/dialog/share-dialog-pingan';
 
 const propTypes = {
   path: PropTypes.string.isRequired,
@@ -236,7 +236,7 @@ class DirOperationToolbar extends React.Component {
         )}
         {this.state.isShareDialogShow &&
           <ModalPortal>
-            <ShareDialog 
+            <ShareDialogPingan 
               itemType={itemType}
               itemName={itemName}
               itemPath={this.props.path}
