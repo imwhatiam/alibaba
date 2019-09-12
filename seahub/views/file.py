@@ -47,7 +47,8 @@ from seahub.auth.decorators import login_required
 from seahub.base.decorators import repo_passwd_set_required
 from seahub.base.accounts import ANONYMOUS_EMAIL
 from seahub.base.templatetags.seahub_tags import file_icon_filter
-from seahub.share.models import FileShare, check_share_link_common
+from seahub.share.models import FileShare, check_share_link_common, \
+        FileShareExtraInfo, UserApprovalChain
 from seahub.share.decorators import share_link_audit, share_link_login_required
 from seahub.wiki.utils import get_wiki_dirent
 from seahub.wiki.models import Wiki, WikiDoesNotExist, WikiPageMissing
@@ -89,6 +90,9 @@ from seahub.settings import FILE_ENCODING_LIST, FILE_PREVIEW_MAX_SIZE, \
     FILE_ENCODING_TRY_LIST, MEDIA_URL, SEAFILE_COLLAB_SERVER, ENABLE_WATERMARK, \
     SHARE_LINK_EXPIRE_DAYS_MIN, SHARE_LINK_EXPIRE_DAYS_MAX, SHARE_LINK_PASSWORD_MIN_LENGTH, \
     SHARE_LINK_EXPIRE_DAYS_DEFAULT
+
+from seahub.share.settings import PINGAN_SHARE_LINK_REVISER_VISITS_LIMIT_BASE, \
+        PINGAN_SHARE_LINK_SEND_TO_VISITS_LIMIT_BASE
 
 # wopi
 try:
@@ -1147,6 +1151,15 @@ def view_shared_file(request, fileshare, *args, **kwargs):
     shared_by = fileshare.username
     if not seafile_api.check_permission_by_path(repo_id, '/', shared_by):
         return render_error(request, _(u'Permission denied'))
+
+    # sent to user number
+    sent_tos = FileShareExtraInfo.objects.filter(share_link=fileshare)
+    revisers = UserApprovalChain.objects.filter(user=fileshare.username)
+    total = len(sent_tos) * PINGAN_SHARE_LINK_SEND_TO_VISITS_LIMIT_BASE + \
+            len(revisers) * PINGAN_SHARE_LINK_REVISER_VISITS_LIMIT_BASE
+
+    if fileshare.get_download_cnt() >= total:
+        return render_error(request, _(u'该文件外链已失效。'))
 
     # Increase file shared link view_cnt, this operation should be atomic
     fileshare.view_cnt = F('view_cnt') + 1

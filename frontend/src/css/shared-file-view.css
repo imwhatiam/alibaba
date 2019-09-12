@@ -22,7 +22,7 @@
 .shared-file-view-head {
   width: 950px;
   margin: 0 auto;
-  height: 60px;
+  height: 200px;
   display: flex;
   align-items:center;
   justify-content: space-between;

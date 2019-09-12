@@ -15,4 +15,13 @@ ENABLE_SHARE_LINK_VERIFY_CODE = getattr(settings, 'ENABLE_SHARE_LINK_VERIFY_CODE
 PA_EMAIL_PATTERN_LIST = getattr(settings, 'PA_EMAIL_PATTERN_LIST', ['*@pingan.com.cn', ])
 PA_STRONG_PASSWORD_PATT = getattr(settings, 'PA_STRONG_PASSWORD_PATT', ())
 SHARE_LINK_MIN_FILE_SIZE = getattr(settings, 'SHARE_LINK_MIN_FILE_SIZE', 15)  # Mb
+
+
+PINGAN_SHARE_LINK_SEND_TO_VISITS_LIMIT_BASE = getattr(settings,
+        'PINGAN_SHARE_LINK_SEND_TO_VISITS_LIMIT_BASE', 2)
+PINGAN_SHARE_LINK_REVISER_VISITS_LIMIT_BASE= getattr(settings,
+        'PINGAN_SHARE_LINK_REVISER_VISITS_LIMIT_BASE', 1)
+PINGAN_SHARE_LINK_BACKUP_LIBRARIES = getattr(settings,
+        'PINGAN_SHARE_LINK_BACKUP_LIBRARIES', {})
+
 ######################### End PingAn Group related ##########################

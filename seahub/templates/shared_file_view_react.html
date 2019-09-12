@@ -71,6 +71,10 @@ body {
       commitID: '{{ current_commit.id }}' || '{{ repo.head_cmmt_id }}',
       shareTo: '{{ share_to }}',
       note: '{{ note }}',
+      downloadCnt: '{{ download_cnt }}',
+      policyCategories: '{{ policy_categories|escapejs }}',
+      breachContent: '{{ breach_content|escapejs }}',
+      totalMatches: '{{ total_matches|escapejs }}',
 
       needVerify: {% if need_verify %}true{% else %}false{% endif %},
       userPass: {% if user_pass %}true{% else %}false{% endif %},

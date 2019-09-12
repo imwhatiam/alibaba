@@ -116,6 +116,13 @@ def share_link_approval_for_pingan(func):
                 'share_to': share_to,
                 'note': note,
                 'show_dlp_veto_msg': show_dlp_veto_msg,
+                'download_cnt': fileshare.get_download_cnt(),
+            })
+            dlp_msg_dict = fileshare.get_dlp_msg()
+            kwargs.update({
+                'policy_categories': dlp_msg_dict['policy_categories'] if 'policy_categories' in dlp_msg_dict else '',
+                'breach_content': dlp_msg_dict['breach_content'] if 'breach_content' in dlp_msg_dict else '',
+                'total_matches': dlp_msg_dict['total_matches'] if 'total_matches' in dlp_msg_dict else '',
             })
             return func(request, fileshare, *args, **kwargs)
 

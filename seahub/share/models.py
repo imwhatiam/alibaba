@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2012-2016 Seafile Ltd.
+import json
 import operator
 import datetime
 import logging
@@ -405,6 +406,13 @@ class FileShare(models.Model):
         return os.path.basename(self.path)
 
     ######################### Start PingAn Group related ##################
+    def get_dlp_msg(self):
+        r = FileShareApprovalStatus.objects.filter(share_link_id=self.id).filter(email='dlp')
+        if len(r) == 0:
+            return {}
+        else:
+            return json.loads(r[0].msg)
+
     def get_approval_chain(self, flat=False):
         username = self.username
 
@@ -611,6 +619,9 @@ class FileShare(models.Model):
                 send_pafile_html_email_with_dj_template(
                     [x], _(u'A file is shared to you on %s') % SITE_NAME,
                     'share/pa_shared_link_email.html', c)
+
+    def get_download_cnt(self):
+        return FileShareDownloads.objects.filter(share_link_id=self.id).count()
     #################### END PingAn Group related ######################
 
 

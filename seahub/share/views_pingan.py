@@ -179,7 +179,7 @@ def export_verified_links(request):
     wb.save(response)
     return response
 
-#@login_required_ajax
+@login_required_ajax
 @require_POST
 def ajax_change_dl_link_status(request):
     """Approve or veto a shared link.
@@ -191,6 +191,10 @@ def ajax_change_dl_link_status(request):
 
     token = request.POST.get('t', '')
     if not token:
+        return HttpResponse({}, status=400, content_type=content_type)
+
+    msg = request.POST.get('msg', None)
+    if not msg:
         return HttpResponse({}, status=400, content_type=content_type)
 
     try:
