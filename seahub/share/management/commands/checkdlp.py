@@ -129,17 +129,16 @@ class MSSQL:
         cur.execute(sql3.encode('utf-8'))
         resList3 = cur.fetchall()
         if int(resList3[0][0]) > 0:
-            sql4 = "SELECT [ID],[FILEPATH],[FILENAME],[POLICY_CATEGORIES],[FILE_SIZE],[TOTAL_MATCHES],[INSERT_DATE],[BREACH_CONTENT] FROM [wbsn-data-security].[dbo].[PA_DSCVR_FILES] where FILEPATH like N'%" + filepath1 + "' and charindex('block_high_risk',[POLICY_CATEGORIES])>0 and FILE_SIZE=%d" % filesize
+            sql4 = "SELECT [ID],[FILENAME],[POLICY_CATEGORIES],[FILE_SIZE],[TOTAL_MATCHES],[INSERT_DATE],[BREACH_CONTENT] FROM [wbsn-data-security].[dbo].[PA_DSCVR_FILES] where FILEPATH like N'%" + filepath1 + "' and charindex('block_high_risk',[POLICY_CATEGORIES])>0 and FILE_SIZE=%d" % filesize
             print(sql4.encode('utf-8'))
             cur.execute(sql4.encode('utf-8'))
             resList4 = cur.fetchone()
 
             dlp_msg = {}
-            dlp_msg['file_path'] = resList4[1]
-            dlp_msg['file_name'] = resList4[2]
-            dlp_msg['policy_categories'] = resList4[3]
-            dlp_msg['total_matches'] = resList4[5]
-            dlp_msg['breach_content'] = resList4[7]
+            dlp_msg['file_name'] = resList4[1]
+            dlp_msg['policy_categories'] = resList4[2]
+            dlp_msg['total_matches'] = resList4[4]
+            dlp_msg['breach_content'] = resList4[6]
 
             result = 3, json.dumps(dlp_msg)
 

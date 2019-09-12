@@ -410,8 +410,11 @@ class FileShare(models.Model):
         r = FileShareApprovalStatus.objects.filter(share_link_id=self.id).filter(email='dlp')
         if len(r) == 0:
             return {}
-        else:
+
+        if r[0].msg:
             return json.loads(r[0].msg)
+
+        return {}
 
     def get_approval_chain(self, flat=False):
         username = self.username
