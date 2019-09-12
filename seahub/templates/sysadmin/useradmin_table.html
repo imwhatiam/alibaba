@@ -3,13 +3,16 @@
     <tr>
         <th width="3%"><input type="checkbox" /></th>
         {% if is_pro %}
-        <th width="21%">ID / {% trans "Name" %} / {% trans "Contact Email" %}</th>
+        <th width="16%">ID / {% trans "Name" %} / {% trans "Contact Email" %}</th>
         <th width="9%">{% trans "Status" %}</th>
-        <th width="15%">{% trans "Role" %}</th>
+        <th width="10%">{% trans "Role" %}</th>
         {% else %}
-        <th width="33%">ID / {% trans "Name" %} / {% trans "Contact Email" %}</th>
+        <th width="23%">ID / {% trans "Name" %} / {% trans "Contact Email" %}</th>
         <th width="12%">{% trans "Status" %}</th>
         {% endif %}
+
+        <th width="10%">{% trans "权限" %}</th>
+
         {% if show_institution %}
             <th width="14%">{% trans "Space Used / Quota" %}</th>
             <th width="10%">{% trans "Institution" %}</th>
@@ -99,6 +102,17 @@
             {% endif %}
         </td>
         {% endif %}
+
+        <td style="font-size:11px;">
+            <span class="user-space-quota">
+                {% if user.space_quota > 15000000 %}
+                外发权限
+                {% else %}
+                审核权限
+                {% endif %}
+            </span>
+        </td>
+
         <td style="font-size:11px;">
             {{ user.space_usage|seahub_filesizeformat }} /
             <span class="user-space-quota">

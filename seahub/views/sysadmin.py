@@ -421,11 +421,11 @@ def sys_useradmin_export_excel(request):
         is_pro = False
 
     if is_pro:
-        head = [_("Email"), _("Name"), _("Contact Email"), _("Status"), _("Role"),
+        head = [_("Email"), _("Name"), _("Contact Email"), _("Status"), _("Role"), _("权限"),
                 _("Space Usage") + "(MB)", _("Space Quota") + "(MB)",
                 _("Create At"), _("Last Login"), _("Admin"), _("LDAP(imported)"),]
     else:
-        head = [_("Email"), _("Name"), _("Contact Email"), _("Status"),
+        head = [_("Email"), _("Name"), _("Contact Email"), _("Status"), _("权限"),
                 _("Space Usage") + "(MB)", _("Space Quota") + "(MB)",
                 _("Create At"), _("Last Login"), _("Admin"), _("LDAP(imported)"),]
 
@@ -474,6 +474,11 @@ def sys_useradmin_export_excel(request):
             else:
                 space_quota_MB = ''
 
+            if user.space_quota > 1000000:
+                pingan_share_link_verify_permission = '审核权限'
+            else:
+                pingan_share_link_verify_permission = '外发权限'
+
             # populate user last login time
             user.last_login = None
             for last_login in last_logins:
@@ -503,11 +508,11 @@ def sys_useradmin_export_excel(request):
                 else:
                     role = _('Default')
 
-                row = [user.email, user.name, user.contact_email, status, role,
+                row = [user.email, user.name, user.contact_email, status, role, pingan_share_link_verify_permission,
                         space_usage_MB, space_quota_MB, create_at,
                         last_login, is_admin, ldap_import]
             else:
-                row = [user.email, user.name, user.contact_email, status,
+                row = [user.email, user.name, user.contact_email, status, pingan_share_link_verify_permission,
                         space_usage_MB, space_quota_MB, create_at,
                         last_login, is_admin, ldap_import]
 
