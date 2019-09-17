@@ -167,6 +167,9 @@ class AdminGroupMember(APIView):
             error_msg = 'Internal Server Error'
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
+        members = ccnet_api.get_group_members(group_id)
+        group_admin_list = [m.user_name for m in members if m.is_staff]
+
         is_admin = request.data.get('is_admin', '')
         try:
             # set/unset a specific group member as admin
@@ -183,6 +186,10 @@ class AdminGroupMember(APIView):
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
         member_info = get_group_member_info(request, group_id, email)
+
+        from seahub.share.pingan_utils import update_chain_list_when_group_member_updated
+        update_chain_list_when_group_member_updated(group.group_name, group_admin_list)
+
         return Response(member_info)
 
     def delete(self, request, group_id, email, format=None):
@@ -212,6 +219,9 @@ class AdminGroupMember(APIView):
             error_msg = '%s is group owner, can not be removed.' % email
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
+        members = ccnet_api.get_group_members(group_id)
+        group_admin_list = [m.user_name for m in members if m.is_staff]
+
         try:
             ccnet_api.group_remove_member(group_id, group.creator_name, email)
             # remove repo-group share info of all 'email' owned repos
@@ -220,5 +230,8 @@ class AdminGroupMember(APIView):
             logger.error(e)
             error_msg = 'Internal Server Error'
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        from seahub.share.pingan_utils import update_chain_list_when_group_member_updated
+        update_chain_list_when_group_member_updated(group.group_name, group_admin_list)
 
         return Response({'success': True})

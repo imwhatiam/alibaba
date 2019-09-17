@@ -256,6 +256,12 @@ def user_reviser_add(request):
                     result['error'] = u'用户不存在: %s' % x
                     return HttpResponse(json.dumps(result), status=400, content_type=content_type)
 
+    from seahub.share.pingan_utils import get_company_security
+    company_security_list = get_company_security(user)
+    if company_security_list:
+        company_security_list.insert(0, 'op_or')
+        chain_list.append(company_security_list)
+
     UserApprovalChain.objects.create_chain(user, chain_list)
     result['success'] = True
     return HttpResponse(json.dumps(result), content_type=content_type)
