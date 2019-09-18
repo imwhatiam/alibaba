@@ -8,7 +8,7 @@ from django.utils.translation import ugettext as _
 
 from seahub.auth import REDIRECT_FIELD_NAME
 from seahub.base.templatetags.seahub_tags import email2nickname
-from seahub.share.constants import STATUS_VETO, STATUS_PASS
+from seahub.share.constants import STATUS_VETO, STATUS_PASS, STATUS_BLOCK_HIGH_RISK
 from seahub.share.models import (FileShare, set_share_link_access,
                                  check_share_link_access, FileShareExtraInfo,
                                  FileShareApprovalStatus, get_chain_step_sibling_type)
@@ -62,7 +62,8 @@ def share_link_approval_for_pingan(func):
 
             chain_status_list = FileShareApprovalStatus.objects.\
                                 get_chain_status_by_share_link(fileshare)
-            show_dlp_veto_msg = chain_status_list[0].status == STATUS_VETO
+            show_dlp_veto_msg = chain_status_list[0].status in (STATUS_VETO,
+                    STATUS_BLOCK_HIGH_RISK)
 
             for obj in chain_status_list:
                 if get_chain_step_sibling_type(obj):  # siblings

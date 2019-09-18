@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.conf import settings
 
 ######################### Start PingAn Group related ########################
@@ -23,5 +24,8 @@ PINGAN_SHARE_LINK_REVISER_VISITS_LIMIT_BASE= getattr(settings,
         'PINGAN_SHARE_LINK_REVISER_VISITS_LIMIT_BASE', 1)
 PINGAN_SHARE_LINK_BACKUP_LIBRARIES = getattr(settings,
         'PINGAN_SHARE_LINK_BACKUP_LIBRARIES', {})
+
+PINGAN_FULL_APPROVE_CHAIN_COMPANY = getattr(settings,
+        'PINGAN_FULL_APPROVE_CHAIN_COMPANY', [])
 
 ######################### End PingAn Group related ##########################

@@ -26,7 +26,7 @@ from seaserv import ccnet_api
 from seahub.base.templatetags.seahub_tags import email2nickname
 from seahub.profile.models import DetailedProfile
 from seahub.share.constants import STATUS_VERIFING, STATUS_PASS, STATUS_VETO, STATUS_BLOCK_HIGH_RISK
-from seahub.share.settings import ENABLE_FILESHARE_CHECK
+from seahub.share.settings import ENABLE_FILESHARE_CHECK, PINGAN_FULL_APPROVE_CHAIN_COMPANY
 from seahub.utils import is_valid_email
 from seahub.utils.ip import get_remote_ip
 from seahub.utils.mail import send_pafile_html_email_with_dj_template
@@ -222,7 +222,7 @@ class ExtraSharePermissionManager(models.Manager):
         return [e.share_to for e in shared_repos]
 
     def batch_is_admin(self, in_datas):
-        """return the data that input data is admin 
+        """return the data that input data is admin
         e.g.
             in_datas:
                 [(repo_id1, username1), (repo_id2, admin1)]
@@ -239,15 +239,15 @@ class ExtraSharePermissionManager(models.Manager):
         return [(e.repo_id, e.share_to) for e in db_data]
 
     def create_share_permission(self, repo_id, username, permission):
-        self.model(repo_id=repo_id, share_to=username, 
+        self.model(repo_id=repo_id, share_to=username,
                    permission=permission).save()
 
     def delete_share_permission(self, repo_id, share_to):
-        super(ExtraSharePermissionManager, self).filter(repo_id=repo_id, 
+        super(ExtraSharePermissionManager, self).filter(repo_id=repo_id,
                                                    share_to=share_to).delete()
 
     def update_share_permission(self, repo_id, share_to, permission):
-        super(ExtraSharePermissionManager, self).filter(repo_id=repo_id, 
+        super(ExtraSharePermissionManager, self).filter(repo_id=repo_id,
                                                    share_to=share_to).delete()
         if permission in [PERMISSION_ADMIN]:
             self.create_share_permission(repo_id, share_to, permission)
@@ -281,7 +281,7 @@ class ExtraGroupsSharePermissionManager(models.Manager):
         ).values_list('group_id', flat=True)
 
     def batch_get_repos_with_admin_permission(self, gids):
-        """ 
+        """
         """
         if len(gids) <= 0:
             return []
@@ -292,11 +292,11 @@ class ExtraGroupsSharePermissionManager(models.Manager):
         self.model(repo_id=repo_id, group_id=gid, permission=permission).save()
 
     def delete_share_permission(self, repo_id, gid):
-        super(ExtraGroupsSharePermissionManager, self).filter(repo_id=repo_id, 
+        super(ExtraGroupsSharePermissionManager, self).filter(repo_id=repo_id,
                                                              group_id=gid).delete()
 
     def update_share_permission(self, repo_id, gid, permission):
-        super(ExtraGroupsSharePermissionManager, self).filter(repo_id=repo_id, 
+        super(ExtraGroupsSharePermissionManager, self).filter(repo_id=repo_id,
                                                        group_id=gid).delete()
         if permission in [PERMISSION_ADMIN]:
             self.create_share_permission(repo_id, gid, permission)
@@ -418,32 +418,30 @@ class FileShare(models.Model):
 
     def get_approval_chain(self, flat=False):
         username = self.username
-
-        # 1. get from share link chain info table
-        ret = FileShareApprovalChain.objects.get_by_share_link(self, flat=flat)
-        if ret:
-            return ret
-
-        # 2. get from user approval chain
         chain_list = UserApprovalChain.objects.get_by_user(username, flat=flat)
-        if len(chain_list) == 0:
-            logger.error('Use approval chain is empty for user: %s' % username)
-        else:
-            return chain_list
-
-        # 3. get chain by share link user department
-        d_profile = DetailedProfile.objects.get_detailed_profile_by_user(
-            username)
-        if not d_profile:
-            logger.error('No detailed profile(department, ... etc) found for user %s' % username)
+        if not chain_list:
             return []
 
-        chain_list = ApprovalChain.objects.get_by_department(
-            d_profile.department, flat=flat)
-        if len(chain_list) == 0:
-            logger.error('Approval chain is empty for user: %s' % username)
+        d_profile = DetailedProfile.objects.get_detailed_profile_by_user(username)
+        if not d_profile or not d_profile.company:
+            return chain_list
 
-        return chain_list
+        if d_profile.company in PINGAN_FULL_APPROVE_CHAIN_COMPANY:
+            return chain_list
+
+        dlp_status = FileShareApprovalStatus.objects.get_dlp_status_by_share_link(self)
+        if not dlp_status:
+            return chain_list
+
+        if dlp_status.status == STATUS_BLOCK_HIGH_RISK:
+            return chain_list
+
+        from seahub.share.pingan_utils import get_company_security, has_security_in_chain_list
+        company_security_list = get_company_security(username)
+        if has_security_in_chain_list(chain_list, company_security_list):
+            return chain_list[:-1]
+        else:
+            return chain_list
 
     def pass_verify(self):
         if not ENABLE_FILESHARE_CHECK:
