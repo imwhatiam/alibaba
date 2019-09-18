@@ -98,6 +98,7 @@ class SharedFileViewPingan extends React.Component {
   }
 
   render() {
+    let heightForHead = showDLPVetoMsg ? "300px" : "200px";
     return (
       <div className="shared-file-view-md">
         <div className="shared-file-view-md-header d-flex">
@@ -109,7 +110,7 @@ class SharedFileViewPingan extends React.Component {
           { loginUser && <Account /> }
         </div>
         <div className="shared-file-view-md-main">
-          <div className="shared-file-view-head" >
+          <div className="shared-file-view-head" style={{height:heightForHead}}>
             <div className="float-left" style={{width:"500px"}}>
               <h2 className="ellipsis" title={fileName}>{fileName}</h2>
               {zipped ?
@@ -122,18 +123,26 @@ class SharedFileViewPingan extends React.Component {
               <br/>
               <small className="share-by ellipsis">{'下载次数：' + downloadCnt}</small>
               <br/>
-              <small className="share-by ellipsis">{'policy categories：' + policyCategories}</small>
-              {totalMatches &&
+              {showDLPVetoMsg &&
                 <Fragment>
                   <br/>
-                  <small className="share-by ellipsis">{'total matches：' + totalMatches}</small>
-                </Fragment>
-              }
-              {breachContent &&
-                <Fragment>
-                  <br/>
-                  <small className="share-by ellipsis">{'breach content：'}</small>
-                  <Input disabled value={breachContent}></Input>
+                  <h6 className="share-by ellipsis">{'注意：DLP扫描提示关键字扫描风险。'}</h6>
+                  {policyCategories &&
+                    <small className="share-by ellipsis">{'policy categories：' + policyCategories}</small>
+                  }
+                  {totalMatches &&
+                    <Fragment>
+                      <br/>
+                      <small className="share-by ellipsis">{'total matches：' + totalMatches}</small>
+                    </Fragment>
+                  }
+                  {breachContent &&
+                    <Fragment>
+                      <br/>
+                      <small className="share-by ellipsis">{'breach content：'}</small>
+                      <Input disabled value={breachContent}></Input>
+                    </Fragment>
+                  }
                 </Fragment>
               }
             </div>
@@ -150,7 +159,7 @@ class SharedFileViewPingan extends React.Component {
                     <Fragment>
                       <Button onClick={() => {this.onVerifyDialogShow('pass');}} color='success'>{'同意'}</Button>
                       <span>{' '}</span>
-                      <Button onClick={() => {this.onVerifyDialogShow('veto');}} color='danger'>{'否决'}</Button>
+                      <Button  className="mr-1" onClick={() => {this.onVerifyDialogShow('veto');}} color='danger'>{'否决'}</Button>
                     </Fragment>
                   }
                   {userPass &&
@@ -160,9 +169,6 @@ class SharedFileViewPingan extends React.Component {
                     <Button disabled outline color='danger'>{'审核结果：该文件已你否决'}</Button>
                   }
                 </Fragment>
-              }
-              {showDLPVetoMsg &&
-                <Button disabled outline color='danger'>{' '}{'注意：DLP扫描提示关键字扫描风险。'}</Button>
               }
               {canDownload &&
               <span>
