@@ -29,6 +29,10 @@ def get_company_security(username):
 
     return result
 
+def is_company_security(username):
+    company_security_list = get_company_security(username)
+    return True if username in company_security_list else False
+
 def has_security_in_chain_list(chain_list, company_security_list):
     for security in company_security_list:
         if security in chain_list[-1]:

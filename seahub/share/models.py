@@ -493,11 +493,13 @@ class FileShare(models.Model):
 
         s = self.get_status()
         if s == STATUS_PASS:
-            return _('Approved')
+            return '通过'
         elif s == STATUS_VERIFING:
-            return _('Verifing')
+            return '正在审核'
         elif s == STATUS_VETO:
-            return _('Rejected')
+            return '否决'
+        elif s == STATUS_BLOCK_HIGH_RISK:
+            return '高敏'
 
     def get_status_str(self):
         if not ENABLE_FILESHARE_CHECK:
@@ -623,6 +625,13 @@ class FileShare(models.Model):
 
     def get_download_cnt(self):
         return FileShareDownloads.objects.filter(share_link_id=self.id).count()
+
+    def get_receivers(self):
+        receivers = []
+        extra_info = FileShareExtraInfo.objects.filter(share_link=self)
+        if extra_info:
+            receivers = [l.sent_to for l in extra_info]
+        return receivers
     #################### END PingAn Group related ######################
 
 

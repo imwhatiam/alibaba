@@ -154,9 +154,10 @@ class Command(BaseCommand):
         else:
             backup_repo_ip = SHARE_LINK_BACKUP_LIBRARY
 
-        new_file = '%s-%s-%s' % (username,
+        new_file = '%s-%s-%s.%s' % (username,
                                  datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                                 os.path.basename(fileshare.path)
+                                 os.path.basename(fileshare.path),
+                                 fileshare.token
         )
 
         try:

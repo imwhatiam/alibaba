@@ -19,6 +19,7 @@ import LibContentToolbar from './lib-content-toolbar';
 import LibContentContainer from './lib-content-container';
 import FileUploader from '../../components/file-uploader/file-uploader';
 import SessionExpiredTip from '../../components/session-expired-tip';
+import ApproveChainInfo from '../approve-chain-info/approve-chain-info';
 
 const propTypes = {
   pathPrefix: PropTypes.array.isRequired,
@@ -75,6 +76,12 @@ class LibContentView extends React.Component {
       updateDetail: false,
       itemsShowLength: 100,
       isSessionExpired: false,
+      pinganApproveStatusList: [],
+      fromTimeStr: '',
+      toTimeStr: '',
+      fileNameForSearch: '',
+      shareLinkCreator: '',
+      isShowPinganApproveStatusPage: false,
     };
 
     this.oldonpopstate = window.onpopstate;
@@ -82,6 +89,29 @@ class LibContentView extends React.Component {
     this.lastModifyTime = new Date();
     this.isNeedUpdateHistoryState = true; // Load, refresh page, switch mode for the first time, no need to set historyState
   }
+
+  listPinganSecurityShareLinksReport = (start, end, searchFileName, searchShareLinkCreator) => {
+    let url = seafileAPI.server + '/pingan-api/company-security/share-links-report/?';
+    url += start ? 'start=' + start + '&' : '';
+    url += end ? 'end=' + end + '&' : '';
+    url += searchFileName ? 'filename=' + encodeURIComponent(searchFileName) + '&' : '';
+    url += searchShareLinkCreator ? 'from_user=' + encodeURIComponent(searchShareLinkCreator) + '&' : '';
+    return seafileAPI.req.get(url);
+  }
+
+  showPinganApproveStatus = () => {
+    this.setState({isShowPinganApproveStatusPage: true});
+    this.listPinganSecurityShareLinksReport(this.state.fromTimeStr, this.state.toTimeStr, this.state.fileNameForSearch, this.state.shareLinkCreator).then(res => {
+      this.setState({pinganApproveStatusList: res.data.data});
+    }).catch(error => {
+      let errMessage = Utils.getErrorMsg(error);
+      toaster.danger(errMessage);
+    });
+   }
+
+   downloadPinganApproveStatus = () => {
+     location.href = seafileAPI.server + '/pingan-api/company-security/share-links-report/?excel=true';
+   }
 
   showDirentDetail = (direntDetailPanelTab) => {
     if (direntDetailPanelTab) {
@@ -1620,6 +1650,22 @@ class LibContentView extends React.Component {
     this.updateUsedRepoTags();
   }
 
+  saveFromTimeStr = (e) => {
+    this.setState({fromTimeStr: e.target.value});
+  }
+
+  saveToTimeStr = (e) => {
+    this.setState({toTimeStr: e.target.value});
+  }
+
+  saveFileNameForSearch = (e) => {
+    this.setState({fileNameForSearch: e.target.value});
+  }
+  
+  saveShareLinkCreator = (e) => {
+    this.setState({shareLinkCreator: e.target.value});
+  }
+
   render() {
     if (this.state.libNeedDecrypt) {
       return (
@@ -1694,6 +1740,29 @@ class LibContentView extends React.Component {
             onFilesTagChanged={this.onFileTagChanged}
           />
         </div>
+        {this.state.isGroupOwnedRepo && this.state.path === '/' && this.state.currentRepoInfo.is_admin &&
+          <div className="main-panel-north border-left-show" style={{'z-index':'10'}}>
+            <div className="">
+              {'从'}
+              <input onChange={this.saveFromTimeStr} className="mr-2" style={{width:'100px'}} placeholder="yyyy-mm-dd"></input>
+              {'到'}
+              <input onChange={this.saveToTimeStr} className="mr-2" style={{width:'100px'}} placeholder="yyyy-mm-dd"></input>
+              <input onChange={this.saveFileNameForSearch} className="mr-2" style={{width:'100px'}} placeholder="按文件名搜索"></input>
+              <input onChange={this.saveShareLinkCreator} className="mr-2" style={{width:'100px'}} placeholder="按创建者搜索"></input>
+            </div>
+            <button className="btn btn-secondary operation-item ml-2 mr-2" title={gettext('Export Excel')} onClick={this.showPinganApproveStatus}>
+              {gettext('查看审批')}
+            </button>
+            <button className="btn btn-secondary operation-item ml-2 mr-2" title={gettext('Export Excel')} onClick={this.downloadPinganApproveStatus}>
+              {gettext('下载表格')}
+            </button>
+          </div>
+        }
+        {this.state.isShowPinganApproveStatusPage ?
+          <ApproveChainInfo
+            pinganApproveStatusList={this.state.pinganApproveStatusList}
+          />
+        :
         <div className="main-panel-center flex-row">
           <LibContentContainer 
             pathPrefix={this.props.pathPrefix}
@@ -1780,6 +1849,7 @@ class LibContentView extends React.Component {
             />
           )}
         </div>
+        }
       </div>
     );
   }

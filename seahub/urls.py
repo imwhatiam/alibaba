@@ -783,7 +783,9 @@ urlpatterns += [
 ########################### Start PingAn Group related ######################
 from seahub.views.sysadmin_pingan import *
 from seahub.share.api import ApprovalChainView, SysDownloadLinksReport, \
-    UserApprovalChainsView, UserApprovalChainView
+    UserApprovalChainsView, UserApprovalChainView, PinganAdminShareLinksReport, \
+    PinganCompanySecurityShareLinksReport
+
 
 urlpatterns += [
     url(r'^sys/reviseradmin/$', sys_reviser_admin, name='sys_reviser_admin'),
@@ -810,5 +812,8 @@ urlpatterns += [
     url(r'^api/v2.1/admin/user-approval-chains/(?P<user>[^/].+)/$', UserApprovalChainView.as_view(), name='api-v2.1-user-approval-chain'),
 
     url(r'^api/v2.1/admin/download-link-excel/$', SysDownloadLinksReport.as_view(), name='api-v2.1-sys-download-links-report'),
+
+    url(r'^pingan-api/admin/share-links-report/$', PinganAdminShareLinksReport.as_view(), name='pingan-api-admin-share-links-report'),
+    url(r'^pingan-api/company-security/share-links-report/$', PinganCompanySecurityShareLinksReport.as_view(), name='pingan-api-company-security-share-links-report'),
 ]
 ########################### End PingAn Group related ########################
