@@ -5,6 +5,7 @@ import moment from 'moment';
 import { gettext, siteRoot, username, isDocs } from '../../utils/constants';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
+import { Input, Button } from 'reactstrap';
 import collabServer from '../../utils/collab-server';
 import Dirent from '../../models/dirent';
 import FileTag from '../../models/file-tag';
@@ -20,6 +21,8 @@ import LibContentContainer from './lib-content-container';
 import FileUploader from '../../components/file-uploader/file-uploader';
 import SessionExpiredTip from '../../components/session-expired-tip';
 import ApproveChainInfo from '../approve-chain-info/approve-chain-info';
+import DatePicker from "react-datepicker"; 
+import "react-datepicker/dist/react-datepicker.css";
 
 const propTypes = {
   pathPrefix: PropTypes.array.isRequired,
@@ -79,6 +82,8 @@ class LibContentView extends React.Component {
       pinganApproveStatusList: [],
       fromTimeStr: '',
       toTimeStr: '',
+      startDate: new Date(),
+      endDate: new Date(),
       fileNameForSearch: '',
       shareLinkCreator: '',
       isShowPinganApproveStatusPage: false,
@@ -99,15 +104,30 @@ class LibContentView extends React.Component {
     return seafileAPI.req.get(url);
   }
 
+  formatDate = (date) => {
+    console.log(date);
+    let month = '' + (date.getMonth() + 1);
+    let day = '' + date.getDate();
+    let year = date.getFullYear();
+
+    if (month.length < 2) 
+      month = '0' + month;
+    if (day.length < 2) 
+      day = '0' + day;
+    return [year, month, day].join('-');
+  }
+
   showPinganApproveStatus = () => {
     this.setState({isShowPinganApproveStatusPage: true});
-    this.listPinganSecurityShareLinksReport(this.state.fromTimeStr, this.state.toTimeStr, this.state.fileNameForSearch, this.state.shareLinkCreator).then(res => {
+    let fromTimeStr = this.formatDate(this.state.startDate);
+    let endTimeStr = this.formatDate(this.state.endDate);
+    this.listPinganSecurityShareLinksReport(fromTimeStr, endTimeStr, this.state.fileNameForSearch, this.state.shareLinkCreator).then(res => {
       this.setState({pinganApproveStatusList: res.data.data});
     }).catch(error => {
       let errMessage = Utils.getErrorMsg(error);
       toaster.danger(errMessage);
     });
-   }
+  }
 
    downloadPinganApproveStatus = () => {
      location.href = seafileAPI.server + '/pingan-api/company-security/share-links-report/?excel=true';
@@ -1658,6 +1678,18 @@ class LibContentView extends React.Component {
     this.setState({toTimeStr: e.target.value});
   }
 
+  handleStartDateChange = (date) => {
+    this.setState({
+      startDate: date
+    });
+  };
+
+  handleEndDateChange = (date) => {
+    this.setState({
+      endDate: date
+    });
+  };
+
   saveFileNameForSearch = (e) => {
     this.setState({fileNameForSearch: e.target.value});
   }
@@ -1665,6 +1697,7 @@ class LibContentView extends React.Component {
   saveShareLinkCreator = (e) => {
     this.setState({shareLinkCreator: e.target.value});
   }
+
 
   render() {
     if (this.state.libNeedDecrypt) {
@@ -1741,12 +1774,26 @@ class LibContentView extends React.Component {
           />
         </div>
         {this.state.isGroupOwnedRepo && this.state.path === '/' && this.state.currentRepoInfo.is_admin &&
-          <div className="main-panel-north border-left-show" style={{'z-index':'10'}}>
+          <div className="main-panel-north border-left-show" style={{'zIndex':'10'}}>
             <div className="">
-              {'从'}
+              {/* {'从'}
               <input onChange={this.saveFromTimeStr} className="mr-2" style={{width:'100px'}} placeholder="yyyy-mm-dd"></input>
               {'到'}
-              <input onChange={this.saveToTimeStr} className="mr-2" style={{width:'100px'}} placeholder="yyyy-mm-dd"></input>
+              <input onChange={this.saveToTimeStr} className="mr-2" style={{width:'100px'}} placeholder="yyyy-mm-dd"></input> */}
+              {'从'}
+              <DatePicker
+                className="mr-2"
+                dateFormat="yyyy/MM/dd"
+                selected={this.state.startDate}
+                onChange={this.handleStartDateChange}
+              />
+              {'到'}
+              <DatePicker
+                className="mr-2"
+                dateFormat="yyyy/MM/dd"
+                selected={this.state.endDate}
+                onChange={this.handleEndDateChange}
+              />
               <input onChange={this.saveFileNameForSearch} className="mr-2" style={{width:'100px'}} placeholder="按文件名搜索"></input>
               <input onChange={this.saveShareLinkCreator} className="mr-2" style={{width:'100px'}} placeholder="按创建者搜索"></input>
             </div>
