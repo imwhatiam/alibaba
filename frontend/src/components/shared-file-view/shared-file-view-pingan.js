@@ -126,20 +126,20 @@ class SharedFileViewPingan extends React.Component {
               {showDLPVetoMsg &&
                 <Fragment>
                   <br/>
-                  <h6 className="share-by ellipsis">{'注意：DLP扫描提示关键字扫描风险。'}</h6>
+                  <h6 className="share-by ellipsis" style={{'color': 'red'}}>{'注意：DLP扫描提示关键字扫描风险。'}</h6>
                   {policyCategories &&
-                    <small className="share-by ellipsis">{'policy categories：' + policyCategories}</small>
+                    <small className="share-by ellipsis">{'策略类型：' + policyCategories}</small>
                   }
                   {totalMatches &&
                     <Fragment>
                       <br/>
-                      <small className="share-by ellipsis">{'total matches：' + totalMatches}</small>
+                      <small className="share-by ellipsis">{'总计：' + totalMatches}</small>
                     </Fragment>
                   }
                   {breachContent &&
                     <Fragment>
                       <br/>
-                      <small className="share-by ellipsis">{'breach content：'}</small>
+                      <small className="share-by ellipsis">{'命中信息：'}</small>
                       <Input disabled value={breachContent}></Input>
                     </Fragment>
                   }
