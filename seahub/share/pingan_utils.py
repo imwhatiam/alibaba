@@ -1,6 +1,7 @@
 from seaserv import ccnet_api
 from seahub.profile.models import DetailedProfile
 from seahub.share.models import UserApprovalChain
+from seahub.share.settings import PINGAN_COMPANY_SEAFILE_DEPT_MAP
 
 def get_all_company():
     return ccnet_api.get_top_groups(including_org=False)
@@ -12,8 +13,18 @@ def get_company(username):
     else:
         return ''
 
-def get_company_users(company_name):
-    d_profiles = DetailedProfile.objects.filter(company=company_name)
+def get_company_name(username):
+    company_name = ''
+    company_id = get_company(username)
+    if company_id:
+        seafile_dept_id = PINGAN_COMPANY_SEAFILE_DEPT_MAP[company_id]
+        seafile_dept = ccnet_api.get_group(seafile_dept_id)
+        company_name = seafile_dept.group_name
+
+    return company_name
+
+def get_company_users(company_id):
+    d_profiles = DetailedProfile.objects.filter(company=company_id)
     return [p.user for p in d_profiles]
 
 def get_company_security(username):
@@ -22,7 +33,7 @@ def get_company_security(username):
 
     result = []
     for company in all_company:
-        if user_company == company.group_name:
+        if PINGAN_COMPANY_SEAFILE_DEPT_MAP[user_company] == company.id:
             members = ccnet_api.get_group_members(company.id)
             result = [m.user_name for m in filter(lambda m: m.is_staff, members)]
             break
@@ -40,8 +51,8 @@ def has_security_in_chain_list(chain_list, company_security_list):
 
     return False
 
-def update_chain_list_when_group_member_updated(group_name, old_company_security_list):
-    company_users = get_company_users(group_name)
+def update_chain_list_when_group_member_updated(company_id, old_company_security_list):
+    company_users = get_company_users(company_id)
     for user in company_users:
         chain_list = UserApprovalChain.objects.get_by_user(user)
         if chain_list:

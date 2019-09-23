@@ -25,13 +25,15 @@ from seahub.utils.ms_excel import write_xls
 from seahub.utils import is_valid_email
 from seahub.views import check_folder_permission
 
+from seahub.share.constants import STATUS_VERIFING, STATUS_PASS, STATUS_VETO, \
+        STATUS_BLOCK_HIGH_RISK
 from seahub.share.models import ApprovalChain, approval_chain_str2list, \
     FileShare, UserApprovalChain, approval_chain_list2str, \
-    is_valid_approval_chain_str, FileShareDownloads, FileShareExtraInfo
+    is_valid_approval_chain_str, FileShareApprovalStatus
 from seahub.views.sysadmin_pingan import download_links_excel_report
 from seahub.share.settings import PINGAN_SHARE_LINK_BACKUP_LIBRARIES
-from seahub.share.pingan_utils import is_company_security, get_company
-
+from seahub.share.pingan_utils import is_company_security, get_company, \
+        get_company_name
 
 
 class ApprovalChainView(APIView):
@@ -283,6 +285,55 @@ class SysDownloadLinksReport(APIView):
 
         return Response(ret)
 
+def get_share_link_approve_info(share_links):
+
+    api_result = []
+    excel_data_list = []
+
+    status_dict = {
+        STATUS_VERIFING: '正在审核',
+        STATUS_PASS: '通过',
+        STATUS_VETO: '否决',
+        STATUS_BLOCK_HIGH_RISK: '高敏',
+    }
+
+    for share_link in share_links:
+
+        dlp_status = ''
+        dlp_vtime = ''
+        chain_status = FileShareApprovalStatus.objects.get_chain_status_by_share_link(share_link)
+        if chain_status:
+            dlp_status = status_dict.get(chain_status[0].status, '')
+            if chain_status[0].vtime:
+                dlp_vtime = chain_status[0].vtime.strftime('%Y-%m-%d %H:%M:%S')
+
+        detailed_profile = DetailedProfile.objects.filter(user=share_link.username)
+
+        info = {}
+        info['filename'] = share_link.get_name()
+        info['from_user'] = share_link.username
+        info['company'] = get_company_name(share_link.username)
+        info['department'] = detailed_profile[0].department if detailed_profile else ''
+        info['send_to'] = ','.join(share_link.get_receivers())
+        info['created_at'] = share_link.ctime.strftime('%Y-%m-%d')
+        info['expiration'] = share_link.expire_date.strftime('%Y-%m-%d') if share_link.expire_date else ''
+        info['share_link_url'] = share_link.get_full_url()
+        info['approve_status'] = share_link.get_short_status_str()
+        info['dlp_status'] = dlp_status
+        info['dlp_vtime'] = dlp_vtime
+        info['detailed_approve_status'] = str(share_link.get_verbose_status())
+
+        api_result.append(info)
+
+        excel_row = [info['filename'], info['from_user'], info['company'],
+                info['department'], info['send_to'], info['created_at'],
+                info['expiration'], info['share_link_url'], info['approve_status'],
+                info['dlp_status'], info['dlp_vtime'], info['detailed_approve_status']]
+        excel_data_list.append(excel_row)
+
+    return api_result, excel_data_list
+
+
 class PinganAdminShareLinksReport(APIView):
 
     authentication_classes = (TokenAuthentication, SessionAuthentication)
@@ -307,38 +358,12 @@ class PinganAdminShareLinksReport(APIView):
         share_links = FileShare.objects.filter(s_type='f') \
                 .filter(ctime__lte=end_date) \
                 .filter(ctime__gte=start_date)
-
+        api_result, excel_data_list = get_share_link_approve_info(share_links)
         ret = {
-            'data': [],
+            'data': api_result,
             'start_time': start_date.strftime("%Y-%m-%d"),
             'end_time': end_date.strftime("%Y-%m-%d"),
         }
-
-        excel_data_list = []
-        for share_link in share_links:
-
-            detailed_profile = DetailedProfile.objects.filter(user=share_link.username)
-
-            info = {}
-            info['filename'] = share_link.get_name()
-            info['from_user'] = share_link.username
-            info['company'] = detailed_profile[0].company if detailed_profile else ''
-            info['department'] = detailed_profile[0].department if detailed_profile else ''
-            info['send_to'] = ','.join(share_link.get_receivers())
-            info['created_at'] = share_link.ctime.strftime('%Y-%m-%d')
-            info['first_download_time'] = FileShareDownloads.objects.get_first_download_time(share_link)
-            info['downlods'] = share_link.get_download_cnt()
-            info['expiration'] = share_link.expire_date.strftime('%Y-%m-%d') if share_link.expire_date else ''
-            info['share_link_url'] = share_link.get_full_url()
-            info['approve_status'] = share_link.get_short_status_str()
-            info['detailed_approve_status'] = str(share_link.get_verbose_status())
-            ret['data'].append(info)
-
-            excel_row = [info['filename'], info['from_user'], info['company'],
-                    info['department'], info['send_to'], info['created_at'],
-                    info['first_download_time'], info['downlods'], info['expiration'],
-                    info['share_link_url'], info['approve_status'], info['detailed_approve_status']]
-            excel_data_list.append(excel_row)
 
         export_excel = request.GET.get('excel', 'false')
         if export_excel.lower() != 'true':
@@ -348,8 +373,8 @@ class PinganAdminShareLinksReport(APIView):
         response['Content-Disposition'] = 'attachment; filename=download-links.xls'
 
         head = ["文件名", "发送人", "发送人公司", "发送人部门", "接收对象",
-                "创建时间", "链接首次下载时间", "链接下载次数", "链接过期时间",
-                "下载链接", "最终审核状态", "详细审核状态"]
+                "创建时间", "链接过期时间", "下载链接", "最终审核状态",
+                "DLP审核状态", "DLP审核时间", "详细审核状态"]
 
         wb = write_xls(u'共享链接', head, excel_data_list)
         wb.save(response)
@@ -385,6 +410,7 @@ class PinganCompanySecurityShareLinksReport(APIView):
             try:
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
                 end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+                end_date = end_date + timedelta(days=1)
             except Exception:
                 error_msg = "date invalid."
                 return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
@@ -398,62 +424,29 @@ class PinganCompanySecurityShareLinksReport(APIView):
                 '/', dir_id, username, -1, -1)
         filename_list = [d.obj_name for d in dirent_list if not stat.S_ISDIR(d.mode)]
 
+        # get share links
         share_link_token_list = []
-
-        # check if search by filename
-        filename = request.GET.get('filename', '')
-        if filename:
-            # search by filename
-            for item in filename_list:
-                if filename not in item:
-                    continue
-                share_link_token_list.append(item.split('.')[-1])
-
-            if not share_link_token_list:
-                error_msg = "File %s not found." % filename
-                return api_error(status.HTTP_404_NOT_FOUND, error_msg)
-        else:
-            # get all file
-            for item in filename_list:
-                share_link_token_list.append(item.split('.')[-1])
-
+        for filename in filename_list:
+            share_link_token_list.append(filename.split('.')[-1])
         share_links = FileShare.objects.filter(Q(token__in=share_link_token_list)) \
                 .filter(ctime__lte=end_date).filter(ctime__gte=start_date)
 
+        # search by filename
+        filename = request.GET.get('filename', '')
+        if filename:
+            share_links = filter(lambda link: filename in link.get_name(), share_links)
+
+        # search by share link creator
+        from_user = request.GET.get('from_user', '')
+        if from_user:
+            share_links = filter(lambda link: from_user in link.username, share_links)
+
+        api_result, excel_data_list = get_share_link_approve_info(share_links)
         ret = {
-            'data': [],
+            'data': api_result,
             'start_time': start_date.strftime("%Y-%m-%d"),
             'end_time': end_date.strftime("%Y-%m-%d"),
         }
-
-        excel_data_list = []
-        from_user = request.GET.get('from_user', '')
-        for share_link in share_links:
-            if from_user and from_user != share_link.username:
-                    continue
-
-            detailed_profile = DetailedProfile.objects.filter(user=share_link.username)
-
-            info = {}
-            info['filename'] = share_link.get_name()
-            info['from_user'] = share_link.username
-            info['company'] = detailed_profile[0].company if detailed_profile else ''
-            info['department'] = detailed_profile[0].department if detailed_profile else ''
-            info['send_to'] = ','.join(share_link.get_receivers())
-            info['created_at'] = share_link.ctime.strftime('%Y-%m-%d')
-            info['first_download_time'] = FileShareDownloads.objects.get_first_download_time(share_link)
-            info['downlods'] = share_link.get_download_cnt()
-            info['expiration'] = share_link.expire_date.strftime('%Y-%m-%d') if share_link.expire_date else ''
-            info['share_link_url'] = share_link.get_full_url()
-            info['approve_status'] = share_link.get_short_status_str()
-            info['detailed_approve_status'] = share_link.get_verbose_status()
-            ret['data'].append(info)
-
-            excel_row = [info['filename'], info['from_user'], info['company'],
-                    info['department'], info['send_to'], info['created_at'],
-                    info['first_download_time'], info['downlods'], info['expiration'],
-                    info['share_link_url'], info['approve_status'], str(info['detailed_approve_status'])]
-            excel_data_list.append(excel_row)
 
         export_excel = request.GET.get('excel', 'false')
         if export_excel.lower() != 'true':
@@ -463,8 +456,8 @@ class PinganCompanySecurityShareLinksReport(APIView):
         response['Content-Disposition'] = 'attachment; filename=download-links.xls'
 
         head = ["文件名", "发送人", "发送人公司", "发送人部门", "接收对象",
-                "创建时间", "链接首次下载时间", "链接下载次数", "链接过期时间",
-                "下载链接", "最终审核状态", "详细审核状态"]
+                "创建时间", "链接过期时间", "下载链接", "最终审核状态",
+                "DLP审核状态", "DLP审核时间", "详细审核状态"]
 
         wb = write_xls(u'共享链接', head, excel_data_list)
         wb.save(response)

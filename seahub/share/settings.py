@@ -22,10 +22,11 @@ PINGAN_SHARE_LINK_SEND_TO_VISITS_LIMIT_BASE = getattr(settings,
         'PINGAN_SHARE_LINK_SEND_TO_VISITS_LIMIT_BASE', 2)
 PINGAN_SHARE_LINK_REVISER_VISITS_LIMIT_BASE= getattr(settings,
         'PINGAN_SHARE_LINK_REVISER_VISITS_LIMIT_BASE', 1)
-PINGAN_SHARE_LINK_BACKUP_LIBRARIES = getattr(settings,
-        'PINGAN_SHARE_LINK_BACKUP_LIBRARIES', {})
 
 PINGAN_FULL_APPROVE_CHAIN_COMPANY = getattr(settings,
         'PINGAN_FULL_APPROVE_CHAIN_COMPANY', [])
+
+PINGAN_COMPANY_SEAFILE_DEPT_MAP = getattr(settings,
+        'PINGAN_COMPANY_SEAFILE_DEPT_MAP', {})
 
 ######################### End PingAn Group related ##########################
