@@ -32,7 +32,7 @@ from seahub.share.models import ApprovalChain, approval_chain_str2list, \
     is_valid_approval_chain_str, FileShareApprovalStatus
 from seahub.views.sysadmin_pingan import download_links_excel_report
 from seahub.share.settings import PINGAN_SHARE_LINK_BACKUP_LIBRARIES
-from seahub.share.pingan_utils import is_company_security, get_company, \
+from seahub.share.pingan_utils import is_company_member, get_company, \
         get_company_name
 
 
@@ -398,7 +398,7 @@ class PinganCompanySecurityShareLinksReport(APIView):
             return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
         # check permission
-        if not is_company_security(username) or \
+        if not is_company_member(username) or \
                 not check_folder_permission(request, backup_repo_id, '/'):
             error_msg = 'Permission denied.'
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)

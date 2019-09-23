@@ -1,5 +1,6 @@
 from seaserv import ccnet_api
 from seahub.profile.models import DetailedProfile
+from seahub.group.utils import is_group_member, is_group_admin
 from seahub.share.models import UserApprovalChain
 from seahub.share.settings import PINGAN_COMPANY_SEAFILE_DEPT_MAP
 
@@ -41,8 +42,17 @@ def get_company_security(username):
     return result
 
 def is_company_security(username):
-    company_security_list = get_company_security(username)
-    return True if username in company_security_list else False
+    company_id = get_company(username)
+    seafile_dept_id = PINGAN_COMPANY_SEAFILE_DEPT_MAP[company_id]
+    return is_group_admin(seafile_dept_id, username)
+
+#    company_security_list = get_company_security(username)
+#    return True if username in company_security_list else False
+
+def is_company_member(username):
+    company_id = get_company(username)
+    seafile_dept_id = PINGAN_COMPANY_SEAFILE_DEPT_MAP[company_id]
+    return is_group_member(seafile_dept_id, username)
 
 def has_security_in_chain_list(chain_list, company_security_list):
     for security in company_security_list:
