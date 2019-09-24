@@ -31,7 +31,8 @@ from seahub.share.models import ApprovalChain, approval_chain_str2list, \
     FileShare, UserApprovalChain, approval_chain_list2str, \
     is_valid_approval_chain_str, FileShareApprovalStatus
 from seahub.views.sysadmin_pingan import download_links_excel_report
-from seahub.share.settings import PINGAN_SHARE_LINK_BACKUP_LIBRARIES
+from seahub.share.settings import PINGAN_SHARE_LINK_BACKUP_LIBRARIES, \
+        PINGAN_SHARE_LINKS_REPORT_ADMIN
 from seahub.share.pingan_utils import is_company_member, get_company, \
         get_company_name
 
@@ -337,10 +338,15 @@ def get_share_link_approve_info(share_links):
 class PinganAdminShareLinksReport(APIView):
 
     authentication_classes = (TokenAuthentication, SessionAuthentication)
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticated,)
     throttle_classes = (UserRateThrottle,)
 
     def get(self, request):
+
+        if not request.user.is_staff or \
+                request.user.username not in PINGAN_SHARE_LINKS_REPORT_ADMIN:
+            error_msg = 'Permission denied.'
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
         start_date_str = request.GET.get('start', '')
         end_date_str = request.GET.get('end', '')

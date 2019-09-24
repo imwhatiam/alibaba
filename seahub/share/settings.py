@@ -29,4 +29,7 @@ PINGAN_FULL_APPROVE_CHAIN_COMPANY = getattr(settings,
 PINGAN_COMPANY_SEAFILE_DEPT_MAP = getattr(settings,
         'PINGAN_COMPANY_SEAFILE_DEPT_MAP', {})
 
+PINGAN_SHARE_LINKS_REPORT_ADMIN = getattr(settings,
+        'PINGAN_SHARE_LINKS_REPORT_ADMIN', [])
+
 ######################### End PingAn Group related ##########################
