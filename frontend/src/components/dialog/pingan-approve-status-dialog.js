@@ -17,11 +17,12 @@ class PinganApproveStatusDialog extends React.Component {
         <ModalHeader toggle={this.props.toggle}>{gettext('审核状态')}</ModalHeader>
         <ModalBody>
           <div>
-            {this.props.item.detailed_approve_status.map((item, idx) => {
+            {/* {this.props.item.detailed_approve_status.map((item, idx) => {
               return (
                 <li key={idx}>{item[1]}</li>
               )
-            })}
+            })} */}
+            {this.props.item.detailed_approve_status}
           </div>
         </ModalBody>
         <ModalFooter>

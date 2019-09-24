@@ -82,8 +82,8 @@ class LibContentView extends React.Component {
       pinganApproveStatusList: [],
       fromTimeStr: '',
       toTimeStr: '',
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: null,
+      endDate: null,
       fileNameForSearch: '',
       shareLinkCreator: '',
       isShowPinganApproveStatusPage: false,
@@ -105,7 +105,8 @@ class LibContentView extends React.Component {
   }
 
   formatDate = (date) => {
-    console.log(date);
+    if (date === null)
+      return date;
     let month = '' + (date.getMonth() + 1);
     let day = '' + date.getDate();
     let year = date.getFullYear();
@@ -1773,19 +1774,16 @@ class LibContentView extends React.Component {
             onFilesTagChanged={this.onFileTagChanged}
           />
         </div>
-        {this.state.isGroupOwnedRepo && this.state.path === '/' && this.state.currentRepoInfo.is_admin &&
+        {this.state.isGroupOwnedRepo && this.state.path === '/' &&
           <div className="main-panel-north border-left-show" style={{'zIndex':'10'}}>
             <div className="">
-              {/* {'从'}
-              <input onChange={this.saveFromTimeStr} className="mr-2" style={{width:'100px'}} placeholder="yyyy-mm-dd"></input>
-              {'到'}
-              <input onChange={this.saveToTimeStr} className="mr-2" style={{width:'100px'}} placeholder="yyyy-mm-dd"></input> */}
               {'从'}
               <DatePicker
                 className="mr-2"
                 dateFormat="yyyy/MM/dd"
                 selected={this.state.startDate}
                 onChange={this.handleStartDateChange}
+                placeholderText="选择日期"
               />
               {'到'}
               <DatePicker
@@ -1793,6 +1791,7 @@ class LibContentView extends React.Component {
                 dateFormat="yyyy/MM/dd"
                 selected={this.state.endDate}
                 onChange={this.handleEndDateChange}
+                placeholderText="选择日期"
               />
               <input onChange={this.saveFileNameForSearch} className="mr-2" style={{width:'100px'}} placeholder="按文件名搜索"></input>
               <input onChange={this.saveShareLinkCreator} className="mr-2" style={{width:'100px'}} placeholder="按创建者搜索"></input>

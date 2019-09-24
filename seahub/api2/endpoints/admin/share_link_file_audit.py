@@ -2,7 +2,7 @@
 import logging
 
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class ShareLinkFileAudit(APIView):
 
     authentication_classes = (TokenAuthentication, SessionAuthentication)
-    permission_classes = (IsAdminUser, IsProVersion)
+    permission_classes = (IsAuthenticated, IsProVersion)
     throttle_classes = (UserRateThrottle,)
 
     def get(self, request):
@@ -39,9 +39,9 @@ class ShareLinkFileAudit(APIView):
         start = request.GET.get('start', None)
         end = request.GET.get('end', None)
 
-        if not check_time_period_valid(start, end):
-            error_msg = 'start or end date invalid.'
-            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+        # if not check_time_period_valid(start, end):
+        #     error_msg = 'start or end date invalid.'
+        #     return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         share_link_token = request.GET.get('share_link_token', None)
         if not share_link_token:

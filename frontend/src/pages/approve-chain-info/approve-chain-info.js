@@ -4,6 +4,7 @@ import EmptyTip from '../../components/empty-tip';
 import Loading from '../../components/loading';
 import PinganApproveStatusDialog from '../../components/dialog/pingan-approve-status-dialog';
 import PinganFromUserDialog from '../../components/dialog/pingan-from-user-dialog';
+import PinganLinkDownloadInfoDialog from '../../components/dialog/pingan-link-download-info-dialog';
 
 class Content extends Component {
 
@@ -28,15 +29,16 @@ class Content extends Component {
           <table className="table-hover">
             <thead>
               <tr>
-                <th width="9%">{'文件名字'}</th>
-                <th width="9%">{'接收对象'}</th>
-                <th width="9%">{'创建时间'}</th>
-                <th width="10%">{'链接首次下载时间'}</th>
-                <th width="5%">{'链接下载次数'}</th>
-                <th width="9%">{'链接过期时间'}</th>
+                <th width="10%">{'文件名字'}</th>
+                <th width="12%">{'接收对象'}</th>
+                <th width="8%">{'创建时间'}</th>
+                <th width="8%">{'链接过期时间'}</th>
                 <th width="14%">{'下载链接'}</th>
+                <th width="9%">{'DLP审批状态'}</th>
+                <th width="9%">{'DLP审批时间'}</th>
                 <th width="9%">{'审核状态'}</th>
-                <th width="9%">{'发送人信息'}</th>
+                <th width="8%">{'发送人信息'}</th>
+                <th width="13%">{'链接下载信息'}</th>
               </tr>
             </thead>
             <tbody>
@@ -63,6 +65,7 @@ class Item extends Component {
       isOpIconShown: false,
       isPinganApproveStatusDialogOpen: false,
       isPinganFromUserDialogOpen: false,
+      isPinganLinkDownloadInfoDialogOpen: false,
     };
   }
 
@@ -75,22 +78,21 @@ class Item extends Component {
   }
 
   togglePinganApproveStatusDialog = (e) => {
-    if (e) {
-      e.preventDefault();
-    }
     this.setState({isPinganApproveStatusDialogOpen: !this.state.isPinganApproveStatusDialogOpen});
   }
 
   togglePinganFromUserDialog = (e) => {
-    if (e) {
-      e.preventDefault();
-    }
     this.setState({isPinganFromUserDialogOpen: !this.state.isPinganFromUserDialogOpen});
+  }
+
+  togglePinganLinkDownloadInfoDialog = (e) => {
+    this.setState({isPinganLinkDownloadInfoDialogOpen: !this.state.isPinganLinkDownloadInfoDialogOpen});
   }
 
   render() {
     let { item } = this.props;
-    let { isOpIconShown, isPinganApproveStatusDialogOpen, isPinganFromUserDialogOpen } = this.state;
+    let { isOpIconShown, isPinganApproveStatusDialogOpen, isPinganFromUserDialogOpen,
+      isPinganLinkDownloadInfoDialogOpen } = this.state;
 
     let iconVisibility = isOpIconShown ? '' : ' invisible'; 
     let deleteIconClassName = 'op-icon sf2-icon-delete' + iconVisibility;
@@ -100,12 +102,13 @@ class Item extends Component {
           <td><a href={item.share_link_url}>{item.filename}</a></td>
           <td>{item.send_to}</td>
           <td>{item.created_at}</td>
-          <td>{item.first_download_time}</td>
-          <td>{item.downlods}</td>
           <td>{item.expiration}</td>
           <td>{item.share_link_url}</td>
+          <td>{item.dlp_status}</td>
+          <td>{item.dlp_vtime}</td>
           <td><a onClick={this.togglePinganApproveStatusDialog} href="#">{'查看审核信息'}</a></td>
           <td><a onClick={this.togglePinganFromUserDialog} href="#">{'查看发送人'}</a></td>
+          <td><a onClick={this.togglePinganLinkDownloadInfoDialog} href="#">{'查看链接下载信息'}</a></td>
         </tr>
         {isPinganApproveStatusDialogOpen &&
           <PinganApproveStatusDialog 
@@ -117,6 +120,11 @@ class Item extends Component {
           <PinganFromUserDialog
             toggle={this.togglePinganFromUserDialog}
             item={item}
+          />
+        }
+        {isPinganLinkDownloadInfoDialogOpen &&
+          <PinganLinkDownloadInfoDialog
+            toggle={this.togglePinganLinkDownloadInfoDialog}
           />
         }
       </Fragment>
