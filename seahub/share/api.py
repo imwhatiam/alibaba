@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import stat
 import logging
+import time
 from collections import namedtuple
 from datetime import timedelta, datetime
 
@@ -23,7 +24,7 @@ from seahub.api2.endpoints.utils import get_log_events_by_type_and_time
 
 from seahub.base.accounts import User
 from seahub.profile.models import DetailedProfile
-from seahub.utils import is_valid_email
+from seahub.utils import is_valid_email, get_log_events_by_time
 from seahub.utils.ms_excel import write_xls
 from seahub.utils.timeutils import datetime_to_isoformat_timestr
 from seahub.views import check_folder_permission
@@ -324,6 +325,7 @@ def get_share_link_approve_info(share_links):
         info['created_at'] = share_link.ctime.strftime('%Y-%m-%d')
         info['expiration'] = share_link.expire_date.strftime('%Y-%m-%d') if share_link.expire_date else ''
         info['share_link_url'] = share_link.get_full_url()
+        info['share_link_token'] = share_link.token
         info['approve_status'] = share_link.get_short_status_str()
         info['dlp_status'] = dlp_status
         info['dlp_vtime'] = dlp_vtime
@@ -484,8 +486,8 @@ class PinganCompanySecurityShareLinkDownloadInfo(APIView):
     def get(self, request):
 
         username = request.user.username
-        if not is_company_member(username) or \
-                not request.user.is_staff or \
+        if not is_company_member(username) and \
+                not request.user.is_staff and \
                 username not in PINGAN_SHARE_LINKS_REPORT_ADMIN:
             error_msg = 'Permission denied.'
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)
@@ -517,7 +519,10 @@ class PinganCompanySecurityShareLinkDownloadInfo(APIView):
             return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
         try:
-            events = get_log_events_by_type_and_time('file_audit', start_date, end_date)
+            start_timestamp = time.mktime(start_date.timetuple())
+            end_timestamp = time.mktime(end_date.timetuple())
+            events = get_log_events_by_time('file_audit', start_timestamp, end_timestamp)
+            events = events if events else []
         except Exception as e:
             logger.error(e)
             error_msg = 'Internal Server Error'

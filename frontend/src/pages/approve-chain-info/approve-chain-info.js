@@ -125,6 +125,7 @@ class Item extends Component {
         {isPinganLinkDownloadInfoDialogOpen &&
           <PinganLinkDownloadInfoDialog
             toggle={this.togglePinganLinkDownloadInfoDialog}
+            shareLinkToken={item.share_link_token}
           />
         }
       </Fragment>

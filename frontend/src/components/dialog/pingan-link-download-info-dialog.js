@@ -7,6 +7,7 @@ import Loading from '../../components/loading';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
 import toaster from '../../components/toast';
+import moment from 'moment';
 
 class Content extends Component {
 
@@ -23,7 +24,7 @@ class Content extends Component {
     } else {
       const emptyTip = (
         <EmptyTip>
-          <h2>{gettext('没有外链审核信息')}</h2>
+          <h2>{gettext('没有外链下载信息')}</h2>
         </EmptyTip>
       );
       const table = (
@@ -31,14 +32,10 @@ class Content extends Component {
           <table className="table-hover">
             <thead>
               <tr>
-                <th width="33%">{'文件名字'}</th>
-                <th width="33%">{'接收对象'}</th>
-                <th width="34%">{'创建时间'}</th>
-                {/* <th width="10%">{'链接过期时间'}</th>
-                <th width="22%">{'下载链接'}</th>
-                <th width="10%">{'审核状态'}</th>
-                <th width="10%">{'发送人信息'}</th>
-                <th width="13%">{'链接下载信息'}</th> */}
+                <th width="15%">{'用户'}</th>
+                <th width="20%">{'时间'}</th>
+                <th width="12%">{'IP'}</th>
+                <th width="53%">{'设备名'}</th>
               </tr>
             </thead>
             <tbody>
@@ -80,13 +77,10 @@ class Item extends Component {
     return (
       <Fragment>
         <tr onMouseEnter={this.handleMouseEnter} onMouseLeave={this.handleMouseLeave}>
-          <td>{item.downloads}</td>
-          <td>{item.qwe}</td>
-          <td>{item.url}</td>
-          {/* <td>{item.share_link_url}</td>
-          <td><a onClick={this.togglePinganApproveStatusDialog} href="#">{'查看审核信息'}</a></td>
-          <td><a onClick={this.togglePinganFromUserDialog} href="#">{'查看发送人'}</a></td>
-          <td><a onClick={this.togglePinganFromUserDialog} href="#">{'查看链接下载信息'}</a></td> */}
+          <td>{item.user}</td>
+          <td>{moment(item.time).format('YYYY-MM-DD HH:mm:ss')}</td>
+          <td>{item.ip}</td>
+          <td>{item.device}</td>
         </tr>
       </Fragment>
     );
@@ -97,16 +91,6 @@ const propTypes = {
   toggle: PropTypes.func.isRequired,
 };
 
-const fake_item = {
-  'downloads': 123,
-  'qwe': 'ewq',
-  'url': 'https://www.google.com',
-}
-
-const fake_List = [
-  fake_item, fake_item, fake_item, fake_item
-]
-
 class PinganLinkDownloadInfoDialog extends React.Component {
 
   constructor(props) {
@@ -115,29 +99,42 @@ class PinganLinkDownloadInfoDialog extends React.Component {
       errorMsg: '',
       loading: false,
       infoList: [],
+      firstDoawloadTime: null,
+      downloadCnt: 0,
     };
   }
 
   componentDidMount() {
-    // this.listPinganShareLinkDownloadInfo().then(res => {
-    //   this.setState({infoList: res.data.data});
-    // }).catch(error => {
-    //   let errMessage = Utils.getErrorMsg(error);
-    //   toaster.danger(errMessage);
-    // });
-    this.setState({infoList: fake_List});
+    this.listPinganShareLinkDownloadInfo().then(res => {
+      this.setState({
+        firstDoawloadTime: res.data.first_download_time,
+        downloadCnt: res.data.download_count,
+        infoList: res.data.data
+      });
+    }).catch(error => {
+      let errMessage = Utils.getErrorMsg(error);
+      toaster.danger(errMessage);
+    });
   }
 
   listPinganShareLinkDownloadInfo = (start, end) => {
-    let url = seafileAPI.server + '/api/v2.1/admin/logs/share-link-file-audit/';
-    return seafileAPI.req.get(url);
+    let url = seafileAPI.server + '/pingan-api/company-security/share-link-download-info/';
+    return seafileAPI.req.get(url + '?share_link_token=' + this.props.shareLinkToken);
   }
 
   render() {
-    let { errorMsg, loading } = this.state;
+    let { errorMsg, loading, firstDoawloadTime, downloadCnt } = this.state;
     return (
-      <Modal isOpen={true} toggle={this.props.toggle}>
-        <ModalHeader toggle={this.props.toggle}>{gettext('链接下载信息')}</ModalHeader>
+      <Modal size="lg" isOpen={true} toggle={this.props.toggle}>
+        <ModalHeader toggle={this.props.toggle}>{gettext('链接下载信息')}
+        </ModalHeader>
+        <div>
+          <p className="ml-3 mb-0 mt-2">
+            <span className="ml-1 mr-4">{'首次下载时间：'}{firstDoawloadTime ?
+              moment(firstDoawloadTime).format('YYYY-MM-DD HH:mm:ss') : '--'}</span><br/>
+            <span className="ml-1">{'下载次数：'}{downloadCnt}</span>
+          </p>
+        </div>
         <ModalBody>
           <Content
             loading={loading}
