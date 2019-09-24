@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import stat
+import logging
 from collections import namedtuple
 from datetime import timedelta, datetime
 
@@ -18,23 +19,27 @@ from seaserv import seafile_api
 from seahub.api2.utils import api_error
 from seahub.api2.throttling import UserRateThrottle
 from seahub.api2.authentication import TokenAuthentication
+from seahub.api2.endpoints.utils import get_log_events_by_type_and_time
 
 from seahub.base.accounts import User
 from seahub.profile.models import DetailedProfile
-from seahub.utils.ms_excel import write_xls
 from seahub.utils import is_valid_email
+from seahub.utils.ms_excel import write_xls
+from seahub.utils.timeutils import datetime_to_isoformat_timestr
 from seahub.views import check_folder_permission
 
 from seahub.share.constants import STATUS_VERIFING, STATUS_PASS, STATUS_VETO, \
         STATUS_BLOCK_HIGH_RISK
 from seahub.share.models import ApprovalChain, approval_chain_str2list, \
     FileShare, UserApprovalChain, approval_chain_list2str, \
-    is_valid_approval_chain_str, FileShareApprovalStatus
+    is_valid_approval_chain_str, FileShareApprovalStatus, FileShareDownloads
 from seahub.views.sysadmin_pingan import download_links_excel_report
 from seahub.share.settings import PINGAN_SHARE_LINK_BACKUP_LIBRARIES, \
         PINGAN_SHARE_LINKS_REPORT_ADMIN
 from seahub.share.pingan_utils import is_company_member, get_company, \
         get_company_name
+
+logger = logging.getLogger(__name__)
 
 
 class ApprovalChainView(APIView):
@@ -468,3 +473,68 @@ class PinganCompanySecurityShareLinksReport(APIView):
         wb = write_xls(u'共享链接', head, excel_data_list)
         wb.save(response)
         return response
+
+
+class PinganCompanySecurityShareLinkDownloadInfo(APIView):
+
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = (UserRateThrottle,)
+
+    def get(self, request):
+
+        username = request.user.username
+        if not is_company_member(username) or \
+                not request.user.is_staff or \
+                username not in PINGAN_SHARE_LINKS_REPORT_ADMIN:
+            error_msg = 'Permission denied.'
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+        # check the date format, should be like '2015-10-10'
+        start_date_str = request.GET.get('start', '')
+        end_date_str = request.GET.get('end', '')
+        if start_date_str and end_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+                end_date = end_date + timedelta(days=1)
+            except Exception:
+                error_msg = "date invalid."
+                return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+        else:
+            end_date = timezone.now()
+            start_date = end_date - timedelta(days=60)
+
+        share_link_token = request.GET.get('share_link_token', None)
+        if not share_link_token:
+            error_msg = 'share_link_token invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        try:
+            share_link = FileShare.objects.get(token=share_link_token)
+        except FileShare.DoesNotExist:
+            error_msg = 'token %s not found.' % share_link_token
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        try:
+            events = get_log_events_by_type_and_time('file_audit', start_date, end_date)
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        result = {
+            'data': [],
+            'first_download_time': FileShareDownloads.objects.get_first_download_time(share_link),
+            'download_count': share_link.get_download_cnt(),
+        }
+
+        for ev in events:
+            result['data'].append({
+                'user': ev.user,
+                'ip': ev.ip,
+                'device': ev.device,
+                'time': datetime_to_isoformat_timestr(ev.timestamp),
+            })
+
+        return Response(result)
