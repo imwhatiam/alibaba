@@ -5,7 +5,7 @@ import IconButton from '../icon-button';
 import { gettext, siteRoot } from '../../utils/constants';
 import { Utils } from '../../utils/utils';
 import ModalPortal from '../modal-portal';
-import ShareDialogPingan from '../dialog/share-dialog-pingan';
+import ShareDialogPingan from '../dialog/pingan-share-dialog';
 
 const propTypes = { 
   isLocked: PropTypes.bool.isRequired,

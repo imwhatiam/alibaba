@@ -20,10 +20,6 @@ const propTypes = {
 let loginUser = window.app.pageOptions.name;
 const { repoID, sharedToken, trafficOverLimit, fileName, fileSize, sharedBy, siteName, enableWatermark, canDownload, zipped, filePath, shareTo, note, needVerify, userPass, userVeto, otherPass, otherVeto, otherInfo, showDLPVetoMsg, downloadCnt, policyCategories, breachContent, totalMatches} = window.shared.pageOptions;
 
-const STATUS = {
-  PASS: 1,
-  VETO: 2,
-};
 
 class SharedFileViewPingan extends React.Component {
 
@@ -74,6 +70,21 @@ class SharedFileViewPingan extends React.Component {
     if (trafficOverLimit) {
       toaster.danger(gettext('File download is disabled: the share link traffic of owner is used up.'), {
         duration: 3
+      });
+    }
+    if (!canDownload) {
+      document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+      });
+      document.addEventListener('keydown', function(e) {
+        // prevent ctrl + s/p/a/c, i.e, 'save', 'print', 'select all', 'copy'
+        // metaKey: for mac
+        if ((e.ctrlKey || e.metaKey) && (e.which == 83 || e.which == 80 || e.which == 65 || e.which == 67)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
       });
     }
   }

@@ -13,7 +13,7 @@ import { hideMenu, showMenu } from '../context-menu/actions';
 import TextTranslation from '../../utils/text-translation';
 import MoveDirentDialog from '../dialog/move-dirent-dialog';
 import CopyDirentDialog from '../dialog/copy-dirent-dialog';
-import ShareDialogPingan from '../dialog/share-dialog-pingan';
+import ShareDialogPingan from '../dialog/pingan-share-dialog';
 import ZipDownloadDialog from '../dialog/zip-download-dialog';
 import EditFileTagDialog from '../dialog/edit-filetag-dialog';
 import Rename from '../../components/dialog/rename-dirent';

@@ -16,7 +16,7 @@ import LinkedDevices from './pages/linked-devices/linked-devices';
 import editUtilties from './utils/editor-utilties';
 import ShareAdminLibraries from './pages/share-admin/libraries';
 import ShareAdminFolders from './pages/share-admin/folders';
-import ShareAdminShareLinks from './pages/share-admin/share-links';
+import ShareAdminShareLinks from './pages/share-admin/pingan-share-links';
 import VerifyingLinks from './pages/verify-links/verifying-links';
 import ShareAdminUploadLinks from './pages/share-admin/upload-links';
 import SharedLibraries from './pages/shared-libs/shared-libs';

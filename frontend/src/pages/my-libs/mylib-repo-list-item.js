@@ -7,7 +7,7 @@ import { Utils } from '../../utils/utils';
 import { seafileAPI } from '../../utils/seafile-api';
 import { gettext, siteRoot, storages } from '../../utils/constants';
 import ModalPortal from '../../components/modal-portal';
-import ShareDialogPingan from '../../components/dialog/share-dialog-pingan';
+import ShareDialogPingan from '../../components/dialog/pingan-share-dialog';
 import toaster from '../../components/toast';
 import DeleteRepoDialog from '../../components/dialog/delete-repo-dialog';
 import TransferDialog from '../../components/dialog/transfer-dialog';

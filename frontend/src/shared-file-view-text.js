@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Utils } from './utils/utils';
-import SharedFileViewPingan from './components/shared-file-view/shared-file-view-pingan';
+import SharedFileViewPingan from './components/shared-file-view/pingan-shared-file-view';
 import SharedFileViewTip from './components/shared-file-view/shared-file-view-tip';
 
 import CodeMirror from 'react-codemirror';

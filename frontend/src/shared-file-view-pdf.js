@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import SharedFileViewPingan from './components/shared-file-view/shared-file-view-pingan';
+import SharedFileViewPingan from './components/shared-file-view/pingan-shared-file-view';
 import SharedFileViewTip from './components/shared-file-view/shared-file-view-tip';
 import PDFViewer from './components/pdf-viewer';
 

@@ -8,7 +8,7 @@ import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
 import { Link } from '@reach/router';
 import { siteRoot } from '../../utils/constants';
-import SharedLinkInfo from '../../models/shared-link-info';
+import ShareLink from '../../models/share-link';
 import toaster from '../toast';
 import Loading from '../loading';
 
@@ -52,7 +52,7 @@ class GenerateShareLinkPingan extends React.Component {
     let repoID = this.props.repoID;
     seafileAPI.getShareLink(repoID, path).then((res) => {
       if (res.data.length !== 0) {
-        let sharedLinkInfo = new SharedLinkInfo(res.data[0]);
+        let sharedLinkInfo = new ShareLink(res.data[0]);
         this.setState({
           isLoading: false,
           sharedLinkInfo: sharedLinkInfo
@@ -126,7 +126,7 @@ class GenerateShareLinkPingan extends React.Component {
       let permissions = this.permissions;
       permissions = JSON.stringify(permissions);
       this.createShareLink(repoID, itemPath, password, expireDays, permissions, sendTo, note).then((res) => {
-        let sharedLinkInfo = new SharedLinkInfo(res.data);
+        let sharedLinkInfo = new ShareLink(res.data);
         this.setState({sharedLinkInfo: sharedLinkInfo});
       }).catch((error) => {
         let errMessage = Utils.getErrorMsg(error);

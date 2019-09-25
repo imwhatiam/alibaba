@@ -13,7 +13,7 @@ import Loading from '../../components/loading';
 import EmptyTip from '../../components/empty-tip';
 import LibsMobileThead from '../../components/libs-mobile-thead';
 import ModalPotal from '../../components/modal-portal';
-import ShareDialogPingan from '../../components/dialog/share-dialog-pingan';
+import ShareDialogPingan from '../../components/dialog/pingan-share-dialog';
 import SortOptionsDialog from '../../components/dialog/sort-options';
 
 class Content extends Component {

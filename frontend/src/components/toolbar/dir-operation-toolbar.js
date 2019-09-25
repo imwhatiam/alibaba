@@ -6,7 +6,7 @@ import { gettext } from '../../utils/constants';
 import ModalPortal from '../modal-portal';
 import CreateFolder from '../../components/dialog/create-folder-dialog';
 import CreateFile from '../../components/dialog/create-file-dialog';
-import ShareDialogPingan from '../../components/dialog/share-dialog-pingan';
+import ShareDialogPingan from '../../components/dialog/pingan-share-dialog';
 
 const propTypes = {
   path: PropTypes.string.isRequired,

@@ -5,7 +5,7 @@ import { Button, Form, FormGroup, Label, Input, InputGroup, InputGroupAddon, Ale
 import { gettext, shareLinkPasswordMinLength } from '../../utils/constants';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
-import SharedUploadInfo from '../../models/shared-upload-info';
+import UploadLink from '../../models/upload-link';
 import toaster from '../toast';
 import SessionExpiredTip from '../session-expired-tip';
 
@@ -36,7 +36,7 @@ class GenerateUploadLinkPingan extends React.Component {
     let repoID = this.props.repoID; 
     seafileAPI.getUploadLinks(repoID, path).then((res) => {
       if (res.data.length !== 0) {
-        let sharedUploadInfo = new SharedUploadInfo(res.data[0]);
+        let sharedUploadInfo = new UploadLink(res.data[0]);
         this.setState({sharedUploadInfo: sharedUploadInfo});
       }
     }).catch((err) => {
@@ -105,7 +105,7 @@ class GenerateUploadLinkPingan extends React.Component {
       });
     } else {
       seafileAPI.createUploadLink(repoID, path, this.state.password).then((res) => {
-        let sharedUploadInfo = new SharedUploadInfo(res.data);
+        let sharedUploadInfo = new UploadLink(res.data);
         this.setState({sharedUploadInfo: sharedUploadInfo}); 
       });
     }

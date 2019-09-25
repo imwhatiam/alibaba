@@ -8,7 +8,7 @@ import URLDecorator from '../../utils/url-decorator';
 import TextTranslation from '../../utils/text-translation';
 import MoveDirentDialog from '../dialog/move-dirent-dialog';
 import CopyDirentDialog from '../dialog/copy-dirent-dialog';
-import ShareDialogPingan from '../dialog/share-dialog-pingan';
+import ShareDialogPingan from '../dialog/pingan-share-dialog';
 import RelatedFileDialogs from '../dialog/related-file-dialogs';
 import EditFileTagDialog from '../dialog/edit-filetag-dialog';
 import ZipDownloadDialog from '../dialog/zip-download-dialog';

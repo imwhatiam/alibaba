@@ -10,7 +10,7 @@ import { RichEditor } from '@seafile/seafile-editor';
 import CDOCTypeChooser from '@seafile/seafile-editor/dist/components/codc-type-chooser';
 import { Value } from 'slate';
 import CDOCTopbar from './components/toolbar/cdoc-editor-topbar';
-import ShareDialogPingan from './components/dialog/share-dialog-pingan';
+import ShareDialogPingan from './components/dialog/pingan-share-dialog';
 import { Utils } from './utils/utils';
 import { translate } from 'react-i18next';
 

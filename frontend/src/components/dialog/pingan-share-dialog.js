@@ -4,15 +4,13 @@ import { Modal, ModalHeader, ModalBody, TabContent, TabPane, Nav, NavItem, NavLi
 import { gettext, username, canGenerateShareLink, canGenerateUploadLink } from '../../utils/constants';
 import ShareToUser from './share-to-user';
 import ShareToGroup from './share-to-group';
-import GenerateShareLink from './generate-share-link';
-import GenerateUploadLink from './generate-upload-link';
 import InternalLink from './internal-link';
 import { seafileAPI } from '../../utils/seafile-api';
 import Loading from '../loading';
 import { Utils } from '../../utils/utils';
 import toaster from '../toast';
-import GenerateShareLinkPingan from './generate-share-link-pingan';
-import GenerateUploadLinkPingan from './generate-upload-link-pingan';
+import GenerateShareLinkPingan from './pingan-generate-share-link';
+import GenerateUploadLinkPingan from './pingan-generate-upload-link';
 import '../../css/share-link-dialog.css';
 
 const propTypes = {
@@ -81,7 +79,7 @@ class ShareDialogPingan extends React.Component {
     }
 
     let activeTab = this.state.activeTab;
-    const {repoEncrypted, userPerm, enableDirPrivateShare} = this.props;
+    const {repoEncrypted, userPerm, enableDirPrivateShare, itemType} = this.props;
     const enableShareLink = !repoEncrypted && canGenerateShareLink;
     const enableUploadLink = !repoEncrypted && canGenerateUploadLink && userPerm == 'rw';
     
@@ -93,6 +91,13 @@ class ShareDialogPingan extends React.Component {
               <NavItem>
                 <NavLink className={activeTab === 'uploadLink' ? 'active' : ''} onClick={this.toggle.bind(this, 'uploadLink')}>
                   {gettext('Upload Link')}
+                </NavLink>
+              </NavItem>
+            }
+            {itemType === 'dir' && 
+              <NavItem>
+                <NavLink className={activeTab === 'internalLink' ? 'active' : ''} onClick={this.toggle.bind(this, 'internalLink')}>
+                  {gettext('Internal Link')}
                 </NavLink>
               </NavItem>
             }
@@ -123,6 +128,13 @@ class ShareDialogPingan extends React.Component {
                 />
               </TabPane>
             }
+            {itemType === 'dir' && activeTab === 'internalLink' &&
+              <InternalLink 
+                path={this.props.itemPath} 
+                repoID={this.props.repoID} 
+                direntType={itemType}
+              />
+            }
             {enableDirPrivateShare &&
               <Fragment>
                 <TabPane tabId="shareToUser">
@@ -141,20 +153,26 @@ class ShareDialogPingan extends React.Component {
 
 
   renderFileContent = () => {
+    let activeTab = this.state.activeTab;
+
     return (
       <Fragment>
         <div className="share-dialog-side">
           <Nav pills vertical>
             <NavItem>
-              <NavLink
-                className="active" onClick={() => {this.toggle.bind(this, 'shareLink');}}>
+              <NavLink className={activeTab === 'shareLink' ? 'active' : ''} onClick={(this.toggle.bind(this, 'shareLink'))}>
                 {gettext('Share Link')}
+              </NavLink>
+            </NavItem>
+            <NavItem>
+              <NavLink className={activeTab === 'internalLink' ? 'active' : ''} onClick={this.toggle.bind(this, 'internalLink')}>
+                {gettext('Internal Link')}
               </NavLink>
             </NavItem>
           </Nav>
         </div>
         <div className="share-dialog-main">
-          <TabContent activeTab={this.state.activeTab}>
+          <TabContent activeTab={activeTab}>
             <TabPane tabId="shareLink">
               <GenerateShareLinkPingan
                 itemPath={this.props.itemPath} 
@@ -162,6 +180,12 @@ class ShareDialogPingan extends React.Component {
                 closeShareDialog={this.props.toggleDialog}
               />
             </TabPane>
+            {activeTab === 'internalLink' &&
+              <InternalLink 
+                path={this.props.itemPath} 
+                repoID={this.props.repoID} 
+              />
+            }
           </TabContent>
         </div>
       </Fragment>

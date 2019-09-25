@@ -7,7 +7,7 @@ import { gettext, isDocs } from './utils/constants';
 import io from 'socket.io-client';
 import toaster from './components/toast';
 import ModalPortal from './components/modal-portal';
-import ShareDialogPingan from './components/dialog/share-dialog-pingan';
+import ShareDialogPingan from './components/dialog/pingan-share-dialog';
 import InsertFileDialog from './components/dialog/insert-file-dialog';
 import InsertRepoImageDialog from './components/dialog/insert-repo-image-dialog';
 import { serialize, deserialize } from '@seafile/seafile-editor/dist/utils/slate2markdown';

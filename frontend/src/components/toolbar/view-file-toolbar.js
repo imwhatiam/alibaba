@@ -6,7 +6,7 @@ import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
 import toaster from '../toast';
 import ModalPotal from '../modal-portal';
-import ShareDialogPingan from '../dialog/share-dialog-pingan';
+import ShareDialogPingan from '../dialog/pingan-share-dialog';
 import EditFileTagDialog from '../dialog/edit-filetag-dialog';
 import RelatedFileDialogs from '../dialog/related-file-dialogs';
 

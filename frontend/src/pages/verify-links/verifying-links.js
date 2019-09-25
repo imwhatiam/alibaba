@@ -126,20 +126,12 @@ class ItemVerifying extends Component {
     let { iconUrl, linkUrl, profileUrl, fileName } = this.getLinkParams();
     let iconVisibility = this.state.showOpIcon ? '' : ' invisible';
     let deleteIconClassName = 'sf2-icon-delete action-icon' + iconVisibility;
-    let statusStr = '';
-    if (item.short_status_str === 'Verifing') {
-      statusStr = '正在审核';
-    } else if (item.short_status_str === 'Approved') {
-      statusStr = '审核通过';
-    } else if (item.short_status_str === 'Rejected') {
-      statusStr = '否决';
-    }
     return (
       <tr onMouseEnter={this.handleMouseOver} onMouseLeave={this.handleMouseOut}>
         <td><img src={iconUrl} width="24" /></td>
         <td><a href={linkUrl} target="_blank">{fileName}</a></td>
         <td><a href={profileUrl} target="_blank">{item.username}</a></td>
-        <td><a href="#"  onClick={this.viewStatus}>{statusStr}</a></td>
+        <td><a href="#"  onClick={this.viewStatus}>{item.short_status_str}</a></td>
         <td title={moment(item.ctime).format('llll')}>{moment(item.ctime).fromNow()}</td>
         <td>
           <a href="#" className={deleteIconClassName} title={gettext('Remove')} onClick={this.removeLink}></a>
@@ -288,20 +280,12 @@ class ItemVerified extends Component {
     let { iconUrl, linkUrl, profileUrl, fileName } = this.getLinkParams();
     let iconVisibility = this.state.showOpIcon ? '' : ' invisible';
     let deleteIconClassName = 'sf2-icon-delete action-icon' + iconVisibility;
-    let statusStr = '';
-    if (item.short_status_str === 'Verifing') {
-      statusStr = '正在审核';
-    } else if (item.short_status_str === 'Approved') {
-      statusStr = '审核通过';
-    } else if (item.short_status_str === 'Rejected') {
-      statusStr = '否决';
-    }
     return (
       <tr onMouseEnter={this.handleMouseOver} onMouseLeave={this.handleMouseOut}>
         <td><img src={iconUrl} width="24" /></td>
         <td><a href={linkUrl} target="_blank">{fileName}</a></td>
         <td><a href={profileUrl} target="_blank">{item.username}</a></td>
-        <td><a href="#"  onClick={this.viewStatus}>{statusStr}</a></td>
+        <td><a href="#"  onClick={this.viewStatus}>{item.short_status_str}</a></td>
         <td title={moment(item.ctime).format('llll')}>{moment(item.ctime).fromNow()}</td>
         <td>{this.renderExpriedData()}</td>
         <td>{item.first_download_time}</td>

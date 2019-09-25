@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { seafileAPI } from './utils/seafile-api';
 import { Utils } from './utils/utils';
 import { serviceURL } from './utils/constants';
-import SharedFileViewPingan from './components/shared-file-view/shared-file-view-pingan';
+import SharedFileViewPingan from './components/shared-file-view/pingan-shared-file-view';
 import SharedFileViewTip from './components/shared-file-view/shared-file-view-tip';
 import Loading from './components/loading';
 import MarkdownViewer from '@seafile/seafile-editor/dist/viewer/markdown-viewer';

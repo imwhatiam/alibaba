@@ -12,7 +12,7 @@ import Rename from '../rename';
 import ModalPortal from '../modal-portal';
 import MoveDirentDialog from '../dialog/move-dirent-dialog';
 import CopyDirentDialog from '../dialog/copy-dirent-dialog';
-import ShareDialogPingan from '../dialog/share-dialog-pingan';
+import ShareDialogPingan from '../dialog/pingan-share-dialog';
 import ZipDownloadDialog from '../dialog/zip-download-dialog';
 import EditFileTagDialog from '../dialog/edit-filetag-dialog';
 import LibSubFolderPermissionDialog from '../dialog/lib-sub-folder-permission-dialog';

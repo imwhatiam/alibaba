@@ -6,7 +6,7 @@ import { Link } from '@reach/router';
 import { Utils } from '../../utils/utils';
 import { gettext, siteRoot, isPro, username, folderPermEnabled, isSystemStaff } from '../../utils/constants';
 import ModalPortal from '../../components/modal-portal';
-import ShareDialogPingan from '../../components/dialog/share-dialog-pingan';
+import ShareDialogPingan from '../../components/dialog/pingan-share-dialog';
 import LibSubFolderPermissionDialog from '../../components/dialog/lib-sub-folder-permission-dialog';
 import DeleteRepoDialog from '../../components/dialog/delete-repo-dialog';
 import Rename from '../rename';
