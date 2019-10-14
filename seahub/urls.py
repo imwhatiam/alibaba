@@ -222,6 +222,7 @@ urlpatterns = [
     url(r'^share-admin-share-links/$', react_fake_view, name="share_admin_share_links"),
     url(r'^share-admin-upload-links/$', react_fake_view, name="share_admin_upload_links"),
     url(r'^verifying-links/$', react_fake_view, name="share_admin_verifying_links"),
+    url(r'^sharelinks-info/$', react_fake_view, name="sharelinks_info"),
     url(r'^shared-libs/$', react_fake_view, name="shared_libs"),
     url(r'^my-libs/$', react_fake_view, name="my_libs"),
     url(r'^groups/$', react_fake_view, name="groups"),
@@ -782,7 +783,8 @@ urlpatterns += [
 from seahub.views.sysadmin_pingan import *
 from seahub.share.api import ApprovalChainView, SysDownloadLinksReport, \
     UserApprovalChainsView, UserApprovalChainView, PinganAdminShareLinksReport, \
-    PinganCompanySecurityShareLinksReport, PinganCompanySecurityShareLinkDownloadInfo
+    PinganCompanySecurityShareLinksReport, PinganCompanySecurityShareLinkDownloadInfo, \
+    PinganAdminShareLinkDownloadInfo
 
 
 urlpatterns += [
@@ -817,5 +819,9 @@ urlpatterns += [
     url(r'^pingan-api/company-security/share-link-download-info/$',
         PinganCompanySecurityShareLinkDownloadInfo.as_view(),
         name='pingan-api-company-security-share-link-download-info'),
+
+    url(r'^pingan-api/admin/share-link-download-info/$',
+        PinganAdminShareLinkDownloadInfo.as_view(),
+        name='pingan-api-admin-share-link-download-info'),
 ]
 ########################### End PingAn Group related ########################

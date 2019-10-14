@@ -16,14 +16,26 @@ class PinganApproveStatusDialog extends React.Component {
       <Modal isOpen={true} toggle={this.props.toggle}>
         <ModalHeader toggle={this.props.toggle}>{gettext('审核状态')}</ModalHeader>
         <ModalBody>
-          <div>
-            {/* {this.props.item.detailed_approve_status.map((item, idx) => {
-              return (
-                <li key={idx}>{item[1]}</li>
-              )
-            })} */}
-            {this.props.item.detailed_approve_status}
-          </div>
+          <ul className="ml-2">
+            {this.props.item.detailed_approve_status.map((item, idx) => {
+              if (idx == 0) {
+                return (
+                  <li key={idx}> {item[1]}
+                    <ul className="ml-2">
+                      <li>命中信息：{this.props.item.breach_content}</li>
+                      <li>策略类型：{this.props.item.policy_categories}</li>
+                      <li>总计：{this.props.item.total_matches}</li>
+                    </ul>
+                  </li>
+                )
+              } else {
+                return (
+                  <li key={idx}>{item[1]}</li>
+                )
+              }
+            })}
+            {/* {this.props.item.detailed_approve_status} */}
+          </ul>
         </ModalBody>
         <ModalFooter>
           <Button color="secondary" onClick={this.props.toggle}>{gettext('Close')}</Button>

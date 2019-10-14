@@ -5,7 +5,6 @@ import moment from 'moment';
 import { gettext, siteRoot, username, isDocs } from '../../utils/constants';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
-import { Input, Button } from 'reactstrap';
 import collabServer from '../../utils/collab-server';
 import Dirent from '../../models/dirent';
 import FileTag from '../../models/file-tag';
@@ -20,9 +19,6 @@ import LibContentToolbar from './lib-content-toolbar';
 import LibContentContainer from './lib-content-container';
 import FileUploader from '../../components/file-uploader/file-uploader';
 import SessionExpiredTip from '../../components/session-expired-tip';
-import ApproveChainInfo from '../approve-chain-info/approve-chain-info';
-import DatePicker from "react-datepicker"; 
-import "react-datepicker/dist/react-datepicker.css";
 
 const propTypes = {
   pathPrefix: PropTypes.array.isRequired,
@@ -79,14 +75,6 @@ class LibContentView extends React.Component {
       updateDetail: false,
       itemsShowLength: 100,
       isSessionExpired: false,
-      pinganApproveStatusList: [],
-      fromTimeStr: '',
-      toTimeStr: '',
-      startDate: null,
-      endDate: null,
-      fileNameForSearch: '',
-      shareLinkCreator: '',
-      isShowPinganApproveStatusPage: false,
     };
 
     this.oldonpopstate = window.onpopstate;
@@ -94,45 +82,6 @@ class LibContentView extends React.Component {
     this.lastModifyTime = new Date();
     this.isNeedUpdateHistoryState = true; // Load, refresh page, switch mode for the first time, no need to set historyState
   }
-
-  listPinganSecurityShareLinksReport = (start, end, searchFileName, searchShareLinkCreator) => {
-    let url = seafileAPI.server + '/pingan-api/company-security/share-links-report/?';
-    url += start ? 'start=' + start + '&' : '';
-    url += end ? 'end=' + end + '&' : '';
-    url += searchFileName ? 'filename=' + encodeURIComponent(searchFileName) + '&' : '';
-    url += searchShareLinkCreator ? 'from_user=' + encodeURIComponent(searchShareLinkCreator) + '&' : '';
-    return seafileAPI.req.get(url);
-  }
-
-  formatDate = (date) => {
-    if (date === null)
-      return date;
-    let month = '' + (date.getMonth() + 1);
-    let day = '' + date.getDate();
-    let year = date.getFullYear();
-
-    if (month.length < 2) 
-      month = '0' + month;
-    if (day.length < 2) 
-      day = '0' + day;
-    return [year, month, day].join('-');
-  }
-
-  showPinganApproveStatus = () => {
-    this.setState({isShowPinganApproveStatusPage: true});
-    let fromTimeStr = this.formatDate(this.state.startDate);
-    let endTimeStr = this.formatDate(this.state.endDate);
-    this.listPinganSecurityShareLinksReport(fromTimeStr, endTimeStr, this.state.fileNameForSearch, this.state.shareLinkCreator).then(res => {
-      this.setState({pinganApproveStatusList: res.data.data});
-    }).catch(error => {
-      let errMessage = Utils.getErrorMsg(error);
-      toaster.danger(errMessage);
-    });
-  }
-
-   downloadPinganApproveStatus = () => {
-     location.href = seafileAPI.server + '/pingan-api/company-security/share-links-report/?excel=true';
-   }
 
   showDirentDetail = (direntDetailPanelTab) => {
     if (direntDetailPanelTab) {
@@ -1671,35 +1620,6 @@ class LibContentView extends React.Component {
     this.updateUsedRepoTags();
   }
 
-  saveFromTimeStr = (e) => {
-    this.setState({fromTimeStr: e.target.value});
-  }
-
-  saveToTimeStr = (e) => {
-    this.setState({toTimeStr: e.target.value});
-  }
-
-  handleStartDateChange = (date) => {
-    this.setState({
-      startDate: date
-    });
-  };
-
-  handleEndDateChange = (date) => {
-    this.setState({
-      endDate: date
-    });
-  };
-
-  saveFileNameForSearch = (e) => {
-    this.setState({fileNameForSearch: e.target.value});
-  }
-  
-  saveShareLinkCreator = (e) => {
-    this.setState({shareLinkCreator: e.target.value});
-  }
-
-
   render() {
     if (this.state.libNeedDecrypt) {
       return (
@@ -1774,41 +1694,6 @@ class LibContentView extends React.Component {
             onFilesTagChanged={this.onFileTagChanged}
           />
         </div>
-        {this.state.isGroupOwnedRepo && this.state.path === '/' &&
-          <div className="main-panel-north border-left-show" style={{'zIndex':'10'}}>
-            <div className="">
-              {'从'}
-              <DatePicker
-                className="mr-2"
-                dateFormat="yyyy/MM/dd"
-                selected={this.state.startDate}
-                onChange={this.handleStartDateChange}
-                placeholderText="选择日期"
-              />
-              {'到'}
-              <DatePicker
-                className="mr-2"
-                dateFormat="yyyy/MM/dd"
-                selected={this.state.endDate}
-                onChange={this.handleEndDateChange}
-                placeholderText="选择日期"
-              />
-              <input onChange={this.saveFileNameForSearch} className="mr-2" style={{width:'100px'}} placeholder="按文件名搜索"></input>
-              <input onChange={this.saveShareLinkCreator} className="mr-2" style={{width:'100px'}} placeholder="按创建者搜索"></input>
-            </div>
-            <button className="btn btn-secondary operation-item ml-2 mr-2" title={gettext('Export Excel')} onClick={this.showPinganApproveStatus}>
-              {gettext('查看审批')}
-            </button>
-            <button className="btn btn-secondary operation-item ml-2 mr-2" title={gettext('Export Excel')} onClick={this.downloadPinganApproveStatus}>
-              {gettext('下载表格')}
-            </button>
-          </div>
-        }
-        {this.state.isShowPinganApproveStatusPage ?
-          <ApproveChainInfo
-            pinganApproveStatusList={this.state.pinganApproveStatusList}
-          />
-        :
         <div className="main-panel-center flex-row">
           <LibContentContainer 
             pathPrefix={this.props.pathPrefix}
@@ -1895,7 +1780,6 @@ class LibContentView extends React.Component {
             />
           )}
         </div>
-        }
       </div>
     );
   }

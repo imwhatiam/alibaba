@@ -1,7 +1,7 @@
 import React, { Fragment, Component } from 'react';
 import PropTypes from 'prop-types';
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
-import { gettext } from '../../utils/constants';
+import { gettext, isSystemSecurity, isCompanySecurity } from '../../utils/constants';
 import EmptyTip from '../../components/empty-tip';
 import Loading from '../../components/loading';
 import { seafileAPI } from '../../utils/seafile-api';
@@ -39,7 +39,7 @@ class Content extends Component {
               </tr>
             </thead>
             <tbody>
-              {items.map((item, index) => {
+              {items && items.map((item, index) => {
                 return (<Item
                   key={index}
                   item={item}
@@ -97,7 +97,7 @@ class PinganLinkDownloadInfoDialog extends React.Component {
     super(props);
     this.state = {
       errorMsg: '',
-      loading: false,
+      loading: true,
       infoList: [],
       firstDoawloadTime: null,
       downloadCnt: 0,
@@ -107,9 +107,10 @@ class PinganLinkDownloadInfoDialog extends React.Component {
   componentDidMount() {
     this.listPinganShareLinkDownloadInfo().then(res => {
       this.setState({
-        firstDoawloadTime: res.data.first_download_time,
-        downloadCnt: res.data.download_count,
-        infoList: res.data.data
+        firstDoawloadTime: res.data[0].first_download_time,
+        downloadCnt: res.data[0].download_count,
+        infoList: res.data[0].data,
+        loading: false,
       });
     }).catch(error => {
       let errMessage = Utils.getErrorMsg(error);
@@ -118,12 +119,17 @@ class PinganLinkDownloadInfoDialog extends React.Component {
   }
 
   listPinganShareLinkDownloadInfo = (start, end) => {
-    let url = seafileAPI.server + '/pingan-api/company-security/share-link-download-info/';
+    let url = seafileAPI.server;
+    if (isCompanySecurity) {
+      url += '/pingan-api/company-security/share-link-download-info/';
+    } else if (isSystemSecurity) {
+      url += '/pingan-api/admin/share-link-download-info/';
+    }
     return seafileAPI.req.get(url + '?share_link_token=' + this.props.shareLinkToken);
   }
 
   render() {
-    let { errorMsg, loading, firstDoawloadTime, downloadCnt } = this.state;
+    let { errorMsg, loading, firstDoawloadTime, downloadCnt, infoList } = this.state;
     return (
       <Modal size="lg" isOpen={true} toggle={this.props.toggle}>
         <ModalHeader toggle={this.props.toggle}>{gettext('链接下载信息')}
@@ -139,7 +145,7 @@ class PinganLinkDownloadInfoDialog extends React.Component {
           <Content
             loading={loading}
             errorMsg={errorMsg}
-            items={this.state.infoList}
+            items={infoList}
           />
         </ModalBody>
         <ModalFooter>

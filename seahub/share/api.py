@@ -20,11 +20,11 @@ from seaserv import seafile_api
 from seahub.api2.utils import api_error
 from seahub.api2.throttling import UserRateThrottle
 from seahub.api2.authentication import TokenAuthentication
-from seahub.api2.endpoints.utils import get_log_events_by_type_and_time
 
 from seahub.base.accounts import User
 from seahub.profile.models import DetailedProfile
-from seahub.utils import is_valid_email, get_log_events_by_time
+from seahub.utils import is_valid_email, get_log_events_by_time, \
+        gen_file_share_link
 from seahub.utils.ms_excel import write_xls
 from seahub.utils.timeutils import datetime_to_isoformat_timestr
 from seahub.views import check_folder_permission
@@ -314,6 +314,7 @@ def get_share_link_approve_info(share_links):
             if chain_status[0].vtime:
                 dlp_vtime = chain_status[0].vtime.strftime('%Y-%m-%d %H:%M:%S')
 
+        dlp_msg_dict = share_link.get_dlp_msg()
         detailed_profile = DetailedProfile.objects.filter(user=share_link.username)
 
         info = {}
@@ -329,14 +330,18 @@ def get_share_link_approve_info(share_links):
         info['approve_status'] = share_link.get_short_status_str()
         info['dlp_status'] = dlp_status
         info['dlp_vtime'] = dlp_vtime
-        info['detailed_approve_status'] = str(share_link.get_verbose_status())
+        info['detailed_approve_status'] = share_link.get_verbose_status()
+        info['policy_categories'] = dlp_msg_dict['policy_categories'] if 'policy_categories' in dlp_msg_dict else ''
+        info['breach_content'] = dlp_msg_dict['breach_content'] if 'breach_content' in dlp_msg_dict else ''
+        info['total_matches'] = dlp_msg_dict['total_matches'] if 'total_matches' in dlp_msg_dict else ''
 
         api_result.append(info)
 
         excel_row = [info['filename'], info['from_user'], info['company'],
                 info['department'], info['send_to'], info['created_at'],
                 info['expiration'], info['share_link_url'], info['approve_status'],
-                info['dlp_status'], info['dlp_vtime'], info['detailed_approve_status']]
+                info['dlp_status'], info['dlp_vtime'], info['policy_categories'],
+                info['breach_content'], info['total_matches'], str(info['detailed_approve_status'])]
         excel_data_list.append(excel_row)
 
     return api_result, excel_data_list
@@ -350,7 +355,7 @@ class PinganAdminShareLinksReport(APIView):
 
     def get(self, request):
 
-        if not request.user.is_staff or \
+        if not request.user.is_staff and \
                 request.user.username not in PINGAN_SHARE_LINKS_REPORT_ADMIN:
             error_msg = 'Permission denied.'
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)
@@ -383,13 +388,14 @@ class PinganAdminShareLinksReport(APIView):
             return Response(ret)
 
         response = HttpResponse(content_type='application/ms-excel')
-        response['Content-Disposition'] = 'attachment; filename=download-links.xls'
+        response['Content-Disposition'] = 'attachment; filename=download-link-report.xlsx'
 
         head = ["文件名", "发送人", "发送人公司", "发送人部门", "接收对象",
                 "创建时间", "链接过期时间", "下载链接", "最终审核状态",
-                "DLP审核状态", "DLP审核时间", "详细审核状态"]
+                "DLP审核状态", "DLP审核时间", "策略类型", "命中信息", "总计",
+                "详细审核状态"]
 
-        wb = write_xls(u'共享链接', head, excel_data_list)
+        wb = write_xls(u'链接审核信息', head, excel_data_list)
         wb.save(response)
         return response
 
@@ -438,9 +444,11 @@ class PinganCompanySecurityShareLinksReport(APIView):
         filename_list = [d.obj_name for d in dirent_list if not stat.S_ISDIR(d.mode)]
 
         # get share links
+        share_link_token_2_source_obj_name = {}
         share_link_token_list = []
         for filename in filename_list:
             share_link_token_list.append(filename.split('.')[-1])
+            share_link_token_2_source_obj_name[share_link_token_list[-1]] = filename
         share_links = FileShare.objects.filter(Q(token__in=share_link_token_list)) \
                 .filter(ctime__lte=end_date).filter(ctime__gte=start_date)
 
@@ -455,10 +463,13 @@ class PinganCompanySecurityShareLinksReport(APIView):
             share_links = filter(lambda link: from_user in link.username, share_links)
 
         api_result, excel_data_list = get_share_link_approve_info(share_links)
+        for result in api_result:
+            result['source_obj_name'] = share_link_token_2_source_obj_name[result['share_link_token']]
         ret = {
             'data': api_result,
             'start_time': start_date.strftime("%Y-%m-%d"),
             'end_time': end_date.strftime("%Y-%m-%d"),
+            'backup_repo_id': backup_repo_id,
         }
 
         export_excel = request.GET.get('excel', 'false')
@@ -466,16 +477,65 @@ class PinganCompanySecurityShareLinksReport(APIView):
             return Response(ret)
 
         response = HttpResponse(content_type='application/ms-excel')
-        response['Content-Disposition'] = 'attachment; filename=download-links.xls'
+        response['Content-Disposition'] = 'attachment; filename=download-link-report.xlsx'
 
         head = ["文件名", "发送人", "发送人公司", "发送人部门", "接收对象",
                 "创建时间", "链接过期时间", "下载链接", "最终审核状态",
-                "DLP审核状态", "DLP审核时间", "详细审核状态"]
+                "DLP审核状态", "DLP审核时间", "策略类型", "命中信息", "总计",
+                "详细审核状态"]
 
-        wb = write_xls(u'共享链接', head, excel_data_list)
+        wb = write_xls(u'链接审核信息', head, excel_data_list)
         wb.save(response)
         return response
 
+
+def get_share_link_download_info(share_link_token_list, start_date, end_date):
+
+    api_result = []
+    excel_data_list = []
+
+    for share_link_token in share_link_token_list:
+        try:
+            share_link = FileShare.objects.get(token=share_link_token)
+        except FileShare.DoesNotExist:
+            error_msg = 'token %s not found.' % share_link_token
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        try:
+            start_timestamp = time.mktime(start_date.timetuple())
+            end_timestamp = time.mktime(end_date.timetuple())
+            events = get_log_events_by_time('file_audit', start_timestamp, end_timestamp)
+            events = events if events else []
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        first_download_time = FileShareDownloads.objects.get_first_download_time(share_link)
+        download_count = share_link.get_download_cnt()
+        info = {
+            'data': [],
+            'first_download_time': first_download_time,
+            'download_count': download_count
+        }
+
+        for ev in events:
+            info['data'].append({
+                'user': ev.user,
+                'ip': ev.ip,
+                'device': ev.device,
+                'time': datetime_to_isoformat_timestr(ev.timestamp),
+            })
+
+            excel_row = [share_link.get_name(), gen_file_share_link(share_link.token),
+                    first_download_time, download_count,
+                    ev.user, ev.ip, ev.device,
+                    datetime_to_isoformat_timestr(ev.timestamp)]
+            excel_data_list.append(excel_row)
+
+        api_result.append(info)
+
+        return api_result, excel_data_list
 
 class PinganCompanySecurityShareLinkDownloadInfo(APIView):
 
@@ -486,8 +546,56 @@ class PinganCompanySecurityShareLinkDownloadInfo(APIView):
     def get(self, request):
 
         username = request.user.username
-        if not is_company_member(username) and \
-                not request.user.is_staff and \
+        if not is_company_member(username):
+            error_msg = 'Permission denied.'
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+        # check the date format, should be like '2015-10-10'
+        start_date_str = request.GET.get('start', '')
+        end_date_str = request.GET.get('end', '')
+        if start_date_str and end_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+                end_date = end_date + timedelta(days=1)
+            except Exception:
+                error_msg = "date invalid."
+                return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+        else:
+            end_date = timezone.now()
+            start_date = end_date - timedelta(days=60)
+
+        share_link_token_list = request.GET.getlist('share_link_token', None)
+        if not share_link_token_list:
+            error_msg = 'share_link_token invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        api_result, excel_data_list = get_share_link_download_info(share_link_token_list,
+                start_date, end_date)
+
+        export_excel = request.GET.get('excel', 'false')
+        if export_excel.lower() != 'true':
+            return Response(api_result)
+
+        response = HttpResponse(content_type='application/ms-excel')
+        response['Content-Disposition'] = 'attachment; filename=link-download-info.xlsx'
+
+        head = ["文件名", "下载链接", "首次下载时间", "下载次数", "用户", "时间", "IP", "设备名"]
+        wb = write_xls(u'链接下载信息', head, excel_data_list)
+        wb.save(response)
+        return response
+
+
+class PinganAdminShareLinkDownloadInfo(APIView):
+
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = (UserRateThrottle,)
+
+    def get(self, request):
+
+        username = request.user.username
+        if not request.user.is_staff and \
                 username not in PINGAN_SHARE_LINKS_REPORT_ADMIN:
             error_msg = 'Permission denied.'
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)
@@ -507,39 +615,22 @@ class PinganCompanySecurityShareLinkDownloadInfo(APIView):
             end_date = timezone.now()
             start_date = end_date - timedelta(days=60)
 
-        share_link_token = request.GET.get('share_link_token', None)
-        if not share_link_token:
+        share_link_token_list = request.GET.getlist('share_link_token', None)
+        if not share_link_token_list:
             error_msg = 'share_link_token invalid.'
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
-        try:
-            share_link = FileShare.objects.get(token=share_link_token)
-        except FileShare.DoesNotExist:
-            error_msg = 'token %s not found.' % share_link_token
-            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+        api_result, excel_data_list = get_share_link_download_info(share_link_token_list,
+                start_date, end_date)
 
-        try:
-            start_timestamp = time.mktime(start_date.timetuple())
-            end_timestamp = time.mktime(end_date.timetuple())
-            events = get_log_events_by_time('file_audit', start_timestamp, end_timestamp)
-            events = events if events else []
-        except Exception as e:
-            logger.error(e)
-            error_msg = 'Internal Server Error'
-            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+        export_excel = request.GET.get('excel', 'false')
+        if export_excel.lower() != 'true':
+            return Response(api_result)
 
-        result = {
-            'data': [],
-            'first_download_time': FileShareDownloads.objects.get_first_download_time(share_link),
-            'download_count': share_link.get_download_cnt(),
-        }
+        response = HttpResponse(content_type='application/ms-excel')
+        response['Content-Disposition'] = 'attachment; filename=link-download-info.xlsx'
 
-        for ev in events:
-            result['data'].append({
-                'user': ev.user,
-                'ip': ev.ip,
-                'device': ev.device,
-                'time': datetime_to_isoformat_timestr(ev.timestamp),
-            })
-
-        return Response(result)
+        head = ["文件名", "下载链接", "首次下载时间", "下载次数", "用户", "时间", "IP", "设备名"]
+        wb = write_xls(u'链接下载信息', head, excel_data_list)
+        wb.save(response)
+        return response

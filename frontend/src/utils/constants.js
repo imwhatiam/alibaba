@@ -54,6 +54,8 @@ export const canAddPublicRepo = window.app.pageOptions.canAddPublicRepo;
 export const canInvitePeople = window.app.pageOptions.canInvitePeople;
 export const canLockUnlockFile = window.app.pageOptions.canLockUnlockFile;
 export const customNavItems = window.app.pageOptions.customNavItems;
+export const isCompanySecurity = window.app.pageOptions.isCompanySecurity;
+export const isSystemSecurity = window.app.pageOptions.isSystemSecurity;
 
 export const curNoteMsg = window.app.pageOptions.curNoteMsg;
 export const curNoteID = window.app.pageOptions.curNoteID;
