@@ -99,6 +99,13 @@ class ProfileManager(models.Manager):
 
         return username
 
+    def get_login_id_by_user(self, username):
+        p = self.get_profile_by_user(username)
+        if p and p.login_id:
+            return p.login_id
+
+        return ''
+
     def get_username_by_login_id(self, login_id):
         """Convert a user's login id to username(login email).
         """

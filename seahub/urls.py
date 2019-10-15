@@ -784,7 +784,7 @@ from seahub.views.sysadmin_pingan import *
 from seahub.share.api import ApprovalChainView, SysDownloadLinksReport, \
     UserApprovalChainsView, UserApprovalChainView, PinganAdminShareLinksReport, \
     PinganCompanySecurityShareLinksReport, PinganCompanySecurityShareLinkDownloadInfo, \
-    PinganAdminShareLinkDownloadInfo
+    PinganAdminShareLinkDownloadInfo, PinganAdminUsers
 
 
 urlpatterns += [
@@ -815,13 +815,9 @@ urlpatterns += [
 
     url(r'^pingan-api/admin/share-links-report/$', PinganAdminShareLinksReport.as_view(), name='pingan-api-admin-share-links-report'),
     url(r'^pingan-api/company-security/share-links-report/$', PinganCompanySecurityShareLinksReport.as_view(), name='pingan-api-company-security-share-links-report'),
-
-    url(r'^pingan-api/company-security/share-link-download-info/$',
-        PinganCompanySecurityShareLinkDownloadInfo.as_view(),
-        name='pingan-api-company-security-share-link-download-info'),
-
-    url(r'^pingan-api/admin/share-link-download-info/$',
-        PinganAdminShareLinkDownloadInfo.as_view(),
-        name='pingan-api-admin-share-link-download-info'),
+    url(r'^pingan-api/admin/share-link-download-info/$', PinganAdminShareLinkDownloadInfo.as_view(), name='pingan-api-admin-share-link-download-info'),
+    url(r'^pingan-api/company-security/share-link-download-info/$', PinganCompanySecurityShareLinkDownloadInfo.as_view(), name='pingan-api-company-security-share-link-download-info'),
+    url(r'^pingan-api/company-security/share-link-download-info/$', PinganCompanySecurityShareLinkDownloadInfo.as_view(), name='pingan-api-company-security-share-link-download-info'),
+    url(r'^pingan-api/admin/users/$', PinganAdminUsers.as_view(), name='pingan-api-admin-users'),
 ]
 ########################### End PingAn Group related ########################

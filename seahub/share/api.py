@@ -15,19 +15,22 @@ from django.db.models import Q
 from django.utils import translation, timezone
 from django.http import HttpResponse
 
-from seaserv import seafile_api
+from seaserv import seafile_api, ccnet_api
 
 from seahub.api2.utils import api_error
 from seahub.api2.throttling import UserRateThrottle
 from seahub.api2.authentication import TokenAuthentication
 
+from seahub.base.models import UserLastLogin
 from seahub.base.accounts import User
-from seahub.profile.models import DetailedProfile
+from seahub.profile.models import DetailedProfile, Profile
 from seahub.utils import is_valid_email, get_log_events_by_time, \
         gen_file_share_link
 from seahub.utils.ms_excel import write_xls
-from seahub.utils.timeutils import datetime_to_isoformat_timestr
+from seahub.utils.timeutils import datetime_to_isoformat_timestr, \
+        timestamp_to_isoformat_timestr
 from seahub.views import check_folder_permission
+from seahub.base.templatetags.seahub_tags import email2nickname
 
 from seahub.share.constants import STATUS_VERIFING, STATUS_PASS, STATUS_VETO, \
         STATUS_BLOCK_HIGH_RISK
@@ -38,7 +41,7 @@ from seahub.views.sysadmin_pingan import download_links_excel_report
 from seahub.share.settings import PINGAN_SHARE_LINK_BACKUP_LIBRARIES, \
         PINGAN_SHARE_LINKS_REPORT_ADMIN
 from seahub.share.pingan_utils import is_company_member, get_company, \
-        get_company_name
+        get_company_name, get_department_name
 
 logger = logging.getLogger(__name__)
 
@@ -634,3 +637,48 @@ class PinganAdminShareLinkDownloadInfo(APIView):
         wb = write_xls(u'链接下载信息', head, excel_data_list)
         wb.save(response)
         return response
+
+
+class PinganAdminUsers(APIView):
+
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = (UserRateThrottle,)
+
+    def get(self, request):
+
+        if not request.user.is_staff and \
+                request.user.username not in PINGAN_SHARE_LINKS_REPORT_ADMIN:
+            error_msg = 'Permission denied.'
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+        users = ccnet_api.get_emailusers('DB', -1, -1)
+        users += ccnet_api.get_emailusers('LDAPImport', -1, -1)
+
+        last_logins = UserLastLogin.objects.filter(username__in=[x.email for x in users])
+        last_login_dict = {}
+        for last_login in last_logins:
+            if last_login.username not in last_login_dict:
+                last_login_dict[last_login.username] = datetime_to_isoformat_timestr(last_login.last_login)
+
+        data = []
+        for user in users:
+
+            email = user.email
+            quota = seafile_api.get_user_quota(email)
+
+            info = {}
+            info['account'] = Profile.objects.get_login_id_by_user(email)
+            info['displayname'] = email2nickname(email)
+            info['company'] = get_company_name(email)
+            info['usedsize'] = seafile_api.get_user_self_usage(email)
+            info['last_login'] = last_login_dict.get(email, '')
+            info['department'] = get_department_name(email)
+            info['email'] = email
+            info['create_time'] = timestamp_to_isoformat_timestr(user.ctime)
+            info['security'] = '外发权限' if quota > 15000000 else '审核权限'
+            info['is_active'] = user.is_active
+            info['quota'] = quota
+            data.append(info)
+
+        return Response({'data': data})

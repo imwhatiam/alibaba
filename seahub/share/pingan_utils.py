@@ -14,6 +14,13 @@ def get_company(username):
     else:
         return ''
 
+def get_department_name(username):
+    d_profile = DetailedProfile.objects.get_detailed_profile_by_user(username)
+    if d_profile and d_profile.department:
+        return d_profile.department
+    else:
+        return ''
+
 def get_company_name(username):
     company_name = ''
     company_id = get_company(username)
