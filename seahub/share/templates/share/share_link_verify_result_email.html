@@ -5,20 +5,20 @@
 
 {% autoescape off %}
 
-<p style="color:#121214;font-size:14px;">{% trans "Hi," %}</p>
+<p style="color:#121214;font-size:14px;">{% trans "你好，" %}</p>
 
 <p style="font-size:14px;color:#434144;">
 {% if result_code == '1' %}
-{% blocktrans %}Your shared link for file {{ file_name }} passed by {{ source }}.{% endblocktrans %}<br />
+{% blocktrans %}您的文件 {{ file_name }} 已通过 {{ source }} 审核。{% endblocktrans %}<br />
 {% elif result_code == '2' %}
-{% blocktrans %}Your shared link for file {{ file_name }} rejected by {{ source }}.{% endblocktrans %}<br />
+{% blocktrans %}您的文件 {{ file_name }} 被 {{ source }} 否决。{% endblocktrans %}<br />
 {% else %}
-{% blocktrans %}Your shared link for file {{ file_name }} is waiting for {{ source }} to verify.{% endblocktrans %}<br />
+{% blocktrans %}您的文件 {{ file_name }} 正在等待 {{ source }} 审核。{% endblocktrans %}<br />
 {% endif %}
 </p>
 
 <p style="font-size:14px;color:#434144;">
-    {% blocktrans %}For details, please refer to <a href="{{ service_url }}/share-admin-share-links/">{{ service_url }}/share-admin-share-links/</a>.{% endblocktrans %}
+{% blocktrans %}请访问 <a href="{{ service_url }}/share-admin-share-links/">{{ service_url }}/share-admin-share-links/</a> 了解详情.{% endblocktrans %}
 </p>
 
 {% endautoescape %}

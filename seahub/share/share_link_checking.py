@@ -87,7 +87,7 @@ def email_reviser(fileshare, reviser_email):
     """Send email to revisers to verify shared link.
     If DLP veto, show veto message to revisers.
     """
-    subject = _('Please verify new share link.')
+    subject = '请审核新创建的共享外链。'
 
     app_status = FileShareApprovalStatus.objects.get_dlp_status_by_share_link(fileshare)
     if app_status is not None:
@@ -127,7 +127,7 @@ def email_verify_result(fileshare, email_to, source='DLP', result_code=1):
         'file_name': fileshare.get_name(),
         'service_url': get_service_url().rstrip('/'),
     }
-    subject = _('Verification status of your share link.')
+    subject = '您共享外链的审核状态。'
     try:
         send_html_email(subject, 'share/share_link_verify_result_email.html',
                         c, None, [email_to])

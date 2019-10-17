@@ -618,12 +618,12 @@ class FileShare(models.Model):
             }
             if is_pa_email(x):
                 send_html_email(
-                    _(u'A file is shared to you on %s') % SITE_NAME,
+                    '有人在 pafile 上共享了一个文件给你',
                     'shared_link_email.html',
                     c, None, [x])
             else:
                 send_pafile_html_email_with_dj_template(
-                    [x], _(u'A file is shared to you on %s') % SITE_NAME,
+                    [x], '有人在 pafile 上共享了一个文件给你',
                     'share/pa_shared_link_email.html', c)
 
     def get_download_cnt(self):

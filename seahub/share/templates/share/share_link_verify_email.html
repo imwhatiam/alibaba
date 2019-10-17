@@ -5,10 +5,10 @@
 
 {% autoescape off %}
 
-<p style="color:#121214;font-size:14px;">{% trans "Hi," %}</p>
+<p style="color:#121214;font-size:14px;">{% trans "你好，" %}</p>
 
 <p style="font-size:14px;color:#434144;">
-{% blocktrans %}{{ email }} created a new share link, shared file: {{ file_name }}, please verify by clicking following link:{% endblocktrans%} <br />
+{% blocktrans %}{{ email }} 创建了新的共享外链，共享的文件是：{{ file_name }}, 请点击以下链接进行审核：{% endblocktrans%} <br />
 <a href="{{ file_shared_link }}">{{ file_shared_link }}</a>
 </p>
 
@@ -17,7 +17,7 @@
 {% endif %}
 
 <p style="font-size:14px;color:#434144;">
-{% blocktrans %}Before clicking the link, you need to log onto {{service_url}} first, otherwise, you would got permission error.<br />(Please use Chrome/Firefox){% endblocktrans%}
+{% blocktrans %}审批人请先登录 {{service_url}}，再点击此链接审批，否则无权限访问。<br />（请使用chrome/firefox浏览器）{% endblocktrans%}
 </p>
 
 {% endautoescape %}
