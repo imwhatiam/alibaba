@@ -330,14 +330,15 @@ class ApproveChainInfo extends Component {
 
   onItemsDownload = () => {
     if (this.state.selectedItems.length == 1) {
+      let url = '';
       let path = '/';
       let direntPath = Utils.joinPath(path, this.state.selectedItems[0].source_obj_name);
       if (isSystemSecurity) {
-          let url = URLDecorator.getUrl({type: 'download_file_url', repoID: pinganShareLinkBackupLibrary, filePath: direntPath});
+          url = URLDecorator.getUrl({type: 'download_file_url', repoID: pinganShareLinkBackupLibrary, filePath: direntPath});
       } else {
-          let url = URLDecorator.getUrl({type: 'download_file_url', repoID: this.state.backupRepoID, filePath: direntPath});
+          url = URLDecorator.getUrl({type: 'download_file_url', repoID: this.state.backupRepoID, filePath: direntPath});
       }
-      location.href= url;
+      location.href = url;
       return;
     } else if (this.state.selectedItems.length >= 2) {
       this.setState({
