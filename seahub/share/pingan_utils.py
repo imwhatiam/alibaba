@@ -26,7 +26,7 @@ def get_company_name(username):
     company_id = get_company(username)
     if company_id:
         seafile_dept_id = PINGAN_COMPANY_SEAFILE_DEPT_MAP[company_id]
-        seafile_dept = ccnet_api.get_group(seafile_dept_id)
+        seafile_dept = ccnet_api.get_group(int(seafile_dept_id))
         company_name = seafile_dept.group_name
 
     return company_name
@@ -50,16 +50,22 @@ def get_company_security(username):
 
 def is_company_security(username):
     company_id = get_company(username)
-    seafile_dept_id = PINGAN_COMPANY_SEAFILE_DEPT_MAP[company_id]
-    return is_group_admin(seafile_dept_id, username)
+    if company_id in PINGAN_COMPANY_SEAFILE_DEPT_MAP:
+        seafile_dept_id = PINGAN_COMPANY_SEAFILE_DEPT_MAP[company_id]
+        return is_group_admin(seafile_dept_id, username)
+    else:
+        return False
 
 #    company_security_list = get_company_security(username)
 #    return True if username in company_security_list else False
 
 def is_company_member(username):
     company_id = get_company(username)
-    seafile_dept_id = PINGAN_COMPANY_SEAFILE_DEPT_MAP[company_id]
-    return is_group_member(seafile_dept_id, username)
+    if company_id in PINGAN_COMPANY_SEAFILE_DEPT_MAP:
+        seafile_dept_id = PINGAN_COMPANY_SEAFILE_DEPT_MAP[company_id]
+        return is_group_member(seafile_dept_id, username)
+    else:
+        return False
 
 def has_security_in_chain_list(chain_list, company_security_list):
     for security in company_security_list:

@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from '@reach/router';
 import { Badge } from 'reactstrap';
-import { gettext, siteRoot, canPublishRepo, canAddRepo, canGenerateShareLink, canGenerateUploadLink, canInvitePeople } from '../utils/constants';
+import { gettext, siteRoot, canPublishRepo, canAddRepo, canGenerateShareLink, canGenerateUploadLink, canInvitePeople, isCompanySecurity, isSystemSecurity } from '../utils/constants';
 import { seafileAPI } from '../utils/seafile-api';
 import { Utils } from '../utils/utils';
 import toaster from './toast';
@@ -273,17 +273,21 @@ class MainSideNav extends React.Component {
                 <span className="nav-text">{'外链审核'}</span>
               </Link>
             </li>
-            <li className="nav-item">
-              <Link
-                to={siteRoot + 'sharelinks-info/'}
-                className={`nav-link ellipsis ${this.getActiveClass('sharelinks-info')}`}
-                title={'查看审批'}
-                onClick={(e) => this.tabItemClick(e, 'sharelinks-info')}
-              >
-                <span className="sf2-icon-histogram" aria-hidden="true"></span>
-                <span className="nav-text">{'查看审批'}</span>
-              </Link>
-            </li>
+
+            {(isSystemSecurity|| isCompanySecurity) &&
+              <li className="nav-item">
+                <Link
+                  to={siteRoot + 'sharelinks-info/'}
+                  className={`nav-link ellipsis ${this.getActiveClass('sharelinks-info')}`}
+                  title={'查看审批'}
+                  onClick={(e) => this.tabItemClick(e, 'sharelinks-info')}
+                >
+                  <span className="sf2-icon-histogram" aria-hidden="true"></span>
+                  <span className="nav-text">{'查看审批'}</span>
+                </Link>
+              </li>
+            }
+
             <li className="nav-item flex-column" id="share-admin-nav">
               <a className="nav-link ellipsis" title={gettext('Share Admin')} onClick={this.shExtend}>
                 <span className={`toggle-icon float-right fas ${this.state.sharedExtended ? 'fa-caret-down':'fa-caret-left'}`} aria-hidden="true"></span>

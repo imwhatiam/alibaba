@@ -5,7 +5,7 @@ import { Button, ButtonGroup } from 'reactstrap';
 import PinganApproveStatusDialog from '../../components/dialog/pingan-approve-status-dialog';
 import PinganFromUserDialog from '../../components/dialog/pingan-from-user-dialog';
 import PinganLinkDownloadInfoDialog from '../../components/dialog/pingan-link-download-info-dialog';
-import { gettext, siteRoot, username, isDocs, isCompanySecurity, isSystemSecurity } from '../../utils/constants';
+import { gettext, siteRoot, username, isDocs, isCompanySecurity, isSystemSecurity, pinganShareLinkBackupLibrary } from '../../utils/constants';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
 import URLDecorator from '../../utils/url-decorator';
@@ -174,7 +174,12 @@ class ApproveChainInfo extends Component {
   }
 
   listPinganSecurityShareLinksReport = (start, end, searchFileName, searchShareLinkCreator) => {
-    let url = seafileAPI.server + '/pingan-api/company-security/share-links-report/?';
+    let url = seafileAPI.server;
+    if (isCompanySecurity) {
+      url += '/pingan-api/company-security/share-links-report/?';
+    } else if (isSystemSecurity) {
+      url += '/pingan-api/admin/share-links-report/?';
+    }
     url += start ? 'start=' + start + '&' : '';
     url += end ? 'end=' + end + '&' : '';
     url += searchFileName ? 'filename=' + encodeURIComponent(searchFileName) + '&' : '';
@@ -219,7 +224,7 @@ class ApproveChainInfo extends Component {
     });
   }
 
-  downloadPinganApproveStatus = () => {
+  downloadShareLinksReport = () => {
     let fromTimeStr = this.formatDate(this.state.startDate);
     let endTimeStr = this.formatDate(this.state.endDate);
     let { fileNameForSearch, searchShareLinkCreator } = this.state;
@@ -327,7 +332,11 @@ class ApproveChainInfo extends Component {
     if (this.state.selectedItems.length == 1) {
       let path = '/';
       let direntPath = Utils.joinPath(path, this.state.selectedItems[0].source_obj_name);
-      let url = URLDecorator.getUrl({type: 'download_file_url', repoID: this.state.backupRepoID, filePath: direntPath});
+      if (isSystemSecurity) {
+          let url = URLDecorator.getUrl({type: 'download_file_url', repoID: pinganShareLinkBackupLibrary, filePath: direntPath});
+      } else {
+          let url = URLDecorator.getUrl({type: 'download_file_url', repoID: this.state.backupRepoID, filePath: direntPath});
+      }
       location.href= url;
       return;
     } else if (this.state.selectedItems.length >= 2) {
@@ -385,7 +394,7 @@ class ApproveChainInfo extends Component {
             <button className="btn btn-secondary operation-item ml-2 mr-2" title={gettext('Export Excel')} onClick={this.showPinganApproveStatus}>
               {gettext('查看审批')}
             </button>
-            <button className="btn btn-secondary operation-item ml-2 mr-2" title={gettext('Export Excel')} onClick={this.downloadPinganApproveStatus}>
+            <button className="btn btn-secondary operation-item ml-2 mr-2" title={gettext('Export Excel')} onClick={this.downloadShareLinksReport}>
               {gettext('下载审批信息')}
             </button>
             <button className="btn btn-secondary operation-item ml-2 mr-2" title={gettext('Export Excel')} onClick={this.downloadDownloadInfo}>

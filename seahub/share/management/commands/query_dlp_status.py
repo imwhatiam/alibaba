@@ -150,9 +150,11 @@ class Command(BaseCommand):
             company = d_profile.company
             company_utf8 = company.encode('utf-8')
             if company_utf8 in PINGAN_SHARE_LINK_BACKUP_LIBRARIES:
-                backup_repo_ip = PINGAN_SHARE_LINK_BACKUP_LIBRARIES[company_utf8]
+                company_backup_repo_ip = PINGAN_SHARE_LINK_BACKUP_LIBRARIES[company_utf8]
+            else:
+                company_backup_repo_ip = ''
         else:
-            backup_repo_ip = SHARE_LINK_BACKUP_LIBRARY
+            admin_backup_repo_ip = SHARE_LINK_BACKUP_LIBRARY
 
         new_file = '%s-%s-%s.%s' % (username,
                                  datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -163,10 +165,16 @@ class Command(BaseCommand):
         try:
             seafile_api.copy_file(
                 fileshare.repo_id, os.path.dirname(fileshare.path),
-                os.path.basename(fileshare.path), backup_repo_ip, '/',
+                os.path.basename(fileshare.path), admin_backup_repo_ip, '/',
                 new_file, '', need_progress=0)
-            print 'Backup to %s successfuly, name is %s.' % (backup_repo_ip, new_file)
-            logger.info('Backup to %s successfuly, name is %s.' % (backup_repo_ip, new_file))
+            print 'Backup to %s successfuly, name is %s.' % (admin_backup_repo_ip, new_file)
+
+            if company_backup_repo_ip:
+                seafile_api.copy_file(
+                    fileshare.repo_id, os.path.dirname(fileshare.path),
+                    os.path.basename(fileshare.path), company_backup_repo_ip, '/',
+                    new_file, '', need_progress=0)
+                print 'Backup to %s successfuly, name is %s.' % (company_backup_repo_ip, new_file)
         except Exception as e:
             logger.error('Failed to backup, %s' % e)
 

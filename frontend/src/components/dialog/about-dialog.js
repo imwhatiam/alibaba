@@ -23,7 +23,7 @@ class AboutDialog extends React.Component {
           <div className="about-content">
             <p><img src={mediaUrl + logoPath} height={logoHeight} width={logoWidth} title={siteTitle} alt="logo" /></p>
             <p>{gettext('Server Version: ')}{seafileVersion}<br />© 2019 {gettext('Seafile')}</p>
-            <p><a href={href} target="_blank">{gettext('About Us')}</a></p>
+            <p>联系我们：<a href='mailto:dept_kjjcjgbyfzwpzc@pingan.com.cn'>dept_kjjcjgbyfzwpzc@pingan.com.cn</a></p>
           </div>
         </ModalBody>
       </Modal>

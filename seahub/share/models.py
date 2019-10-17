@@ -410,9 +410,12 @@ class FileShare(models.Model):
         r = FileShareApprovalStatus.objects.filter(share_link_id=self.id).filter(email='dlp')
         if len(r) == 0:
             return {}
-
         if r[0].msg:
-            return json.loads(r[0].msg)
+            try:
+                return json.loads(r[0].msg)
+            except Exception as e:
+                logger.error(e)
+                return {}
 
         return {}
 

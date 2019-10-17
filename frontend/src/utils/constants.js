@@ -56,6 +56,7 @@ export const canLockUnlockFile = window.app.pageOptions.canLockUnlockFile;
 export const customNavItems = window.app.pageOptions.customNavItems;
 export const isCompanySecurity = window.app.pageOptions.isCompanySecurity;
 export const isSystemSecurity = window.app.pageOptions.isSystemSecurity;
+export const pinganShareLinkBackupLibrary = window.app.pageOptions.pinganShareLinkBackupLibrary;
 
 export const curNoteMsg = window.app.pageOptions.curNoteMsg;
 export const curNoteID = window.app.pageOptions.curNoteID;

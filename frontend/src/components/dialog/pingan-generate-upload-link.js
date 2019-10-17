@@ -2,10 +2,11 @@ import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import copy from 'copy-to-clipboard';
 import { Button, Form, FormGroup, Label, Input, InputGroup, InputGroupAddon, Alert } from 'reactstrap';
-import { gettext, shareLinkPasswordMinLength } from '../../utils/constants';
+import { gettext, shareLinkPasswordMinLength, canSendShareLinkEmail } from '../../utils/constants';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
 import UploadLink from '../../models/upload-link';
+import SendLink from '../send-link';
 import toaster from '../toast';
 import SessionExpiredTip from '../session-expired-tip';
 
@@ -24,6 +25,7 @@ class GenerateUploadLinkPingan extends React.Component {
       password: '',
       passwdnew: '',
       sharedUploadInfo: null,
+      isSendLinkShown: false,
     };
   }
 
@@ -130,7 +132,15 @@ class GenerateUploadLinkPingan extends React.Component {
     });
   }
 
+  toggleSendLink = () => {
+    this.setState({
+      isSendLinkShown: !this.state.isSendLinkShown
+    });
+  }
+
   render() {
+
+    const { isSendLinkShown } = this.state;
 
     let passwordLengthTip = gettext('(at least {passwordLength} characters)');
     passwordLengthTip = passwordLengthTip.replace('{passwordLength}', shareLinkPasswordMinLength);
@@ -156,7 +166,16 @@ class GenerateUploadLinkPingan extends React.Component {
                 </FormGroup>
               )}
           </Form>
+          {canSendShareLinkEmail && !isSendLinkShown && <Button onClick={this.toggleSendLink} className="mr-2">{gettext('Send')}</Button>}
           <Button onClick={this.deleteUploadLink}>{gettext('Delete')}</Button>
+          {isSendLinkShown &&
+          <SendLink
+            linkType='uploadLink'
+            token={sharedUploadInfo.token}
+            toggleSendLink={this.toggleSendLink}
+            closeShareDialog={this.props.closeShareDialog}
+          />
+          }
         </div>
       );
     }

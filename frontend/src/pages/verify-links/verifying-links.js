@@ -235,6 +235,21 @@ class ItemVerified extends Component {
     e.preventDefault();
     let strArray = this.props.item.verbose_status_str.split(';');
     let ele = strArray.map((str, i) => {
+      if (str.indexOf('<br>') != -1) {
+        let strArray = str.split('<br>');
+        return (
+          <li key={i}>
+            {strArray.map(str => {
+              return (
+                <Fragment>
+                  <span>{str}</span>
+                  <br/>
+                </Fragment>
+              )
+            })}
+          </li>
+        )
+      }
       return (
         <li key={i}>{str}</li>
       );

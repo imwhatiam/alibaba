@@ -63,7 +63,7 @@ from seahub.onlyoffice.settings import ENABLE_ONLYOFFICE
 from seahub.constants import HASH_URLS, PERMISSION_READ
 
 from seahub.share.pingan_utils import is_company_member
-from seahub.share.settings import PINGAN_SHARE_LINKS_REPORT_ADMIN
+from seahub.share.settings import PINGAN_SHARE_LINKS_REPORT_ADMIN, SHARE_LINK_BACKUP_LIBRARY
 
 LIBRARY_TEMPLATES = getattr(settings, 'LIBRARY_TEMPLATES', {})
 CUSTOM_NAV_ITEMS = getattr(settings, 'CUSTOM_NAV_ITEMS', '')
@@ -1282,5 +1282,6 @@ def react_fake_view(request, **kwargs):
         'file_audit_enabled' : FILE_AUDIT_ENABLED,
         'is_company_security': is_company_member(username),
         'is_system_security':  request.user.is_staff or username in PINGAN_SHARE_LINKS_REPORT_ADMIN,
+        'pingan_share_link_backup_library': SHARE_LINK_BACKUP_LIBRARY
 
     })
