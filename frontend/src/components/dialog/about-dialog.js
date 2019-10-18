@@ -22,7 +22,7 @@ class AboutDialog extends React.Component {
           <button type="button" className="close" onClick={this.toggle}><span aria-hidden="true">×</span></button>
           <div className="about-content">
             <p><img src={mediaUrl + logoPath} height={logoHeight} width={logoWidth} title={siteTitle} alt="logo" /></p>
-            <p>{gettext('Server Version: ')}{seafileVersion}<br />© 2019 {gettext('Seafile')}</p>
+            <p>{gettext('Server Version: ')}{seafileVersion}<br />© 2019 平安科技大文件外发平台运维团队</p>
             <p>联系我们：<a href='mailto:dept_kjjcjgbyfzwpzc@pingan.com.cn'>dept_kjjcjgbyfzwpzc@pingan.com.cn</a></p>
           </div>
         </ModalBody>
