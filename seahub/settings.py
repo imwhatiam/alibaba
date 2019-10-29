@@ -231,6 +231,7 @@ INSTALLED_APPS = (
     'webpack_loader',
     'social_django',
 
+    'seahub.pku',
     'seahub.api2',
     'seahub.avatar',
     'seahub.contacts',
@@ -912,3 +913,7 @@ if ENABLE_REMOTE_USER_AUTHENTICATION:
 
 if ENABLE_OAUTH or ENABLE_WORK_WEIXIN:
     AUTHENTICATION_BACKENDS += ('seahub.oauth.backends.OauthRemoteUserBackend',)
+
+if ENABLE_PKU_IAAA:
+    AUTHENTICATION_BACKENDS += ('seahub.pku.backends.PkuIaaaAuthUserBackend',)
+    AUTHENTICATION_BACKENDS += ('seahub.pku.backends.PkuIaaaOTPBackend',)

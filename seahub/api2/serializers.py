@@ -67,7 +67,8 @@ class AuthTokenSerializer(serializers.Serializer):
             raise serializers.ValidationError('invalid params')
 
         if login_id and password:
-            user = authenticate(username=login_id, password=password)
+            client_ip = self.context['request'].META.get('HTTP_X_FORWARDED_FOR', '')
+            user = authenticate(username=login_id, password=password, client_ip=client_ip)
             if user:
                 if not user.is_active:
                     raise serializers.ValidationError('User account is disabled.')

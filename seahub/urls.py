@@ -144,6 +144,7 @@ from seahub.api2.endpoints.admin.work_weixin import AdminWorkWeixinDepartments, 
     AdminWorkWeixinDepartmentMembers, AdminWorkWeixinUsersBatch
 
 urlpatterns = [
+    url(r'^pku/', include('seahub.pku.urls')),
     url(r'^accounts/', include('seahub.base.registration_urls')),
 
     url(r'^sso/$', sso, name='sso'),
