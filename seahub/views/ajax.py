@@ -1208,7 +1208,7 @@ def get_file_upload_url_ul(request, token):
     try:
 ########################### Start PingAn Group related ######################
         acc_token = seafile_api.get_fileserver_access_token(
-            repo_id, json.dumps({'anonymous_user': username}), 'upload', '',
+            repo_id, json.dumps({'anonymous_user': shared_by}), 'upload', '',
             use_onetime=False, check_virus=True)
 ########################### End PingAn Group related ########################
     except SearpcError as e:

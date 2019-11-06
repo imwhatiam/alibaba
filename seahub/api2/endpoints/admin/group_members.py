@@ -187,8 +187,8 @@ class AdminGroupMember(APIView):
 
         member_info = get_group_member_info(request, group_id, email)
 
-        from seahub.share.pingan_utils import update_chain_list_when_group_member_updated, get_company
-        update_chain_list_when_group_member_updated(get_company(email), group_admin_list)
+        from seahub.share.pingan_utils import update_chain_list_when_group_member_updated, get_company_id
+        update_chain_list_when_group_member_updated(get_company_id(email), group_admin_list)
 
         return Response(member_info)
 
@@ -231,7 +231,7 @@ class AdminGroupMember(APIView):
             error_msg = 'Internal Server Error'
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
-        from seahub.share.pingan_utils import update_chain_list_when_group_member_updated, get_company
-        update_chain_list_when_group_member_updated(get_company(email), group_admin_list)
+        from seahub.share.pingan_utils import update_chain_list_when_group_member_updated, get_company_id
+        update_chain_list_when_group_member_updated(get_company_id(email), group_admin_list)
 
         return Response({'success': True})

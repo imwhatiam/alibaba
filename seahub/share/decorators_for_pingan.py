@@ -31,7 +31,7 @@ def share_link_approval_for_pingan(func):
         req_user = request.user.username
         fileshare = get_object_or_404(FileShare, token=token)
 
-        chain = fileshare.get_approval_chain(flat=True)
+        chain = fileshare.get_approval_chain(flat=False)
         if fileshare.pass_verify() and req_user not in chain:
             if fileshare.is_expired():
                 raise Http404

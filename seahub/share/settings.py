@@ -29,7 +29,16 @@ PINGAN_FULL_APPROVE_CHAIN_COMPANY = getattr(settings,
 PINGAN_COMPANY_SEAFILE_DEPT_MAP = getattr(settings,
         'PINGAN_COMPANY_SEAFILE_DEPT_MAP', {})
 
+PINGAN_COMPANY_ID_NAME = getattr(settings,
+        'PINGAN_COMPANY_ID_NAME', {})
+
 PINGAN_SHARE_LINKS_REPORT_ADMIN = getattr(settings,
         'PINGAN_SHARE_LINKS_REPORT_ADMIN', [])
+
+PINGAN_EMAIL_URL = getattr(settings,
+        'PINGAN_EMAIL_URL', 'http://pecp-mngt-api-super.paic.com.cn/pecp-mngt/appsvr/public/smg/sendEmail')
+
+PINGAN_DMZ_DOMAIN = getattr(settings,
+        'PINGAN_DMZ_DOMAIN', 'https://pafile2.pingan.com.cn')
 
 ######################### End PingAn Group related ##########################

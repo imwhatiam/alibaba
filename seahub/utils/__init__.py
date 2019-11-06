@@ -59,6 +59,8 @@ try:
 except ImportError:
     CHECK_SHARE_LINK_TRAFFIC = False
 
+from seahub.share.settings import PINGAN_DMZ_DOMAIN
+
 # init Seafevents API
 if EVENTS_CONFIG_FILE:
     try:
@@ -962,6 +964,7 @@ def gen_shared_link(token, s_type):
     service_url = get_service_url()
     assert service_url is not None
 
+    service_url = PINGAN_DMZ_DOMAIN
     service_url = service_url.rstrip('/')
     if s_type == 'f':
         return '%s/f/%s/' % (service_url, token)
@@ -972,6 +975,7 @@ def gen_shared_upload_link(token):
     service_url = get_service_url()
     assert service_url is not None
 
+    service_url = PINGAN_DMZ_DOMAIN
     service_url = service_url.rstrip('/')
     return '%s/u/d/%s/' % (service_url, token)
 

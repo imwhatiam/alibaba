@@ -39,7 +39,7 @@ class UploadLinkShareForm(forms.Form):
 ######################### Start PingAn Group related ########################
 from django.core.cache import cache
 from captcha.fields import CaptchaField
-from .hashers import check_password
+from seahub.share.pingan_utils import check_password
 from .utils import get_unusable_verify_code
 
 class SharedLinkPasswordForm(forms.Form):

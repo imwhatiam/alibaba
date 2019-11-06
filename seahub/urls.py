@@ -782,9 +782,11 @@ urlpatterns += [
 ########################### Start PingAn Group related ######################
 from seahub.views.sysadmin_pingan import *
 from seahub.share.api import ApprovalChainView, SysDownloadLinksReport, \
-    UserApprovalChainsView, UserApprovalChainView, PinganAdminShareLinksReport, \
-    PinganCompanySecurityShareLinksReport, PinganCompanySecurityShareLinkDownloadInfo, \
-    PinganAdminShareLinkDownloadInfo, PinganAdminUsers
+        UserApprovalChainsView, UserApprovalChainView, \
+        PinganAdminShareLinksReport, PinganCompanySecurityShareLinksReport, \
+        PinganCompanySecurityShareLinkDownloadInfo, PinganAdminShareLinkDownloadInfo, \
+        PinganAdminShareLinkApprovalInfo, PinganCompanySecurityShareLinkApprovalInfo, \
+        PinganAdminUsers, PinganAdminUserApprovalChain
 
 
 urlpatterns += [
@@ -810,14 +812,19 @@ urlpatterns += [
     url(r'^api/v2.1/admin/approval-chain/$', ApprovalChainView.as_view(), name='api-v2.1-approval-chain'),
     url(r'^api/v2.1/admin/user-approval-chains/$', UserApprovalChainsView.as_view(), name='api-v2.1-user-approval-chains'),
     url(r'^api/v2.1/admin/user-approval-chains/(?P<user>[^/].+)/$', UserApprovalChainView.as_view(), name='api-v2.1-user-approval-chain'),
-
     url(r'^api/v2.1/admin/download-link-excel/$', SysDownloadLinksReport.as_view(), name='api-v2.1-sys-download-links-report'),
 
+    # pingan 7.0
     url(r'^pingan-api/admin/share-links-report/$', PinganAdminShareLinksReport.as_view(), name='pingan-api-admin-share-links-report'),
     url(r'^pingan-api/company-security/share-links-report/$', PinganCompanySecurityShareLinksReport.as_view(), name='pingan-api-company-security-share-links-report'),
+
     url(r'^pingan-api/admin/share-link-download-info/$', PinganAdminShareLinkDownloadInfo.as_view(), name='pingan-api-admin-share-link-download-info'),
     url(r'^pingan-api/company-security/share-link-download-info/$', PinganCompanySecurityShareLinkDownloadInfo.as_view(), name='pingan-api-company-security-share-link-download-info'),
-    url(r'^pingan-api/company-security/share-link-download-info/$', PinganCompanySecurityShareLinkDownloadInfo.as_view(), name='pingan-api-company-security-share-link-download-info'),
+
+    url(r'^pingan-api/admin/share-link-approval-info/$', PinganAdminShareLinkApprovalInfo.as_view(), name='pingan-api-admin-share-link-approval-info'),
+    url(r'^pingan-api/company-security/share-link-approval-info/$', PinganCompanySecurityShareLinkApprovalInfo.as_view(), name='pingan-api-company-security-share-link-approval-info'),
+
     url(r'^pingan-api/admin/users/$', PinganAdminUsers.as_view(), name='pingan-api-admin-users'),
+    url(r'^pingan-api/admin/user-approval-chains/(?P<email>[^/]+)/$', PinganAdminUserApprovalChain.as_view(), name='pingan-api-admin-user-approval-chain'),
 ]
 ########################### End PingAn Group related ########################

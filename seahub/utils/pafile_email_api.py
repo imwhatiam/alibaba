@@ -8,9 +8,7 @@ import json
 class PAFileEmailApi(object):
     """docstring for EmailApi"""
     def __init__(self):
-        # self.base = 'http://pecp-mngt-api-stg.paic.com.cn'
-        self.base = 'http://pecp-mngt-api.paic.com.cn'
-        self.send_email_url = self.base + '/pecp-mngt/appsvr/public/smg/sendEmail'
+        self.send_email_url = 'http://pecp-mngt-api-super.paic.com.cn/pecp-mngt/appsvr/public/smg/sendEmail'
         self.system_name = 'IFBSS_PAFILE'
         self.department_id = 'PA001S000033888'
         self.is_success = False
@@ -72,7 +70,7 @@ class PAFileEmailApi(object):
 
     def parse_send_email_resp(self, response):
         if response.status_code == requests.codes.ok:
-            self.check_req_result()
+            self.check_req_result(response)
         else:
             self.error_msg = response.status_code
 

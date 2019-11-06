@@ -124,13 +124,6 @@ MIDDLEWARE_CLASSES = (
     'seahub.base.middleware.ForcePasswdChangeMiddleware',
     'seahub.base.middleware.UserPermissionMiddleware',
     'termsandconditions.middleware.TermsAndConditionsRedirectMiddleware',
-    'seahub.two_factor.middleware.OTPMiddleware',
-    'seahub.two_factor.middleware.ForceTwoFactorAuthMiddleware',
-    'seahub.trusted_ip.middleware.LimitIpMiddleware',
-    'social_django.middleware.SocialAuthExceptionMiddleware',
-######################### Start PingAn Group related ########################
-    'seahub.share.middleware.FileLinkVerifyMiddleware',
-######################### End PingAn Group related ##########################
 )
 
 

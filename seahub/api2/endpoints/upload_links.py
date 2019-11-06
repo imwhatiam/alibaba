@@ -22,7 +22,8 @@ from seahub.api2.throttling import AnonRateThrottle, UserRateThrottle
 from seahub.api2.permissions import CanGenerateUploadLink
 
 from seahub.share.models import UploadLinkShare
-from seahub.utils import gen_shared_upload_link, gen_file_upload_url
+from seahub.utils import gen_shared_upload_link, gen_file_upload_url, \
+        is_user_password_strong
 from seahub.views import check_folder_permission
 from seahub.utils.timeutils import datetime_to_isoformat_timestr
 
@@ -149,9 +150,13 @@ class UploadLinks(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         password = request.data.get('password', None)
-        if password and len(password) < config.SHARE_LINK_PASSWORD_MIN_LENGTH:
-            error_msg = _('Password is too short')
-            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+        if password:
+            if len(password) < config.SHARE_LINK_PASSWORD_MIN_LENGTH:
+                error_msg = _('Password is too short')
+                return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+            if not is_user_password_strong(password):
+                error_msg = _('Password is too week.')
+                return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         try:
             expire_days = int(request.data.get('expire_days', 0))

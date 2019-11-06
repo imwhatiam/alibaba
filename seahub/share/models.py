@@ -32,6 +32,7 @@ from seahub.utils.ip import get_remote_ip
 from seahub.utils.mail import send_pafile_html_email_with_dj_template
 from seahub.settings import SITE_NAME
 from seahub.utils.hasher import AESPasswordHasher
+from seahub.share.settings import PINGAN_DMZ_DOMAIN
 ######################### End PingAn Group related ##########################
 
 # Get an instance of a logger
@@ -379,6 +380,8 @@ class FileShare(models.Model):
 
     def get_full_url(self):
         service_url = get_service_url().rstrip('/')
+        service_url = PINGAN_DMZ_DOMAIN
+        service_url = service_url.rstrip('/')
         if self.is_file_share_link():
             return '%s/f/%s/' % (service_url, self.token)
         else:
@@ -533,13 +536,13 @@ class FileShare(models.Model):
         status_str = ';'.join(rst)
 
         if self.pass_verify():
-            status_str += '<br><br>'
+            status_str += ' '
             extra_info = FileShareExtraInfo.objects.filter(share_link=self)
             if len(extra_info) > 0:
                 sent_to_emails = ', '.join([x.sent_to for x in extra_info])
                 status_str += u'该文件下载链接已外发至邮件：' + sent_to_emails
                 status_str += u'（发送于' + self.get_pass_time() + u'）'
-                status_str += '<br><br>'
+                status_str += ' '
 
             if show_password is True:
                 status_str += _('Password:') + ' '
@@ -548,7 +551,7 @@ class FileShare(models.Model):
                     status_str += '%s' % decoded_pwd
                 else:
                     status_str += _('Unsupported password format, please regenerate link if you want to show password.')
-                status_str += '<br><br>'
+                    status_str += ' '
 
             # status_str += u'<button id="re-send-btn">重发邮件</button>'
 
@@ -617,11 +620,15 @@ class FileShare(models.Model):
                 'file_shared_type': _(u"file")
             }
             if is_pa_email(x):
+                logger.error('is_pa_email')
+                logger.error(x)
                 send_html_email(
                     '有人在 pafile 上共享了一个文件给你',
                     'shared_link_email.html',
                     c, None, [x])
             else:
+                logger.error('not is_pa_email')
+                logger.error(x)
                 send_pafile_html_email_with_dj_template(
                     [x], '有人在 pafile 上共享了一个文件给你',
                     'share/pa_shared_link_email.html', c)

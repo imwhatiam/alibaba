@@ -130,7 +130,7 @@ class GenerateShareLinkPingan extends React.Component {
         this.setState({sharedLinkInfo: sharedLinkInfo});
       }).catch((error) => {
         let errMessage = Utils.getErrorMsg(error);
-        this.setState({errMessage: errMessage});
+        this.setState({errorInfo: errMessage});
       });
     }
   }
@@ -381,15 +381,12 @@ class GenerateShareLinkPingan extends React.Component {
                 </FormGroup>
               )}
             </Form>
-            {(!this.state.isShowSendLink && !this.state.isNoticeMessageShow) &&
-            <Button onClick={this.toggleSendLink} className='mr-2'>{gettext('Send')}</Button>
-            }
             {this.state.isShowSendLink &&
               <Fragment>
                 <Form>
                   <FormGroup>
                     <Label htmlFor="sendLinkEmails" className="text-secondary font-weight-normal">{gettext('Send to')}{':'}</Label>
-                    <Input 
+                    <Input
                       id="sendLinkEmails"
                       className="w-75"
                       value={this.state.sendLinkEmails}

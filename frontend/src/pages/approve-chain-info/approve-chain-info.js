@@ -2,9 +2,11 @@ import React, { Component, Fragment } from 'react';
 import EmptyTip from '../../components/empty-tip';
 import Loading from '../../components/loading';
 import { Button, ButtonGroup } from 'reactstrap';
-import PinganApproveStatusDialog from '../../components/dialog/pingan-approve-status-dialog';
+import PinganShareLinkApproveInfoDialog from '../../components/dialog/pingan-share-link-approve-info-dialog';
 import PinganFromUserDialog from '../../components/dialog/pingan-from-user-dialog';
 import PinganLinkDownloadInfoDialog from '../../components/dialog/pingan-link-download-info-dialog';
+import PinganShareLinkInfoDialog from '../../components/dialog/pingan-share-link-info-dialog.js';
+import PinganShareLinkReceiverDialog from '../../components/dialog/pingan-share-link-receiver-dialog.js';
 import { gettext, siteRoot, username, isDocs, isCompanySecurity, isSystemSecurity, pinganShareLinkBackupLibrary } from '../../utils/constants';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
@@ -43,17 +45,11 @@ class Content extends Component {
                 <th width="3%">
                   <input type="checkbox" className="vam" onChange={this.props.onAllItemSelected} checked={this.props.isAllItemSelected}/>
                 </th>
-                <th width="10%">{'文件名字'}</th>
-                <th width="6%">{'发送人'}</th>
-                <th width="6%">{'接收对象'}</th>
-                <th width="8%">{'创建时间'}</th>
-                <th width="8%">{'链接过期时间'}</th>
-                <th width="11%">{'下载链接'}</th>
-                <th width="9%">{'DLP审批状态'}</th>
-                <th width="9%">{'DLP审批时间'}</th>
-                <th width="9%">{'审核状态'}</th>
-                <th width="8%">{'发送人信息'}</th>
-                <th width="13%">{'链接下载信息'}</th>
+                <th width="27%">{'文件名字'}</th>
+                <th width="15%">{'发送人'}</th>
+                <th width="18%">{'接收人'}</th>
+                <th width="17%">{'详细审批状态'}</th>
+                <th width="20%">{'链接下载信息'}</th>
               </tr>
             </thead>
             <tbody>
@@ -68,7 +64,7 @@ class Content extends Component {
           </table>
         </Fragment>
       );
-      return items.length ? table : emptyTip; 
+      return items.length ? table : emptyTip;
     }
   }
 }
@@ -79,9 +75,11 @@ class Item extends Component {
     super(props);
     this.state = {
       isOpIconShown: false,
-      isPinganApproveStatusDialogOpen: false,
+      isPinganApproveInfoDialogOpen: false,
       isPinganFromUserDialogOpen: false,
       isPinganLinkDownloadInfoDialogOpen: false,
+      isPinganShareLinkInfoDialogOpen: false,
+      isPinganShareLinkReceiverDialogOpen: false,
     };
   }
 
@@ -93,8 +91,8 @@ class Item extends Component {
     this.setState({isOpIconShown: false});
   }
 
-  togglePinganApproveStatusDialog = (e) => {
-    this.setState({isPinganApproveStatusDialogOpen: !this.state.isPinganApproveStatusDialogOpen});
+  togglePinganApproveInfoDialog = (e) => {
+    this.setState({isPinganApproveInfoDialogOpen: !this.state.isPinganApproveInfoDialogOpen});
   }
 
   togglePinganFromUserDialog = (e) => {
@@ -105,35 +103,38 @@ class Item extends Component {
     this.setState({isPinganLinkDownloadInfoDialogOpen: !this.state.isPinganLinkDownloadInfoDialogOpen});
   }
 
+  togglePinganShareLinkInfoDialog = (e) => {
+    this.setState({isPinganShareLinkInfoDialogOpen: !this.state.isPinganShareLinkInfoDialogOpen});
+  }
+
+  togglePinganShareLinkReceiverDialog = (e) => {
+    this.setState({isPinganShareLinkReceiverDialogOpen: !this.state.isPinganShareLinkReceiverDialogOpen});
+  }
+
   onItemSelected = () => {
     this.props.onItemSelected(this.props.item);
   }
 
   render() {
     let { item } = this.props;
-    let { isPinganApproveStatusDialogOpen, isPinganFromUserDialogOpen,
-      isPinganLinkDownloadInfoDialogOpen } = this.state;
+    let { isPinganApproveInfoDialogOpen, isPinganFromUserDialogOpen,
+      isPinganLinkDownloadInfoDialogOpen, isPinganShareLinkInfoDialogOpen,
+      isPinganShareLinkReceiverDialogOpen,} = this.state;
     return (
       <Fragment>
         <tr onMouseEnter={this.handleMouseEnter} onMouseLeave={this.handleMouseLeave}>
           <td>
             <input type="checkbox" className="vam" onChange={this.onItemSelected} checked={item.isSelected}/>
           </td>
-          <td><a href={item.share_link_url}>{item.filename}</a></td>
-          <td>{item.from_user}</td>
-          <td>{item.send_to}</td>
-          <td>{item.created_at}</td>
-          <td>{item.expiration}</td>
-          <td>{item.share_link_url}</td>
-          <td>{item.dlp_status}</td>
-          <td>{item.dlp_vtime}</td>
-          <td><a onClick={this.togglePinganApproveStatusDialog} href="#">{'查看审核信息'}</a></td>
-          <td><a onClick={this.togglePinganFromUserDialog} href="#">{'查看发送人'}</a></td>
+          <td><a onClick={this.togglePinganShareLinkInfoDialog} href="#">{item.filename}</a></td>
+          <td><a onClick={this.togglePinganFromUserDialog} href="#">{item.from_user}</a></td>
+          <td><a onClick={this.togglePinganShareLinkReceiverDialog} href="#">{'查看接收人'}</a></td>
+          <td><a onClick={this.togglePinganApproveInfoDialog} href="#">{'查看详细信息'}</a></td>
           <td><a onClick={this.togglePinganLinkDownloadInfoDialog} href="#">{'查看链接下载信息'}</a></td>
         </tr>
-        {isPinganApproveStatusDialogOpen &&
-          <PinganApproveStatusDialog 
-            toggle={this.togglePinganApproveStatusDialog}
+        {isPinganShareLinkInfoDialogOpen &&
+          <PinganShareLinkInfoDialog
+            toggle={this.togglePinganShareLinkInfoDialog}
             item={item}
           />
         }
@@ -141,6 +142,18 @@ class Item extends Component {
           <PinganFromUserDialog
             toggle={this.togglePinganFromUserDialog}
             item={item}
+          />
+        }
+        {isPinganShareLinkReceiverDialogOpen &&
+          <PinganShareLinkReceiverDialog
+            toggle={this.togglePinganShareLinkReceiverDialog}
+            item={item}
+          />
+        }
+        {isPinganApproveInfoDialogOpen &&
+          <PinganShareLinkApproveInfoDialog
+            toggle={this.togglePinganApproveInfoDialog}
+            shareLinkToken={item.share_link_token}
           />
         }
         {isPinganLinkDownloadInfoDialogOpen &&
@@ -194,9 +207,9 @@ class ApproveChainInfo extends Component {
     let day = '' + date.getDate();
     let year = date.getFullYear();
 
-    if (month.length < 2) 
+    if (month.length < 2)
       month = '0' + month;
-    if (day.length < 2) 
+    if (day.length < 2)
       day = '0' + day;
     return [year, month, day].join('-');
   }
@@ -271,7 +284,7 @@ class ApproveChainInfo extends Component {
   saveFileNameForSearch = (e) => {
     this.setState({fileNameForSearch: e.target.value});
   }
-  
+
   saveShareLinkCreator = (e) => {
     this.setState({shareLinkCreator: e.target.value});
   }

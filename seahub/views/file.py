@@ -1299,7 +1299,7 @@ def view_shared_file(request, fileshare, *args, **kwargs):
     else:
         ret_dict['err'] = err_msg
 
-    accessible_repos = get_unencry_rw_repos_by_user(request)
+    accessible_repos = []
     save_to_link = reverse('save_shared_link') + '?t=' + token
     traffic_over_limit = user_traffic_over_limit(shared_by)
 

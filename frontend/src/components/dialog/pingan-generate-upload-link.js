@@ -109,6 +109,9 @@ class GenerateUploadLinkPingan extends React.Component {
       seafileAPI.createUploadLink(repoID, path, this.state.password).then((res) => {
         let sharedUploadInfo = new UploadLink(res.data);
         this.setState({sharedUploadInfo: sharedUploadInfo}); 
+      }).catch((error) => {
+        let errMessage = Utils.getErrorMsg(error);
+        this.setState({errorInfo: errMessage});
       });
     }
   }

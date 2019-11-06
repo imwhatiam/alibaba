@@ -27,7 +27,7 @@ from seahub.api2.permissions import CanGenerateShareLink, IsProVersion
 from seahub.constants import PERMISSION_READ_WRITE
 from seahub.share.models import FileShare, check_share_link_access
 from seahub.utils import gen_shared_link, is_org_context, normalize_file_path, \
-        normalize_dir_path, is_pro_version, get_file_type_and_ext
+        normalize_dir_path, is_pro_version, get_file_type_and_ext, is_user_password_strong
 from seahub.utils.file_op import if_locked_by_online_office
 from seahub.utils.file_types import IMAGE, VIDEO, XMIND
 from seahub.utils.timeutils import datetime_to_isoformat_timestr, \
@@ -252,9 +252,13 @@ class ShareLinks(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         password = request.data.get('password', None)
-        if password and len(password) < config.SHARE_LINK_PASSWORD_MIN_LENGTH:
-            error_msg = _('Password is too short.')
-            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+        if password:
+            if len(password) < config.SHARE_LINK_PASSWORD_MIN_LENGTH:
+                error_msg = _('Password is too short.')
+                return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+            if not is_user_password_strong(password):
+                error_msg = _('Password is too week.')
+                return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         try:
             expire_days = int(request.data.get('expire_days', 0))

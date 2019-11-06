@@ -211,7 +211,7 @@ def ajax_change_dl_link_status(request):
         return HttpResponse({}, status=400, content_type=content_type)
 
     username = request.user.username
-    chain = fileshare.get_approval_chain(flat=True)
+    chain = fileshare.get_approval_chain()
     if username not in chain:
         return HttpResponse({}, status=403, content_type=content_type)
 
