@@ -540,7 +540,7 @@ class FileShare(models.Model):
             extra_info = FileShareExtraInfo.objects.filter(share_link=self)
             if len(extra_info) > 0:
                 sent_to_emails = ', '.join([x.sent_to for x in extra_info])
-                status_str += u'该文件下载链接已外发至邮件：' + sent_to_emails
+                status_str += u';该文件下载链接已外发至邮件：' + sent_to_emails
                 status_str += u'（发送于' + self.get_pass_time() + u'）'
                 status_str += ' '
 
