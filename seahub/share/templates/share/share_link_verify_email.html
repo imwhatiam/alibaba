@@ -17,7 +17,7 @@
 {% endif %}
 
 <p style="font-size:14px;color:#434144;">
-{% blocktrans %}审批人请先登录 {{service_url}}，再点击此链接审批，否则无权限访问。<br />（请使用chrome/firefox浏览器）{% endblocktrans%}
+{% blocktrans %}审批人请先登录 <a href="{{service_url}}">{{service_url}}</a>，再点击此链接审批，否则无权限访问。<br />（请使用chrome/firefox浏览器）{% endblocktrans%}
 </p>
 
 {% endautoescape %}
