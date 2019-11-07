@@ -88,13 +88,13 @@ class Content extends Component {
                 <th width={columnWidths[2]}><a className="d-block table-sort-op" href="#" onClick={this.sortByTime}>{gettext('Expiration')} {sortByTime && sortIcon}</a></th>
                 <th width="10%">{/*Operations*/}</th>
               </tr>
-            ) : ( 
+            ) : (
               <tr>
                 <th width="12%"></th>
                 <th width="80%"></th>
                 <th width="8%"></th>
               </tr>
-            )}  
+            )}
           </thead>
           <tbody>
             {items.map((item, index) => {
@@ -114,7 +114,7 @@ class Content extends Component {
         </Fragment>
       );
 
-      return items.length ? table : emptyTip; 
+      return items.length ? table : emptyTip;
     }
   }
 }
@@ -144,7 +144,7 @@ class Item extends Component {
   updatePermissionOptions = () => {
     const item = this.props.item;
     let options = this.permissionOptions;
-  
+
     if (!Utils.isEditableOfficeFile(item.obj_name)) {
       return ;
     }
@@ -180,19 +180,19 @@ class Item extends Component {
   toggleOpMenu = () => {
     this.setState({
       isOpMenuOpen: !this.state.isOpMenuOpen
-    }); 
+    });
   }
 
   togglePermSelectDialog = () => {
     this.setState({
       isPermSelectDialogOpen: !this.state.isPermSelectDialogOpen
-    }); 
+    });
   }
 
   toggleLinkDialog = () => {
     this.setState({
       isLinkDialogOpen: !this.state.isLinkDialogOpen
-    }); 
+    });
   }
 
   handleMouseOver = () => {
@@ -207,7 +207,7 @@ class Item extends Component {
     e.preventDefault();
     this.toggleLinkDialog();
   }
-  
+
   removeLink = (e) => {
     e.preventDefault();
     this.props.onRemoveLink(this.props.item);
@@ -223,7 +223,7 @@ class Item extends Component {
     let expire_date = moment(item.expire_date).format('YYYY-MM-DD');
     return (
       <Fragment>
-        {item.is_expired ? 
+        {item.is_expired ?
           <span className="error">{expire_date}</span> : expire_date
         }
       </Fragment>
@@ -235,7 +235,7 @@ class Item extends Component {
     const permissionDetails = Utils.getShareLinkPermissionObject(permission).permissionDetails;
     seafileAPI.updateShareLink(item.token, JSON.stringify(permissionDetails)).then(() => {
       this.setState({
-        currentPermission: permission 
+        currentPermission: permission
       });
       let message = gettext('Successfully modified permission.');
       toaster.success(message);
@@ -266,7 +266,7 @@ class Item extends Component {
       iconUrl = Utils.getFolderIconUrl(false);
       objUrl = `${siteRoot}library/${item.repo_id}/${encodeURIComponent(item.repo_name)}${Utils.encodePath(path)}`;
     } else {
-      iconUrl = Utils.getFileIconUrl(item.obj_name); 
+      iconUrl = Utils.getFileIconUrl(item.obj_name);
       objUrl = `${siteRoot}lib/${item.repo_id}/file${Utils.encodePath(item.path)}`;
     }
     let statusStr = '';
@@ -291,7 +291,7 @@ class Item extends Component {
         <td><a href="#"  onClick={this.viewStatus}>{statusStr}</a></td>
         {isPro &&
         <td>
-          <ShareLinkPermissionEditor 
+          <ShareLinkPermissionEditor
             isTextMode={true}
             isEditIconShow={isOpIconShown && !item.is_expired}
             currentPermission={currentPermission}
@@ -301,15 +301,14 @@ class Item extends Component {
         </td>
         }
         <td>{item.view_cnt}</td>
-        <td>{this.renderExpiration()}</td> 
+        <td>{this.renderExpiration()}</td>
         <td>
-          {!item.is_expired && <a href="#" className={`sf2-icon-link action-icon ${isOpIconShown ? '': 'invisible'}`} title={gettext('View')} onClick={this.viewLink}></a>}
           <a href="#" className={`sf2-icon-delete action-icon ${isOpIconShown ? '': 'invisible'}`} title={gettext('Remove')} onClick={this.removeLink}></a>
         </td>
       </tr>
     );
 
-    const mobileItem = ( 
+    const mobileItem = (
       <Fragment>
         <tr>
           <td><img src={iconUrl} alt="" width="24" /></td>
@@ -332,7 +331,7 @@ class Item extends Component {
                 title={gettext('More Operations')}
                 data-toggle="dropdown"
                 aria-expanded={this.state.isOpMenuOpen}
-              />  
+              />
               <div className={this.state.isOpMenuOpen ? '' : 'd-none'} onClick={this.toggleOpMenu}>
                 <div className="mobile-operation-menu-bg-layer"></div>
                 <div className="mobile-operation-menu">
