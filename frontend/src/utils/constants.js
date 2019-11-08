@@ -57,7 +57,9 @@ export const customNavItems = window.app.pageOptions.customNavItems;
 export const isCompanySecurity = window.app.pageOptions.isCompanySecurity;
 export const isSystemSecurity = window.app.pageOptions.isSystemSecurity;
 export const pinganShareLinkBackupLibrary = window.app.pageOptions.pinganShareLinkBackupLibrary;
-
+export const pinganFaqUrl = window.app.pageOptions.pinganFaqUrl;
+export const pinganHelpUrl = window.app.pageOptions.pinganHelpUrl;
+export const pinganPermissionHelpUrl = window.app.pageOptions.pinganPermissionHelpUrl;
 export const curNoteMsg = window.app.pageOptions.curNoteMsg;
 export const curNoteID = window.app.pageOptions.curNoteID;
 

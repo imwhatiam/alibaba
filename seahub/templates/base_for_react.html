@@ -94,6 +94,9 @@
             isCompanySecurity: {% if is_company_security %} true {% else %} false {% endif %},
             isSystemSecurity: {% if is_system_security %} true {% else %} false {% endif %},
             pinganShareLinkBackupLibrary: '{{pingan_share_link_backup_library}}',
+            pinganFaqUrl: '{{pingan_faq_url}}',
+            pinganHelpUrl: '{{pingan_help_url}}',
+            pinganPermissionHelpUrl: '{{pingan_permission_help_url}}',
 
             {% if request.user.is_authenticated and request.cur_note %}
             curNoteMsg: '{{ request.cur_note.message|urlize|escapejs }}',

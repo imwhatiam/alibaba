@@ -41,4 +41,12 @@ PINGAN_EMAIL_URL = getattr(settings,
 PINGAN_DMZ_DOMAIN = getattr(settings,
         'PINGAN_DMZ_DOMAIN', 'https://pafile2.pingan.com.cn')
 
+PINGAN_FAQ_URL = getattr(settings,
+        'PINGAN_FAQ_URL', '#')
+
+PINGAN_HELP_URL = getattr(settings,
+        'PINGAN_HELP_URL', 'http://fcloud.paic.com.cn/f/470c7c10bd/?raw=1')
+
+PINGAN_PERMISSION_HELP_URL = getattr(settings,
+        'PINGAN_PERMISSION_HELP_URL', 'http://fcloud.paic.com.cn/f/e176568aa7/?raw=1')
 ######################### End PingAn Group related ##########################
