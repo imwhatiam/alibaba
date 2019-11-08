@@ -49,4 +49,7 @@ PINGAN_HELP_URL = getattr(settings,
 
 PINGAN_PERMISSION_HELP_URL = getattr(settings,
         'PINGAN_PERMISSION_HELP_URL', 'http://fcloud.paic.com.cn/f/e176568aa7/?raw=1')
+
+PINGAN_DLP_DATABASE_CONF = getattr(settings,
+        'PINGAN_DLP_DATABASE_CONF', '/wls/seafile/check-dlp/mssql.conf')
 ######################### End PingAn Group related ##########################

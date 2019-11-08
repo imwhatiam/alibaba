@@ -147,14 +147,11 @@ class Command(BaseCommand):
         username = fileshare.username
         d_profile = DetailedProfile.objects.get_detailed_profile_by_user(username)
         if d_profile and d_profile.company:
-            company = d_profile.company
-            company_utf8 = company.encode('utf-8')
-            if company_utf8 in PINGAN_SHARE_LINK_BACKUP_LIBRARIES:
-                company_backup_repo_ip = PINGAN_SHARE_LINK_BACKUP_LIBRARIES[company_utf8]
+            company_id = d_profile.company.lower()
+            if company_id in PINGAN_SHARE_LINK_BACKUP_LIBRARIES:
+                company_backup_repo_ip = PINGAN_SHARE_LINK_BACKUP_LIBRARIES[company_id]
             else:
                 company_backup_repo_ip = ''
-        else:
-            admin_backup_repo_ip = SHARE_LINK_BACKUP_LIBRARY
 
         new_file = '%s-%s-%s.%s' % (username,
                                  datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -163,6 +160,7 @@ class Command(BaseCommand):
         )
 
         try:
+            admin_backup_repo_ip = SHARE_LINK_BACKUP_LIBRARY
             seafile_api.copy_file(
                 fileshare.repo_id, os.path.dirname(fileshare.path),
                 os.path.basename(fileshare.path), admin_backup_repo_ip, '/',

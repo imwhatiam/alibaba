@@ -4,12 +4,13 @@
 import json
 import pymssql
 import ConfigParser
+from seahub.share.settings import PINGAN_DLP_DATABASE_CONF
 
 
 class MSSQL:
     def __init__(self):
         cf = ConfigParser.ConfigParser()
-        cf.read("/opt/seafile/check-dlp/mssql.conf")
+        cf.read(PINGAN_DLP_DATABASE_CONF)
         self.host = cf.get("DB", "host")
         self.user = cf.get("DB", "user")
         self.pwd = cf.get("DB", "pwd")
