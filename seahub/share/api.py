@@ -29,7 +29,7 @@ from seahub.utils import is_valid_email, get_log_events_by_time, \
         gen_file_share_link
 from seahub.utils.ms_excel import write_xls
 from seahub.utils.timeutils import datetime_to_isoformat_timestr, \
-        timestamp_to_isoformat_timestr
+        timestamp_to_isoformat_timestr, utc_datetime_to_isoformat_timestr
 from seahub.views import check_folder_permission
 from seahub.base.templatetags.seahub_tags import email2nickname
 
@@ -333,7 +333,7 @@ def get_share_link_info(share_links, export_excel=False):
         # basic info
         info['filename'] = share_link.get_name()
         info['from_user'] = share_link.username
-        info['created_at'] = share_link.ctime.strftime('%Y-%m-%d')
+        info['created_at'] = datetime_to_isoformat_timestr(share_link.ctime)
         info['expiration'] = share_link.expire_date.strftime('%Y-%m-%d') if share_link.expire_date else ''
         info['share_link_url'] = share_link.get_full_url()
         info['share_link_token'] = share_link.token
@@ -403,7 +403,7 @@ def get_share_link_approval_info(share_link):
     dlp_approval_dict = {}
     dlp_approval_dict['dlp_msg'] = dlp_msg
     dlp_approval_dict['dlp_status'] = dlp_approval.status
-    dlp_approval_dict['dlp_vtime'] = dlp_approval.vtime
+    dlp_approval_dict['dlp_vtime'] = datetime_to_isoformat_timestr(dlp_approval.vtime)
 
     # get detailed approval message
     result = {
@@ -487,8 +487,8 @@ class PinganAdminShareLinksReport(APIView):
 
             ret = {
                 'data': api_result,
-                'start_time': start_date.strftime("%Y-%m-%dT%H:%M:%S"),
-                'end_time': end_date.strftime("%Y-%m-%dT%H:%M:%S"),
+                'start_time': datetime_to_isoformat_timestr(start_date),
+                'end_time': datetime_to_isoformat_timestr(end_date),
                 'backup_repo_id': SHARE_LINK_BACKUP_LIBRARY,
             }
             return Response(ret)
@@ -581,8 +581,8 @@ class PinganCompanySecurityShareLinksReport(APIView):
                 result['source_obj_name'] = share_link_token_2_source_obj_name.get(result['share_link_token'], '')
             ret = {
                 'data': api_result,
-                'start_time': start_date.strftime("%Y-%m-%dT%H:%M:%S"),
-                'end_time': end_date.strftime("%Y-%m-%dT%H:%M:%S"),
+                'start_time': datetime_to_isoformat_timestr(start_date),
+                'end_time': datetime_to_isoformat_timestr(end_date),
                 'backup_repo_id': backup_repo_id,
             }
             return Response(ret)
@@ -688,7 +688,7 @@ def get_share_link_download_info(share_links, events):
         first_download_time = first_download_time_dict.get(share_link.id, '')
         share_link_info = {
             'download_count': download_count,
-            'first_download_time': first_download_time,
+            'first_download_time': datetime_to_isoformat_timestr(first_download_time),
             'data': [],
         }
 
@@ -703,7 +703,7 @@ def get_share_link_download_info(share_links, events):
                 'user': event.user,
                 'ip': event.ip,
                 'device': event.device,
-                'time': datetime_to_isoformat_timestr(event.timestamp),
+                'time': utc_datetime_to_isoformat_timestr(event.timestamp),
 
             }
             share_link_info['data'].append(event_data)
@@ -749,16 +749,15 @@ class PinganAdminShareLinkDownloadInfo(APIView):
             error_msg = 'Permission denied.'
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
-        # get resource
-        share_links = FileShare.objects.filter(ctime__lte=end_date).\
-                filter(ctime__gte=start_date). \
-                filter(s_type='f')
-
+        # get share_links
         share_link_token_list = request.GET.getlist('share_link_token', '')
-        if share_link_token_list:
-            share_links = share_links.filter(token__in=share_link_token_list)
+        if not share_link_token_list:
+            error_msg = "share_link_token invalid."
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
-        # get share link file download info
+        share_links = FileShare.objects.filter(token__in=share_link_token_list)
+
+        # get download info
         try:
             start_timestamp = time.mktime(start_date.timetuple())
             end_timestamp = time.mktime(end_date.timetuple())
@@ -798,28 +797,16 @@ class PinganCompanySecurityShareLinkDownloadInfo(APIView):
         # parameter check
         start_date_str = request.GET.get('start', '')
         end_date_str = request.GET.get('end', '')
-        if start_date_str and end_date_str:
-
-            if len(start_date_str) == 10:
-                start_date_str += 'T00:00:00'
-
-            if len(end_date_str) == 10:
-                end_date_str += 'T23:59:59'
-
+        if not start_date_str and not end_date_str:
+            end_date = timezone.now()
+            start_date = end_date - timedelta(days=30)
+        else:
             try:
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%S')
                 end_date = datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S')
             except Exception:
                 error_msg = "date invalid."
                 return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
-        else:
-            end_date = timezone.now()
-            start_date = end_date - timedelta(days=7)
-
-        share_link_token_list = request.GET.getlist('share_link_token', None)
-        if not share_link_token_list:
-            error_msg = 'share_link_token invalid.'
-            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         # permission check
         username = request.user.username
@@ -827,7 +814,15 @@ class PinganCompanySecurityShareLinkDownloadInfo(APIView):
             error_msg = 'Permission denied.'
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
-        # get share link file download info
+        # get share_links
+        share_link_token_list = request.GET.getlist('share_link_token', None)
+        if not share_link_token_list:
+            error_msg = 'share_link_token invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        share_links = FileShare.objects.filter(token__in=share_link_token_list)
+
+        # get download info
         try:
             start_timestamp = time.mktime(start_date.timetuple())
             end_timestamp = time.mktime(end_date.timetuple())
@@ -840,7 +835,7 @@ class PinganCompanySecurityShareLinkDownloadInfo(APIView):
 
         events = filter(lambda e: e.etype=='file-download-share-link', events)
         events.sort(key=lambda e: e.timestamp, reverse=True)
-        share_links = FileShare.objects.filter(token__in=share_link_token_list)
+
         api_result, excel_data_list = get_share_link_download_info(share_links, events)
 
         export_excel = request.GET.get('excel', 'false').lower() == 'true'
