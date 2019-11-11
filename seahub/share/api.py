@@ -780,7 +780,7 @@ class PinganAdminShareLinkDownloadInfo(APIView):
         response = HttpResponse(content_type='application/ms-excel')
         response['Content-Disposition'] = 'attachment; filename=link-download-info.xlsx'
 
-        head = ["文件名", "下载链接", "首次下载时间", "下载次数", "用户", "时间", "IP", "设备名"]
+        head = ["文件名", "下载链接", "首次下载时间", "下载次数", "用户", "IP", "设备名", "时间"]
         wb = write_xls(u'链接下载信息', head, excel_data_list)
         wb.save(response)
         return response
@@ -845,7 +845,7 @@ class PinganCompanySecurityShareLinkDownloadInfo(APIView):
         response = HttpResponse(content_type='application/ms-excel')
         response['Content-Disposition'] = 'attachment; filename=link-download-info.xlsx'
 
-        head = ["文件名", "下载链接", "首次下载时间", "下载次数", "用户", "时间", "IP", "设备名"]
+        head = ["文件名", "下载链接", "首次下载时间", "下载次数", "用户", "IP", "设备名", "时间"]
         wb = write_xls(u'链接下载信息', head, excel_data_list)
         wb.save(response)
         return response
