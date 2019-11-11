@@ -127,6 +127,8 @@ class Groups(APIView):
 
         for g in user_groups:
             group_info = get_group_info(request, g.id, avatar_size)
+            if group_info['owner'] == 'system admin':
+                continue
 
             if with_repos:
                 if org_id:
