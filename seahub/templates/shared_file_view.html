@@ -43,8 +43,8 @@ body {
             {% else %}
             <p class="share-by ellipsis">{% trans "Shared by: " %}{{ shared_by|email2nickname }}</p>
             {% if share_to %}
-            <p>发送对象：{{ share_to }}</p>
-            <p>外发需求：{{ note }}</p>
+            <p>发送对象：{{ share_to|escapejs }}</p>
+            <p>外发需求：{{ note|escapejs }}</p>
             {% endif %}
             {% endif %}
         </div>
