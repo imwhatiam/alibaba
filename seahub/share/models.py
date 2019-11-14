@@ -432,7 +432,7 @@ class FileShare(models.Model):
         if not d_profile or not d_profile.company:
             return chain_list
 
-        if d_profile.company in PINGAN_FULL_APPROVE_CHAIN_COMPANY:
+        if d_profile.company.lower() in PINGAN_FULL_APPROVE_CHAIN_COMPANY:
             return chain_list
 
         dlp_status = FileShareApprovalStatus.objects.get_dlp_status_by_share_link(self)
