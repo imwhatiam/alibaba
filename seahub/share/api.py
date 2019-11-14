@@ -328,6 +328,9 @@ def get_share_link_info(share_links, export_excel=False):
 
     for share_link in share_links:
 
+        if share_link.s_type != 'f':
+            continue
+
         info = {}
 
         # basic info
@@ -338,10 +341,11 @@ def get_share_link_info(share_links, export_excel=False):
         info['share_link_url'] = share_link.get_full_url()
         info['share_link_token'] = share_link.token
 
-        dirent = None
-        if share_link.s_type == 'f':
+        try:
             dirent = seafile_api.get_dirent_by_path(share_link.repo_id, share_link.path)
-        info['size'] = dirent.size if dirent else ''
+            info['size'] = dirent.size if dirent else ''
+        except Exception:
+            info['size'] = ''
 
         # company and department info
         company_id = company_id_dict.get(share_link.username, '')
