@@ -31,6 +31,8 @@ from seahub.utils import gen_token, send_html_email
 from seahub.utils.ms_excel import write_xls
 from seahub.settings import SITE_ROOT
 
+from seahub.share.pingan_utils import user_in_chain
+
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
@@ -212,7 +214,7 @@ def ajax_change_dl_link_status(request):
 
     username = request.user.username
     chain = fileshare.get_approval_chain()
-    if username not in chain:
+    if not user_in_chain(username, chain):
         return HttpResponse({}, status=403, content_type=content_type)
 
     # check whether it is approved/veto by me or others siblings

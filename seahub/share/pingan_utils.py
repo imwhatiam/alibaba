@@ -91,3 +91,21 @@ def update_chain_list_when_group_member_updated(company_id, old_company_security
 from seahub.utils.hasher import AESPasswordHasher
 def check_password(password, encoded):
     return AESPasswordHasher().verify(password, encoded)
+
+def user_in_chain(username, chain):
+    """ chain could be:
+        1. [('op_or', u'pa011-manager-1@1.com', u'1@1.com'), u'foo@foo.com', u'bar@bar.com']
+        2. [u'lian@seafile.com']
+    """
+
+    if not username or len(chain) == 0:
+        return False
+
+    if username in chain:
+        return True
+
+    for sub_chain in chain:
+        if username in sub_chain:
+            return True
+
+    return False

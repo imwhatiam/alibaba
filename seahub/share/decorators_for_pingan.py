@@ -21,6 +21,7 @@ from seahub.share.utils import (incr_share_link_decrypt_failed_attempts,
 from seahub.share.signals import file_shared_link_decrypted
 from seahub.utils import render_error
 from seahub.utils.ip import get_remote_ip
+from seahub.share.pingan_utils import user_in_chain
 
 def share_link_approval_for_pingan(func):
     """Decorator for share link approval test for PingAn Group.
@@ -32,7 +33,7 @@ def share_link_approval_for_pingan(func):
         fileshare = get_object_or_404(FileShare, token=token)
 
         chain = fileshare.get_approval_chain(flat=False)
-        if fileshare.pass_verify() and req_user not in chain:
+        if fileshare.pass_verify() and not user_in_chain(req_user, chain):
             if fileshare.is_expired():
                 raise Http404
 
@@ -57,7 +58,7 @@ def share_link_approval_for_pingan(func):
             if len(chain) == 0:
                 return render_error(request, _(u'权限不足：你无法访问该文件。'))
 
-            if req_user not in chain:
+            if not user_in_chain(req_user, chain):
                 return render_error(request, _(u'权限不足：你无法访问该文件。'))
 
             chain_status_list = FileShareApprovalStatus.objects.\
