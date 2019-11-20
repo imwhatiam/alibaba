@@ -59,6 +59,11 @@ try:
 except ImportError:
     CHECK_SHARE_LINK_TRAFFIC = False
 
+try:
+    from seahub.settings import PAFILE_EMAIL_DEBUG
+except ImportError:
+    PAFILE_EMAIL_DEBUG = False
+
 from seahub.share.settings import PINGAN_DMZ_DOMAIN
 
 # init Seafevents API
@@ -949,6 +954,13 @@ def send_html_email(subject, con_template, con_context, from_email, to_email,
                        to_email, headers=headers)
     msg.content_subtype = "html"
     msg.send()
+
+    if PAFILE_EMAIL_DEBUG:
+        # Get an instance of a logger
+        logger = logging.getLogger(__name__)
+        logger.info('PAFile Email send to: %s' % to_email)
+        logger.info('PAFile Email subject: %s' % subject)
+        logger.info('PAFile Email body: %s' % t.render(con_context))
 
 def gen_dir_share_link(token):
     """Generate directory share link.
