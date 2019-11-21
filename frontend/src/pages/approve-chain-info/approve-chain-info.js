@@ -257,16 +257,23 @@ class ApproveChainInfo extends Component {
   }
 
   downloadDownloadInfo = () => {
+    let fromTimeStr = this.formatDate(this.state.startDate);
+    let endTimeStr = this.formatDate(this.state.endDate);
+    let { fileNameForSearch, searchShareLinkCreator } = this.state;
+
     let url = seafileAPI.server;
     if (isCompanySecurity) {
-      url += '/pingan-api/company-security/share-link-download-info/?excel=true';
+      url += '/pingan-api/company-security/share-link-download-info/?';
     } else if (isSystemSecurity) {
-      url += '/pingan-api/admin/share-link-download-info/?excel=true';
+      url += '/pingan-api/admin/share-link-download-info/?';
     }
-    this.state.pinganApproveStatusList.map(item => {
-      url += '&share_link_token=' + item.share_link_token;
-    });
-    location.href = url;
+
+    url += fromTimeStr ? 'start=' + fromTimeStr + '&' : '';
+    url += endTimeStr ? 'end=' + endTimeStr + '&' : '';
+    url += fileNameForSearch ? 'filename=' + encodeURIComponent(fileNameForSearch) + '&' : '';
+    url += searchShareLinkCreator ? 'from_user=' + encodeURIComponent(searchShareLinkCreator) + '&' : '';
+
+    location.href = url + 'excel=true';
   }
 
   handleStartDateChange = (date) => {
