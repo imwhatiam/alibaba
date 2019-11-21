@@ -473,14 +473,14 @@ class PinganAdminShareLinksReport(APIView):
                 .filter(ctime__gte=start_date)
 
         # search by filename
-        filename = request.GET.get('filename', '')
+        filename = request.GET.get('filename', '').lower().strip()
         if filename:
-            share_links = filter(lambda link: filename in link.get_name(), share_links)
+            share_links = filter(lambda link: filename in link.get_name().lower().strip(), share_links)
 
         # search by share link creator
-        from_user = request.GET.get('from_user', '')
+        from_user = request.GET.get('from_user', '').lower().strip()
         if from_user:
-            share_links = filter(lambda link: from_user in link.username, share_links)
+            share_links = filter(lambda link: from_user in link.username.lower().strip(), share_links)
 
         export_excel = request.GET.get('excel', 'false').lower() == 'true'
         api_result, excel_data_list = get_share_link_info(share_links, export_excel)
@@ -568,14 +568,14 @@ class PinganCompanySecurityShareLinksReport(APIView):
                 .filter(ctime__lte=end_date).filter(ctime__gte=start_date)
 
         # search by filename
-        filename = request.GET.get('filename', '')
+        filename = request.GET.get('filename', '').lower().strip()
         if filename:
-            share_links = filter(lambda link: filename in link.get_name(), share_links)
+            share_links = filter(lambda link: filename in link.get_name().lower().strip(), share_links)
 
         # search by share link creator
-        from_user = request.GET.get('from_user', '')
+        from_user = request.GET.get('from_user', '').lower().strip()
         if from_user:
-            share_links = filter(lambda link: from_user in link.username, share_links)
+            share_links = filter(lambda link: from_user in link.username.lower().strip(), share_links)
 
         export_excel = request.GET.get('excel', 'false').lower() == 'true'
         api_result, excel_data_list = get_share_link_info(share_links, export_excel)
