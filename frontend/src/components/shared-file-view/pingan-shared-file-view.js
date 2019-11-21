@@ -151,7 +151,7 @@ class SharedFileViewPingan extends React.Component {
                     <Fragment>
                       <br/>
                       <small className="share-by ellipsis">{'命中信息：'}</small>
-                      <Input disabled value={breachContent}></Input>
+                      <Input disabled value={breachContent} title={breachContent}></Input>
                     </Fragment>
                   }
                 </Fragment>
