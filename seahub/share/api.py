@@ -377,6 +377,10 @@ def get_share_link_info(share_links, export_excel=False):
                 STATUS_BLOCK_HIGH_RISK: '高敏',
             }
 
+            formated_approval_info = ''
+            for sub_approval_info in detailed_approval_info:
+                formated_approval_info += str(sub_approval_info[1]) + '; '
+
             excel_row = [info['filename'], info['size'], info['from_user'], info['company'],
                     info['department'], ','.join(info['sent_to']), info['created_at'],
                     info['expiration'], info['share_link_url'],
@@ -386,7 +390,7 @@ def get_share_link_info(share_links, export_excel=False):
                     dlp_approval_msg.get('policy_categories', ''),
                     dlp_approval_msg.get('breach_content', ''),
                     dlp_approval_msg.get('total_matches', ''),
-                    str(detailed_approval_info)
+                    formated_approval_info
                     ]
 
             excel_data_list.append(excel_row)
