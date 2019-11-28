@@ -109,6 +109,7 @@
             appleClientPublicDownloadUrlEn: "{{ apple_client_public_download_url_en }}",
             appleClientVersionEn: "{{ apple_client_version_en }}",
             alibabaEnableWatermark: '{{ alibaba_enable_watermark }}',
+            alibabaEnableCitrix: '{{ alibaba_enable_citrix }}',
 
             {% if request.user.is_authenticated and request.cur_note %}
             curNoteMsg: '{{ request.cur_note.message|urlize|escapejs }}',

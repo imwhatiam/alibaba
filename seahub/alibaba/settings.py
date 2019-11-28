@@ -1,5 +1,7 @@
 from django.conf import settings
 
+ALIBABA_ENABLE_CITRIX = getattr(settings, 'ALIBABA_ENABLE_CITRIX', False)
+
 # for client download
 WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL = getattr(settings, 'WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL', '')
 WINDOWS_CLIENT_VERSION = getattr(settings, 'WINDOWS_CLIENT_VERSION', '')

@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import sys
+import base64
 import os
 import stat
 import json
@@ -22,6 +24,7 @@ from datetime import datetime
 from django.db.models import Q
 from django.shortcuts import render
 from django.utils.translation import ugettext as _
+from django.http import FileResponse
 
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -58,7 +61,18 @@ from seahub.alibaba.settings import WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL, \
         WINDOWS_CLIENT_VERSION, APPLE_CLIENT_PUBLIC_DOWNLOAD_URL, \
         APPLE_CLIENT_VERSION, WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL_EN, \
         WINDOWS_CLIENT_VERSION_EN, APPLE_CLIENT_PUBLIC_DOWNLOAD_URL_EN, \
-        APPLE_CLIENT_VERSION_EN
+        APPLE_CLIENT_VERSION_EN, ALIBABA_ENABLE_CITRIX
+
+try:
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    seafile_conf_dir = os.path.join(current_path, \
+            '../../../../conf')
+    sys.path.append(seafile_conf_dir)
+    from seahub_custom_functions import get_citrix_file
+    has_get_citrix_file = True
+except ImportError:
+    has_get_citrix_file = False
+
 
 logger = logging.getLogger(__name__)
 
@@ -685,3 +699,64 @@ class AlibabaUserEditFileView(APIView):
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
         return Response({'success': True})
+
+
+class AlibabaCitrix(APIView):
+    """
+    """
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = (UserRateThrottle,)
+
+    def get(self, request, format=None):
+
+        if not ALIBABA_ENABLE_CITRIX:
+            error_msg = 'Citrix feature not enabled.'
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+        if not has_get_citrix_file:
+            error_msg = 'get_citrix_file func not found.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        # parameter check
+        repo_id = request.GET.get('repo_id', '')
+        if not repo_id:
+            error_msg = 'repo_id invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        path = request.GET.get('path', '')
+        if not path:
+            error_msg = 'repo_id invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        # resource check
+        repo = seafile_api.get_repo(repo_id)
+        if not repo:
+            error_msg = 'Library %s not found.' % repo_id
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        try:
+            dirent = seafile_api.get_dirent_by_path(repo_id, path)
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        if not dirent:
+            error_msg = 'Dirent %s not found.' % path
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        # permission check
+        if not check_folder_permission(request, repo_id, '/'):
+            error_msg = 'permission denied.'
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+        username = request.user.username
+        citrix_file = get_citrix_file(username, repo_id, path)
+
+        ica_file_name = base64.b64encode('%s_%s' % (repo_id, path))
+        response =FileResponse(citrix_file)
+        response['Content-Type']='application/octet-stream'
+        response['Content-Disposition']='attachment;filename="%s.ica"' % ica_file_name
+
+        return response

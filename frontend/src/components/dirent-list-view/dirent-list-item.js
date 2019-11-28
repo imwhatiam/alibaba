@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import MD5 from 'MD5';
 import { UncontrolledTooltip } from 'reactstrap';
 import { Dropdown, DropdownToggle, DropdownItem } from 'reactstrap';
-import { gettext, siteRoot, mediaUrl, username } from '../../utils/constants';
+import { gettext, siteRoot, mediaUrl, username, alibabaEnableCitrix } from '../../utils/constants';
 import MediaQuery from 'react-responsive';
 import { Utils } from '../../utils/utils';
 import { seafileAPI } from '../../utils/seafile-api';
@@ -494,6 +494,15 @@ class DirentListItem extends React.PureComponent {
     this.props.onItemContextMenu(event, dirent);
   }
 
+  onItemAlibabaGetCitrix = (e) => {
+    let dirent = this.props.dirent;
+    let repoID = this.props.repoID;
+    let direntPath = this.getDirentPath(dirent);
+
+    let url = seafileAPI.server + '/alibaba/api/citrix/';
+    window.open(url + '?repo_id=' + repoID + '&path=' + Utils.encodePath(direntPath));
+  }
+
   renderItemOperation = () => {
     let { dirent, currentRepoInfo, selectedDirentList } = this.props;
 
@@ -507,6 +516,11 @@ class DirentListItem extends React.PureComponent {
             {this.state.isOperationShow && !dirent.isSelected &&
               <div className="operations">
                 <ul className="operation-group">
+                  {(dirent.type === 'file' && alibabaEnableCitrix) && (
+                    <li className="operation-group-item">
+                      <i className="op-icon sf2-icon-link" title={gettext('Citrix')} onClick={this.onItemAlibabaGetCitrix}></i>
+                    </li>
+                  )}
                   {(dirent.permission === 'rw' || dirent.permission === 'r') && (
                     <li className="operation-group-item">
                       <i className="op-icon sf2-icon-download" title={gettext('Download')} onClick={this.onItemDownload}></i>
@@ -541,6 +555,11 @@ class DirentListItem extends React.PureComponent {
             {this.state.isOperationShow && 
               <div className="operations">
                 <ul className="operation-group">
+                  {(dirent.type === 'file' && alibabaEnableCitrix) && (
+                    <li className="operation-group-item">
+                      <i className="op-icon sf2-icon-link" title={gettext('Citrix')} onClick={this.onItemAlibabaGetCitrix}></i>
+                    </li>
+                  )}
                   {(dirent.permission === 'rw' || dirent.permission === 'r') &&
                     <MediaQuery query="(min-device-width: 767.8px)">
                       <li className="operation-group-item">
