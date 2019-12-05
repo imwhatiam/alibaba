@@ -9,7 +9,7 @@ import logging
 import posixpath
 
 from django.core.cache import cache
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, resolve
 from django.contrib import messages
 from django.http import HttpResponse, Http404, \
     HttpResponseRedirect
@@ -1255,6 +1255,42 @@ def choose_register(request):
 
 @login_required
 def react_fake_view(request, **kwargs):
+
+    if resolve(request.path).url_name == 'lib_view':
+
+        repo_id = kwargs.get('repo_id', '')
+        path = kwargs.get('path', '')
+
+        if repo_id and path and \
+                not check_folder_permission(request, repo_id, path):
+
+            username = request.user.username
+            converted_repo_path = seafile_api.convert_repo_path(repo_id, path, username)
+            if not converted_repo_path:
+                error_msg = 'Permission denied.'
+                return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+            converted_repo_path = json.loads(converted_repo_path)
+
+            repo_id = converted_repo_path['repo_id']
+            repo = seafile_api.get_repo(repo_id)
+            if not repo:
+                error_msg = 'Library %s not found.' % repo_id
+                return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+            path = converted_repo_path['path']
+            dirent = seafile_api.get_dirent_by_path(repo_id, path)
+            if not dirent:
+                error_msg = 'Dirent %s not found.' % path
+                return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+            if not check_folder_permission(request, repo_id, path):
+                error_msg = 'Permission denied.'
+                return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+            next_url = reverse('lib_view', args=[repo_id, repo.repo_name, path.strip('/')])
+            return HttpResponseRedirect(next_url)
+
     folder_perm_enabled = True if is_pro_version() and ENABLE_FOLDER_PERM else False
 
     try:
