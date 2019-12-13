@@ -49,7 +49,8 @@ from seahub.share.utils import is_repo_admin, check_group_share_in_permission
 from seahub.base.templatetags.seahub_tags import email2nickname, \
     translate_seahub_time, translate_commit_desc_escape, \
     email2contact_email
-from seahub.constants import PERMISSION_READ_WRITE, PERMISSION_PREVIEW_EDIT
+from seahub.constants import PERMISSION_READ_WRITE, PERMISSION_PREVIEW_EDIT, \
+        PERMISSION_READ_WRITE_NO_SYNC
 from seahub.group.views import remove_group_common, \
     rename_group_with_new_name, is_group_staff
 from seahub.group.utils import BadGroupNameError, ConflictGroupNameError, \
@@ -667,6 +668,16 @@ class Repos(APIView):
     throttle_classes = (UserRateThrottle, )
 
     def get(self, request, format=None):
+
+        from_client = False
+
+        if 'seadrive' in request.META.get('HTTP_USER_AGENT', '').lower():
+            from_client = True
+
+        for key in request.META.keys():
+            if 'seafile_client_version' in key.lower():
+                from_client = True
+
         # parse request params
         filter_by = {
             'mine': False,
@@ -773,6 +784,10 @@ class Repos(APIView):
 
             shared_repos.sort(lambda x, y: cmp(y.last_modify, x.last_modify))
             for r in shared_repos:
+
+                if from_client and r.permission == PERMISSION_READ_WRITE_NO_SYNC:
+                    continue
+
                 if q and q.lower() not in r.name.lower():
                     continue
 
@@ -839,6 +854,10 @@ class Repos(APIView):
                     nickname_dict[e] = email2nickname(e)
 
             for r in group_repos:
+
+                if from_client and r.permission == PERMISSION_READ_WRITE_NO_SYNC:
+                    continue
+
                 if q and q.lower() not in r.name.lower():
                     continue
 
@@ -884,6 +903,10 @@ class Repos(APIView):
                     nickname_dict[e] = email2nickname(e)
 
             for r in public_repos:
+
+                if from_client and r.permission == PERMISSION_READ_WRITE_NO_SYNC:
+                    continue
+
                 if q and q.lower() not in r.name.lower():
                     continue
 

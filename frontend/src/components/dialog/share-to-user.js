@@ -108,9 +108,9 @@ class ShareToUser extends React.Component {
     this.permissions = [];
     let { itemType, isRepoOwner } = props;
     if (itemType === 'library') {
-      this.permissions = isRepoOwner ? ['rw', 'r', 'admin', 'cloud-edit', 'preview'] : ['rw', 'r', 'cloud-edit', 'preview'];
+      this.permissions = isRepoOwner ? ['rw', 'rw-no-sync', 'r', 'admin', 'cloud-edit', 'preview'] : ['rw', 'rw-no-sync', 'r', 'cloud-edit', 'preview'];
     } else if (this.props.itemType === 'dir') {
-      this.permissions = ['rw', 'r', 'cloud-edit', 'preview'];
+      this.permissions = ['rw', 'rw-no-sync', 'r', 'cloud-edit', 'preview'];
     }
     if (this.props.isGroupOwnedRepo || !isPro) {
       this.permissions = ['rw', 'r'];

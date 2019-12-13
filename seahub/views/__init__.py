@@ -61,7 +61,8 @@ from seahub.settings import AVATAR_FILE_STORAGE, \
 
 from seahub.wopi.settings import ENABLE_OFFICE_WEB_APP
 from seahub.onlyoffice.settings import ENABLE_ONLYOFFICE
-from seahub.constants import HASH_URLS, PERMISSION_READ
+from seahub.constants import HASH_URLS, PERMISSION_READ, \
+        PERMISSION_READ_WRITE_NO_SYNC, PERMISSION_READ_WRITE
 
 LIBRARY_TEMPLATES = getattr(settings, 'LIBRARY_TEMPLATES', {})
 CUSTOM_NAV_ITEMS = getattr(settings, 'CUSTOM_NAV_ITEMS', '')
@@ -115,7 +116,11 @@ def check_folder_permission(request, repo_id, path):
         return PERMISSION_READ
 
     username = request.user.username
-    return seafile_api.check_permission_by_path(repo_id, path, username)
+    permission = seafile_api.check_permission_by_path(repo_id, path, username)
+    if permission == PERMISSION_READ_WRITE_NO_SYNC:
+        return PERMISSION_READ_WRITE
+    else:
+        return permission
 
 def gen_path_link(path, repo_name):
     """

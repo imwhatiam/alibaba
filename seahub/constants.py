@@ -15,6 +15,7 @@ PERMISSION_PREVIEW = 'preview'  # preview only on the web, can not be downloaded
 PERMISSION_PREVIEW_EDIT = 'cloud-edit'  # preview only with edit on the web
 PERMISSION_READ = 'r'
 PERMISSION_READ_WRITE = 'rw'
+PERMISSION_READ_WRITE_NO_SYNC = 'rw-no-sync'
 PERMISSION_ADMIN = 'admin'
 
 DEFAULT_ADMIN = 'default_admin'

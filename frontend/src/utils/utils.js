@@ -579,6 +579,9 @@ export const Utils = {
       case 'rw':
         title = isZHCN ? '读写，可同步' : 'Read-Write-Sync';
         break;
+      case 'rw-no-sync':
+        title = isZHCN ? '读写，不可同步' : 'Read-Write-no-Sync';
+        break;
       case 'r':
         title = isZHCN ? '只读，可同步' : 'Read-Only-Sync';
         break;
@@ -601,6 +604,9 @@ export const Utils = {
     switch(permission) {
       case 'rw':
         title = gettext('User can read, write, upload, download and sync files.');
+        break;
+      case 'rw-no-sync':
+        title = isZHCN ? '用户可以查看、修改、上传和下载文件。' : 'User can read, write, upload, and download files.'
         break;
       case 'r':
         title = gettext('User can read, download and sync files.');

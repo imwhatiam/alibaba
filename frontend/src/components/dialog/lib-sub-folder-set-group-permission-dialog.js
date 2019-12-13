@@ -97,7 +97,7 @@ class LibSubFolderSerGroupPermissionDialog extends React.Component {
     if (!isPro) {
       this.permissions = ['r', 'rw'];
     } else {
-      this.permissions = ['r', 'rw', 'cloud-edit', 'preview'];
+      this.permissions = ['r', 'rw', 'rw-no-sync', 'cloud-edit', 'preview'];
     }
   }
 
