@@ -4,6 +4,7 @@ import MD5 from 'MD5';
 import { UncontrolledTooltip } from 'reactstrap';
 import { Dropdown, DropdownToggle, DropdownItem } from 'reactstrap';
 import { gettext, siteRoot, mediaUrl, username } from '../../utils/constants';
+import MediaQuery from 'react-responsive';
 import { Utils } from '../../utils/utils';
 import { seafileAPI } from '../../utils/seafile-api';
 import URLDecorator from '../../utils/url-decorator';
@@ -540,12 +541,14 @@ class DirentListItem extends React.PureComponent {
             {this.state.isOperationShow && 
               <div className="operations">
                 <ul className="operation-group">
-                  {(dirent.permission === 'rw' || dirent.permission === 'r') && (
-                    <li className="operation-group-item">
-                      <i className="op-icon sf2-icon-download" title={gettext('Download')} onClick={this.onItemDownload}></i>
-                    </li>
-                  )}
-                  {showShareBtn && (
+                  {(dirent.permission === 'rw' || dirent.permission === 'r') &&
+                    <MediaQuery query="(min-device-width: 767.8px)">
+                      <li className="operation-group-item">
+                        <i className="op-icon sf2-icon-download" title={gettext('Download')} onClick={this.onItemDownload}></i>
+                      </li>
+                    </MediaQuery>
+                  }
+                  {(
                     <li className="operation-group-item">
                       <i className="op-icon sf2-icon-share" title={gettext('Share')} onClick={this.onItemShare}></i>
                     </li>
