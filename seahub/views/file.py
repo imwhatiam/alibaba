@@ -344,7 +344,7 @@ def can_preview_file(file_name, file_size, repo):
     elif filetype in (DRAW):
         pass
 
-    elif filetype in (DOCUMENT, SPREADSHEET):
+    elif filetype in (DOCUMENT, SPREADSHEET) or fileext in ['xlsm', 'xlsb']:
 
         if repo.encrypted:
             error_msg = _(u'The library is encrypted, can not open file online.')
@@ -400,7 +400,7 @@ def can_edit_file(file_name, file_size, repo):
     if file_type in (TEXT, MARKDOWN, UMIND) or file_ext in get_conf_text_ext():
         return True, ''
 
-    if file_type in (DOCUMENT, SPREADSHEET):
+    if file_type in (DOCUMENT, SPREADSHEET) or file_ext in ['xlsm', 'xlsb']:
         if ENABLE_OFFICE_WEB_APP_EDIT and \
                 file_ext in OFFICE_WEB_APP_EDIT_FILE_EXTENSION:
             return True, ''

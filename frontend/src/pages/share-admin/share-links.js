@@ -6,7 +6,7 @@ import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
 import { isPro, gettext, siteRoot, loginUrl, canGenerateUploadLink } from '../../utils/constants';
 import ShareLink from '../../models/share-link';
-import ShareLinkPermissionEditor from '../../components/select-editor/share-link-permission-editor';
+import ShareLinksPermissionEditorAlibaba from '../../components/select-editor/share-links-permission-editor-alibaba';
 import Loading from '../../components/loading';
 import toaster from '../../components/toast';
 import EmptyTip from '../../components/empty-tip';
@@ -91,13 +91,21 @@ class Item extends Component {
   constructor(props) {
     super(props);
 
+    const item = this.props.item;
+
+    if (isPro) {
+      this.editOption = 'edit_download';
+      this.permissionOptions = ['previewOnCloud', 'editOnCloud'];
+      this.updatePermissionOptions();
+    }
+
     this.state = {
       isOpIconShown: false,
       isOpMenuOpen: false, // for mobile
       isPermSelectDialogOpen: false, // for mobile
       isLinkDialogOpen: false,
       permissionOptions: [],
-      currentPermission: '',
+      currentPermission: item.permissions.can_edit ? 'editOnCloud' : 'previewOnCloud',
     };
   }
 
@@ -188,8 +196,15 @@ class Item extends Component {
 
   changePerm = (permission) => {
     const item = this.props.item;
-    const permissionDetails = Utils.getShareLinkPermissionObject(permission).permissionDetails;
-    seafileAPI.updateShareLink(item.token, JSON.stringify(permissionDetails)).then(() => {
+    let permissions = item.permissions;
+
+    if (permission === 'previewOnCloud'){
+      permissions.can_edit = false;
+    } else if (permission === 'editOnCloud'){
+      permissions.can_edit = true;
+    }
+
+    seafileAPI.updateShareLink(item.token, JSON.stringify(permissions)).then(() => {
       this.setState({
         currentPermission: permission 
       });
@@ -227,11 +242,11 @@ class Item extends Component {
         <td><Link to={`${siteRoot}library/${item.repo_id}/${encodeURIComponent(item.repo_name)}/`}>{item.repo_name}</Link></td>
         {isPro &&
         <td>
-          <ShareLinkPermissionEditor 
+          <ShareLinksPermissionEditorAlibaba
             isTextMode={true}
             isEditIconShow={isOpIconShown && !item.is_expired}
             currentPermission={currentPermission}
-            permissionOptions={permissionOptions}
+            permissionOptions={['previewOnCloud', 'editOnCloud']}
             onPermissionChanged={this.changePerm}
           />
         </td>

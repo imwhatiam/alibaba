@@ -409,6 +409,27 @@ export const Utils = {
           break;
       }
     }
+    let isZHCN = window.app.config.lang === 'zh-cn';
+    if (repo.encrypted) {
+      title = gettext('Encrypted library');
+    } else if (repo.is_admin) { // shared with 'admin' permission
+      title = isZHCN ? '共同所有者' : 'Co-Owner';
+    } else {
+      switch(permission) {
+        case 'rw':
+          title = isZHCN ? '读写，可同步' : 'Read-Write-Sync';
+          break;
+        case 'r':
+          title = isZHCN ? '只读，可同步' : 'Read-Only-Sync';
+          break;
+        case 'cloud-edit':
+          title = isZHCN ? '仅云端读写' : 'Edit-on-Cloud';
+          break;
+        case 'preview':
+          title = isZHCN ? '仅云端只读' : 'View-on-Cloud';
+          break;
+      }
+    }
     return title;
   },
 
@@ -553,10 +574,29 @@ export const Utils = {
         title = gettext('Online Read-Only');
         break;
     }
+    let isZHCN = window.app.config.lang === 'zh-cn';
+    switch(permission) {
+      case 'rw':
+        title = isZHCN ? '读写，可同步' : 'Read-Write-Sync';
+        break;
+      case 'r':
+        title = isZHCN ? '只读，可同步' : 'Read-Only-Sync';
+        break;
+      case 'admin':
+        title = isZHCN ? '共同所有者' : 'Co-Owner';
+        break;
+      case 'cloud-edit':
+        title = isZHCN ? '仅云端读写' : 'Edit-on-Cloud';
+        break;
+      case 'preview':
+        title = isZHCN ? '仅云端只读' : 'View-on-Cloud';
+        break;
+    }
     return title;
   },
 
   sharePermsExplanation: function(permission) {
+    let isZHCN = window.app.config.lang === 'zh-cn';
     var title;
     switch(permission) {
       case 'rw':
@@ -567,6 +607,7 @@ export const Utils = {
         break;
       case 'admin':
         title = gettext('Besides Write permission, user can also share the library.');
+        title = isZHCN ? '除了“读写，可同步”权限，用户还可以共享文件库。' : 'Besides \'Read-Write-Sync\' permission, user can also share the library.'
         break;
       case 'cloud-edit':
         title = gettext('User can view and edit file online via browser. Files can\'t be downloaded.');
@@ -579,6 +620,9 @@ export const Utils = {
   },
 
   getShareLinkPermissionObject: function(permission) {
+
+    let isZHCN = window.app.config.lang === 'zh-cn';
+
     switch (permission) {
       case 'preview_download':
         return {
@@ -607,12 +651,21 @@ export const Utils = {
             "can_download": true
           }
         };
-      case 'cloud_edit':
+      case 'editOnCloud':
         return {
           value: permission,
-          text: gettext('Edit on cloud'),
+          text: isZHCN ? '仅云端读写' : 'Edit-on-Cloud', 
           permissionDetails: {
             'can_edit': true,
+            "can_download": false
+          }
+        };
+      case 'previewOnCloud':
+        return {
+          value: permission,
+          text: isZHCN ? '仅云端只读': 'View-on-Cloud', 
+          permissionDetails: {
+            'can_edit': false,
             "can_download": false
           }
         };
@@ -1168,12 +1221,12 @@ export const Utils = {
       return hasGenerateShareLinkPermission;
     }
 
-    // the root path or the dirent type is dir
-    let hasGenerateShareLinkPermission = false;
-    if (canGenerateShareLink && (userDirPermission == 'rw' || userDirPermission == 'r')) {
-      hasGenerateShareLinkPermission = true;
-      return hasGenerateShareLinkPermission;
-    }
+    // // the root path or the dirent type is dir
+    // let hasGenerateShareLinkPermission = false;
+    // if (canGenerateShareLink && (userDirPermission == 'rw' || userDirPermission == 'r')) {
+    //   hasGenerateShareLinkPermission = true;
+    //   return hasGenerateShareLinkPermission;
+    // }
 
     let hasGenerateUploadLinkPermission = false;
     if (canGenerateUploadLink && (userDirPermission == 'rw')) {

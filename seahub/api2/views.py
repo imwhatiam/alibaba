@@ -90,6 +90,7 @@ from seahub.utils.timeutils import utc_to_local, \
 from seahub.views import is_registered_user, check_folder_permission, \
     create_default_library, list_inner_pub_repos
 from seahub.views.file import get_file_view_path_and_perm, send_file_access_msg, can_edit_file
+from seahub.views.file import can_preview_file
 if HAS_FILE_SEARCH:
     from seahub_extra.search.utils import search_files, get_search_repos_map, SEARCH_FILEEXT
 from seahub.utils import HAS_OFFICE_CONVERTER
@@ -3192,6 +3193,9 @@ class FileDetailView(APIView):
             logger.error(e)
             file_size = 0
         entry["size"] = file_size
+
+        entry["can_preview"], error_msg = can_preview_file(file_name, entry["size"], repo)
+        entry["can_edit"], error_msg  = can_edit_file(file_name, entry["size"], repo)
 
         starred_files = UserStarredFiles.objects.filter(repo_id=repo_id,
                 path=path)
