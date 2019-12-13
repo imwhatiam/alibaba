@@ -98,6 +98,16 @@
             {% if max_number_of_files_for_fileupload > 0 %}
             maxNumberOfFilesForFileupload: {{ max_number_of_files_for_fileupload }},
             {% endif %}
+
+            windowsClientPublicDownloadUrl: "{{ windows_client_public_download_url }}",
+            windowsClientVersion: "{{ windows_client_version }}",
+            appleClientPublicDownloadUrl: "{{ apple_client_public_download_url }}",
+            appleClientVersion: "{{ apple_client_version }}",
+            windowsClientPublicDownloadUrlEn: "{{ windows_client_public_download_url_en }}",
+            windowsClientVersionEn: "{{ windows_client_version_en }}",
+            appleClientPublicDownloadUrlEn: "{{ apple_client_public_download_url_en }}",
+            appleClientVersionEn: "{{ apple_client_version_en }}",
+
             {% if request.user.is_authenticated and request.cur_note %}
             curNoteMsg: '{{ request.cur_note.message|urlize|escapejs }}',
             curNoteID: '{{ request.cur_note.id }}',
