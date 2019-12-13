@@ -1865,8 +1865,13 @@ def send_file_access_msg(request, repo, path, access_from):
     ip = get_remote_ip(request)
     user_agent = request.META.get("HTTP_USER_AGENT")
 
+    repo_id = repo.id
+    if repo.is_virtual:
+        repo_id = repo.origin_repo_id
+        path = posixpath.join(repo.origin_path, path.strip('/'))
+
     msg = 'file-download-%s\t%s\t%s\t%s\t%s\t%s' % \
-        (access_from, username, ip, user_agent, repo.id, path)
+        (access_from, username, ip, user_agent, repo_id, path)
     msg_utf8 = msg.encode('utf-8')
 
     try:
