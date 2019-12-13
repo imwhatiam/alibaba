@@ -122,6 +122,13 @@ class DirOperationToolbar extends React.Component {
     });
   }
 
+  onCreateUmindToggle = () => {
+    this.setState({
+      isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
+      fileType: '.umind'
+    });
+  }
+
   onCreateExcelToggle = () => {
     this.setState({
       isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
@@ -168,6 +175,7 @@ class DirOperationToolbar extends React.Component {
       return '';
     }
 
+    let isZHCN = window.app.config.lang === 'zh-cn';
     let itemType = path === '/' ? 'library' : 'dir';
     let itemName = path == '/' ? repoName : Utils.getFolderName(path);
 
@@ -220,6 +228,23 @@ class DirOperationToolbar extends React.Component {
             </ul>
           )}
         </div>
+        {this.state.isUploadMenuShow && (
+          <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
+            <li className="dropdown-item" onClick={this.onUploadFile}>{gettext('Upload Files')}</li>
+            <li className="dropdown-item" onClick={this.onUploadFolder}>{gettext('Upload Folder')}</li>
+          </ul>
+        )}
+        {this.state.isCreateMenuShow && (
+          <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
+            <li className="dropdown-item" onClick={this.onCreateFolderToggle}>{gettext('New Folder')}</li>
+            <li className="dropdown-item" onClick={this.onCreateFileToggle}>{gettext('New File')}</li>
+            <li className="dropdown-divider"></li>
+            <li className="dropdown-item" onClick={this.onCreateUmindToggle}>{isZHCN ? '新建 Umind 文件' : 'New Umind File'}</li>
+            <li className="dropdown-item" onClick={this.onCreateExcelToggle}>{gettext('New Excel File')}</li>
+            <li className="dropdown-item" onClick={this.onCreatePPTToggle}>{gettext('New PowerPoint File')}</li>
+            <li className="dropdown-item" onClick={this.onCreateWordToggle}>{gettext('New Word File')}</li>
+          </ul>
+        )}
         {Utils.isDesktop() && <ViewModeToolbar currentMode={this.props.currentMode} switchViewMode={this.props.switchViewMode} />}
         {this.state.isCreateFileDialogShow && (
           <ModalPortal>

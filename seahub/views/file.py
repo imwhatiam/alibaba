@@ -46,7 +46,7 @@ from seahub.onlyoffice.utils import get_onlyoffice_dict
 from seahub.auth.decorators import login_required
 from seahub.base.decorators import repo_passwd_set_required
 from seahub.base.accounts import ANONYMOUS_EMAIL
-from seahub.base.templatetags.seahub_tags import file_icon_filter
+from seahub.base.templatetags.seahub_tags import file_icon_filter, email2nickname
 from seahub.share.models import FileShare, check_share_link_common
 from seahub.share.decorators import share_link_audit, share_link_login_required
 from seahub.wiki.utils import get_wiki_dirent
@@ -59,11 +59,12 @@ from seahub.utils import render_error, is_org_context, \
     generate_file_audit_event_type, FILE_AUDIT_ENABLED, \
     get_conf_text_ext, HAS_OFFICE_CONVERTER, PREVIEW_FILEEXT, \
     normalize_file_path, get_service_url, OFFICE_PREVIEW_MAX_SIZE, \
-    normalize_cache_key
+    normalize_cache_key, gen_file_upload_url
 from seahub.utils.ip import get_remote_ip
 from seahub.utils.timeutils import utc_to_local
 from seahub.utils.file_types import (IMAGE, PDF, SVG,
-        DOCUMENT, SPREADSHEET, AUDIO, MARKDOWN, TEXT, VIDEO, DRAW, XMIND, CDOC)
+        DOCUMENT, SPREADSHEET, AUDIO, MARKDOWN, TEXT, VIDEO, DRAW, XMIND,
+        CDOC, UMIND)
 from seahub.utils.star import is_file_starred
 from seahub.utils.http import json_response, \
         BadRequestException, RequestForbbiddenException
@@ -396,7 +397,7 @@ def can_edit_file(file_name, file_size, repo):
 
     file_type, file_ext = get_file_type_and_ext(file_name)
 
-    if file_type in (TEXT, MARKDOWN) or file_ext in get_conf_text_ext():
+    if file_type in (TEXT, MARKDOWN, UMIND) or file_ext in get_conf_text_ext():
         return True, ''
 
     if file_type in (DOCUMENT, SPREADSHEET):
@@ -746,9 +747,39 @@ def view_lib_file(request, repo_id, path):
             return_dict['xmind_image_src'] = urlquote(get_thumbnail_src(repo_id, XMIND_IMAGE_SIZE, path))
 
         return render(request, template, return_dict)
-        
     elif filetype == CDOC:
         return render(request, template, return_dict)    
+    elif filetype == UMIND:
+        from seahub.alibaba.models import AlibabaProfile
+        try:
+            from seahub.settings import ALIBABA_UMIND_JS_SRC
+        except ImportError:
+            ALIBABA_UMIND_JS_SRC = ''
+
+        ali_work_no = ''
+        ali_username = username
+        ali_profile = AlibabaProfile.objects.get_profile(username)
+        if ali_profile:
+            ali_work_no = ali_profile.work_no
+            ali_username = email2nickname(username)
+
+        can_edit_file = True
+        if parse_repo_perm(permission).can_edit_on_web is False:
+            can_edit_file = False
+        elif is_locked and not locked_by_me:
+            can_edit_file = False
+
+        return_dict['username'] = username
+        return_dict['can_edit'] = can_edit_file
+        return_dict['ali_work_no'] = ali_work_no
+        return_dict['ali_username'] = ali_username
+        return_dict['ali_umind_js_src'] = ALIBABA_UMIND_JS_SRC
+        return_dict['raw_path'] = raw_path
+        token = seafile_api.get_fileserver_access_token(repo_id,
+                'dummy', 'update', username, use_onetime=False)
+        return_dict['update_link'] = gen_file_upload_url(token, 'update-api')
+        return render(request, 'view_file_umind.html', return_dict)
+
     elif filetype == IMAGE:
 
         if file_size > FILE_PREVIEW_MAX_SIZE:
@@ -1261,6 +1292,39 @@ def view_shared_file(request, fileshare):
                         onlyoffice_dict)
             else:
                 ret_dict['err'] = _(u'Error when prepare OnlyOffice file preview page.')
+
+    if filetype == UMIND:
+        from seahub.alibaba.models import AlibabaProfile
+        try:
+            from seahub.settings import ALIBABA_UMIND_JS_SRC
+        except ImportError:
+            ALIBABA_UMIND_JS_SRC = ''
+
+        if not request.user.is_authenticated():
+            username = ANONYMOUS_EMAIL
+        else:
+            username = request.user.username
+
+        ali_work_no = ''
+        ali_username = ''
+        ali_profile = AlibabaProfile.objects.get_profile(username)
+        if ali_profile:
+            ali_work_no = ali_profile.work_no
+            ali_username = email2nickname(username)
+
+        return_dict = {}
+        return_dict['path'] = path
+        return_dict['filename'] = filename
+        return_dict['can_edit'] = can_edit
+        return_dict['ali_work_no'] = ali_work_no
+        return_dict['ali_username'] = ali_username
+        return_dict['ali_umind_js_src'] = ALIBABA_UMIND_JS_SRC
+
+        return_dict['raw_path'] = raw_path
+        token = seafile_api.get_fileserver_access_token(repo_id,
+                'dummy', 'update', username, use_onetime=False)
+        return_dict['update_link'] = gen_file_upload_url(token, 'update-api')
+        return render(request, 'view_file_umind.html', return_dict)
 
     file_size = seafile_api.get_file_size(repo.store_id, repo.version, obj_id)
     can_preview, err_msg = can_preview_file(filename, file_size, repo)

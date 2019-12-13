@@ -99,6 +99,8 @@ export const Utils = {
     'bmp' : 'pic.png',
     'ico' : 'pic.png',
 
+    'umind' : 'umind.png',
+
     // default
     'default' : 'file.png'
   },

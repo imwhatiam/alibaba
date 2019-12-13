@@ -137,6 +137,7 @@ PREVIEW_FILEEXT = {
     #'3D': ('stl', 'obj'),
     XMIND: ('xmind',),
     CDOC: ('cdoc',),
+    UMIND: ('umind',),
 }
 
 def gen_fileext_type_map():
