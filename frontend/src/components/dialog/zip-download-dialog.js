@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Modal, ModalHeader, ModalBody } from 'reactstrap'; 
-import { gettext, fileServerRoot } from '../../utils/constants';
+import { Modal, ModalHeader, ModalBody } from 'reactstrap';
+import { gettext, fileServerRoot, alibabaEnableWatermark } from '../../utils/constants';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
 import Loading from '../loading';
@@ -35,20 +35,30 @@ class ZipDownloadDialog extends React.Component {
       seafileAPI.getShareLinkZipTask(token, path) :
       seafileAPI.zipDownload(repoID, path, target);
     getZipTask.then((res) => {
-      const zipToken = res.data['zip_token'];
-      this.setState({
-        isLoading: false,
-        errorMsg: '',
-        zipToken: zipToken 
-      }); 
-      this.queryZipProgress();
-      interval = setInterval(this.queryZipProgress, 1000);
+
+      if (alibabaEnableWatermark && res.data.hasOwnProperty('download_url')) {
+        location.href = res.data['download_url'];
+        this.setState({
+          isLoading: false,
+          errorMsg: ''
+        });
+        this.props.toggleDialog();
+      } else {
+        let zipToken = res.data['zip_token'];
+        this.setState({
+          isLoading: false,
+          errorMsg: '',
+          zipToken: zipToken
+        });
+        this.queryZipProgress();
+        interval = setInterval(this.queryZipProgress, 1000);
+      }
     }).catch((error) => {
       let errorMsg = Utils.getErrorMsg(error);
       this.setState({
         isLoading: false,
         errorMsg: errorMsg
-      }); 
+      });
     });
   }
 
@@ -70,7 +80,7 @@ class ZipDownloadDialog extends React.Component {
       this.setState({
         isLoading: false,
         errorMsg: errorMsg
-      }); 
+      });
     });
   }
 

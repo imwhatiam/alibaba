@@ -136,6 +136,12 @@ from seahub.bisheng_office.utils import get_bisheng_dict, \
 from seahub.bisheng_office.settings import ENABLE_BISHENG_OFFICE
 from seahub.bisheng_office.settings import BISHENG_OFFICE_FILE_EXTENSION
 
+from seahub.alibaba.settings import ALIBABA_ENABLE_WATERMARK
+if ALIBABA_ENABLE_WATERMARK:
+    from seahub.alibaba.settings import ALIBABA_WATERMARK_SUPPORTED_FILEEXT
+    from seahub.alibaba.settings import ALIBABA_WATERMARK_FILE_SIZE_LIMIT
+    from seahub.alibaba.views import alibaba_get_file_download_url
+
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
@@ -489,6 +495,9 @@ def view_lib_file(request, repo_id, path):
     if not file_id:
         return render_error(request, _(u'File does not exist'))
 
+    # handle file preview/edit according to file extention
+    file_size = seafile_api.get_file_size(repo.store_id, repo.version, file_id)
+
     # permission check
     username = request.user.username
     parent_dir = os.path.dirname(path)
@@ -514,11 +523,26 @@ def view_lib_file(request, repo_id, path):
             return render_permission_error(request,
                     alibaba_err_msg_when_unable_to_view_file(request, repo_id))
 
+        filetype, fileext = get_file_type_and_ext(filename)
         dl_or_raw_url = gen_file_get_url(token, filename)
+        if not ALIBABA_ENABLE_WATERMARK or \
+                fileext not in ALIBABA_WATERMARK_SUPPORTED_FILEEXT or \
+                file_size > ALIBABA_WATERMARK_FILE_SIZE_LIMIT * 1024 * 1024 or \
+                file_size <= 0:
 
-        # send stats message
+            # send stats message
+            send_file_access_msg(request, repo, path, 'web')
+            return HttpResponseRedirect(dl_or_raw_url)
+
+        token = seafile_api.get_fileserver_access_token(
+            repo_id, file_id, operation, username,
+            use_onetime=False)
+        result = alibaba_get_file_download_url(username, repo_id, path,
+                file_id, token)
+        if result['success']:
+            dl_or_raw_url = result['url']
+
         send_file_access_msg(request, repo, path, 'web')
-
         return HttpResponseRedirect(dl_or_raw_url)
 
     org_id = request.user.org.org_id if is_org_context(request) else -1
@@ -612,8 +636,6 @@ def view_lib_file(request, repo_id, path):
         raw_path = gen_file_get_url(token, filename)
         inner_path = gen_inner_file_get_url(token, filename)
 
-    # handle file preview/edit according to file extention
-    file_size = seafile_api.get_file_size(repo.store_id, repo.version, file_id)
     # template = 'view_file_%s.html' % filetype.lower()
     template = '%s_file_view_react.html' % filetype.lower()
 

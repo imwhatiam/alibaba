@@ -3,15 +3,24 @@
 
 from __future__ import unicode_literals
 
+import os
+import stat
 import json
 import csv
 import logging
 import chardet
 import StringIO
+import hmac
+import time
+import random
+import requests
+import posixpath
+
+import hashlib
+from datetime import datetime
 
 from django.db.models import Q
 from django.shortcuts import render
-from django.http import HttpResponse
 from django.utils.translation import ugettext as _
 
 from rest_framework.authentication import SessionAuthentication
@@ -26,37 +35,240 @@ from seahub.api2.throttling import UserRateThrottle
 from seahub.api2.authentication import TokenAuthentication
 from seahub.api2.utils import api_error
 
-from seahub.utils import normalize_file_path
+from seahub.utils import normalize_file_path, gen_file_get_url, \
+        get_fileserver_root
 from seahub.views import check_folder_permission
-from seahub.auth.decorators import login_required, login_required_ajax
+from seahub.auth.decorators import login_required
 from seahub.group.utils import is_group_member, is_group_admin_or_owner
 from seahub.group.signals import add_user_to_group
 from seahub.share.models import FileShare
 from seahub.avatar.util import get_alibaba_user_avatar_url
 from seahub.base.templatetags.seahub_tags import email2nickname
+from seahub.tags.models import FileUUIDMap
 
 from seahub.alibaba.models import AlibabaProfile, AlibabaUserEditFile
 
+from seahub.alibaba.settings import ALIBABA_WATERMARK_KEY_ID, \
+        ALIBABA_WATERMARK_SECRET, ALIBABA_WATERMARK_SERVER_NAME, \
+        ALIBABA_WATERMARK_BASE_URL, ALIBABA_WATERMARK_MARK_MODE, \
+        ALIBABA_WATERMARK_VISIBLE_TEXT, ALIBABA_WATERMARK_EXTEND_PARAMS, \
+        ALIBABA_WATERMARK_FILE_SIZE_LIMIT
+
+from seahub.alibaba.settings import WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL, \
+        WINDOWS_CLIENT_VERSION, APPLE_CLIENT_PUBLIC_DOWNLOAD_URL, \
+        APPLE_CLIENT_VERSION, WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL_EN, \
+        WINDOWS_CLIENT_VERSION_EN, APPLE_CLIENT_PUBLIC_DOWNLOAD_URL_EN, \
+        APPLE_CLIENT_VERSION_EN
+
 logger = logging.getLogger(__name__)
 
-try:
-    from seahub.settings import WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL, \
-            WINDOWS_CLIENT_VERSION, APPLE_CLIENT_PUBLIC_DOWNLOAD_URL, \
-            APPLE_CLIENT_VERSION, WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL_EN, \
-            WINDOWS_CLIENT_VERSION_EN, APPLE_CLIENT_PUBLIC_DOWNLOAD_URL_EN, \
-            APPLE_CLIENT_VERSION_EN
-
-except ImportError:
-    WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL = ''
-    WINDOWS_CLIENT_VERSION = ''
-    APPLE_CLIENT_PUBLIC_DOWNLOAD_URL = ''
-    APPLE_CLIENT_VERSION = ''
-    WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL_EN = ''
-    WINDOWS_CLIENT_VERSION_EN = ''
-    APPLE_CLIENT_PUBLIC_DOWNLOAD_URL_EN = ''
-    APPLE_CLIENT_VERSION_EN = ''
-
 ### utils ###
+
+def get_dir_file_recursively(username, repo_id, path, all_dirs):
+    dir_id = seafile_api.get_dir_id_by_path(repo_id, path)
+    if not dir_id:
+        return [{'parent_dir': '/', 'name': os.path.basename(path)}]
+
+    dirs = seafile_api.list_dir_with_perm(repo_id, path,
+            dir_id, username, -1, -1)
+
+    for dirent in dirs:
+        entry = {}
+        if not stat.S_ISDIR(dirent.mode):
+            entry["parent_dir"] = path
+            entry["name"] = dirent.obj_name
+            all_dirs.append(entry)
+
+        if stat.S_ISDIR(dirent.mode):
+            sub_path = posixpath.join(path, dirent.obj_name)
+            get_dir_file_recursively(username, repo_id, sub_path, all_dirs)
+
+    return all_dirs
+
+def alibaba_get_zip_download_url(username, repo_id, parent_path,
+        dirent_name_list, zip_token):
+
+    # generate zip file name
+    now = datetime.now()
+    now_date = now.strftime('%Y-%m-%d')
+    filename = 'documents-export-%s.zip' % now_date
+
+    # query zip progress
+    zipped = 0
+    total = 1
+    while zipped < total:
+        time.sleep(1)
+        progress = seafile_api.query_zip_progress(zip_token)
+        json_resp = json.loads(progress)
+        zipped = json_resp['zipped']
+        total = json_resp['total']
+
+    # get zip_packet_size field after finish zip
+    progress = seafile_api.query_zip_progress(zip_token)
+    json_resp = json.loads(progress)
+
+    # generate zip download url
+    fileserver_root = get_fileserver_root()
+    fileserver_root = fileserver_root.rstrip('/')
+    download_url = '%s/zip/%s' % (fileserver_root, zip_token)
+
+    # check if size exceed limit
+    if 'zip_packet_size' not in json_resp:
+        logger.error('zip_packet_size field not returned.')
+        logger.error(json_resp)
+        return {'success': True, 'url': download_url}
+
+    if 'zip_packet_size' in json_resp:
+        file_size = json_resp['zip_packet_size']
+        if file_size > ALIBABA_WATERMARK_FILE_SIZE_LIMIT * 1024 * 1024:
+            return {'success': True, 'url': download_url}
+
+    profile = AlibabaProfile.objects.get_profile(username)
+
+    sub_item_path_list = []
+    for dirent_name in dirent_name_list:
+        dirent_name = dirent_name.strip('/')
+        sub_item_list = get_dir_file_recursively(username, repo_id,
+                posixpath.join(parent_path, dirent_name), [])
+
+        for item in sub_item_list:
+            sub_item_path_list.append(posixpath.join(item['parent_dir'], item['name']))
+
+    invisible_text = {
+        "operatorId": profile.work_no or '',
+        "operatorType": "aliempid",
+        "operatorName": profile.emp_name or '',
+        "operatorNick": profile.nick_name or '',
+        "labelInfo": {
+            "businessInfo": {
+                "repo_owner": seafile_api.get_repo_owner(repo_id),
+                "repo_id": repo_id,
+                "parent_path": parent_path,
+                "sub_item_path_list": sub_item_path_list,
+            },
+            "fileInfo": {
+                "fileId": '%s_%s' % (repo_id, parent_path),
+                "fileName": filename,
+                "fileSize": file_size,
+                "fileType": filename.split('.')[-1],
+            },
+        }
+    }
+
+    extend_params = ALIBABA_WATERMARK_EXTEND_PARAMS
+    extend_params.update({
+        "Content-Disposition":"attachment;filename=%s" % filename
+        })
+
+    # make watermark
+    body = json.dumps({
+        'carrierLink': download_url,
+        'markMode': 'waterm_document_1',
+        'scene': 'datasec',
+        'invisibleText': json.dumps(invisible_text),
+        'visibleText': ALIBABA_WATERMARK_VISIBLE_TEXT,
+        'extendParams': extend_params
+    })
+
+    ts = str(int(time.time() * 1000))
+    nonce = str(random.randint(1000, 9999))
+    hmac_key = ALIBABA_WATERMARK_SECRET + ts + nonce
+    sign = hmac.new(key=bytes(hmac_key), msg=bytes(body), digestmod=hashlib.md5).hexdigest()
+    headers = {
+        'time': ts,
+        'nonce': nonce,
+        'sign': sign,
+        'Content-Type': 'application/json; charset=utf-8'
+    }
+    url = '%s/%s?key=%s' % (ALIBABA_WATERMARK_BASE_URL,
+            ALIBABA_WATERMARK_SERVER_NAME, ALIBABA_WATERMARK_KEY_ID)
+
+    try:
+        resp = requests.post(url, data=body, headers=headers)
+        json_resp = json.loads(resp.content)
+        return {'success': True, 'url': json_resp['data']['carrierLink']}
+    except Exception as e:
+        logger.error(e)
+        logger.error(json_resp)
+        return {'success': False, 'error_msg': json_resp['msg']}
+
+def alibaba_get_file_download_url(username, repo_id, file_path, file_id, access_token):
+
+    repo = seafile_api.get_repo(repo_id)
+    if repo.is_virtual:
+        repo_id = repo.origin_repo_id
+        file_path = posixpath.join(repo.origin_path, file_path.strip('/'))
+
+    file_path = normalize_file_path(file_path)
+    parent_dir = os.path.dirname(file_path)
+    filename = os.path.basename(file_path)
+    file_uuid_map = FileUUIDMap.objects.get_or_create_fileuuidmap(repo_id,
+                    parent_dir, filename, False)
+    file_uuid = file_uuid_map.uuid.hex
+
+    download_url = gen_file_get_url(access_token, filename)
+
+    profile = AlibabaProfile.objects.get_profile(username)
+    dirent = seafile_api.get_dirent_by_path(repo_id, file_path)
+    invisible_text = {
+        "operatorId": profile.work_no or '',
+        "operatorType": "aliempid",
+        "operatorName": profile.emp_name or '',
+        "operatorNick": profile.nick_name or '',
+        "labelInfo": {
+            "businessInfo": {
+                "repo_owner": seafile_api.get_repo_owner(repo_id),
+                "repo_id": repo_id,
+                "file_path": file_path,
+            },
+            "fileInfo": {
+                "fileId": file_uuid,
+                "fileName": filename,
+                "fileSize": dirent.size,
+                "fileType": filename.split('.')[-1],
+            },
+        }
+    }
+
+    extend_params = ALIBABA_WATERMARK_EXTEND_PARAMS
+
+    from django.utils.http import urlquote
+    content_disposition = "attachment; filename*=UTF-8''" + urlquote(filename)
+    extend_params.update({
+        "Content-Disposition": content_disposition
+        })
+
+    # make watermark
+    body = json.dumps({
+        'carrierLink': download_url,
+        'markMode': ALIBABA_WATERMARK_MARK_MODE[filename.split('.')[-1].lower()],
+        'scene': 'datasec',
+        'invisibleText': json.dumps(invisible_text),
+        'visibleText': ALIBABA_WATERMARK_VISIBLE_TEXT,
+        'extendParams': extend_params
+    })
+
+    ts = str(int(time.time() * 1000))
+    nonce = str(random.randint(1000, 9999))
+    hmac_key = ALIBABA_WATERMARK_SECRET + ts + nonce
+    sign = hmac.new(key=bytes(hmac_key), msg=bytes(body), digestmod=hashlib.md5).hexdigest()
+    headers = {
+        'time': ts,
+        'nonce': nonce,
+        'sign': sign,
+        'Content-Type': 'application/json; charset=utf-8'
+    }
+    url = '%s/%s?key=%s' % (ALIBABA_WATERMARK_BASE_URL,
+            ALIBABA_WATERMARK_SERVER_NAME, ALIBABA_WATERMARK_KEY_ID)
+
+    try:
+        resp = requests.post(url, data=body, headers=headers)
+        json_resp = json.loads(resp.content)
+        return {'success': True, 'url': json_resp['data']['carrierLink']}
+    except Exception as e:
+        logger.error(e)
+        logger.error(json_resp)
+        return {'success': False, 'error_msg': json_resp['msg']}
 
 def alibaba_err_msg_when_unable_to_view_file(request, repo_id):
 
@@ -68,7 +280,6 @@ def alibaba_err_msg_when_unable_to_view_file(request, repo_id):
                 please contact %s to add permission" % email2nickname(repo_owner)
 
 ### page view ###
-
 @login_required
 def alibaba_client_download_view(request):
 
@@ -120,7 +331,6 @@ def alibaba_user_profile(request, username):
     return render(request, 'alibaba/user_profile.html', init_dict)
 
 ### alibaba api ###
-
 class AlibabaImportGroupMembers(APIView):
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated,)

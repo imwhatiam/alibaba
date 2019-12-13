@@ -24,7 +24,7 @@ from django.contrib.auth.hashers import check_password
 from django.contrib.sites.shortcuts import get_current_site
 from django.db import IntegrityError
 from django.db.models import F
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template.defaultfilters import filesizeformat
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -102,6 +102,12 @@ from seahub.settings import THUMBNAIL_EXTENSION, THUMBNAIL_ROOT, \
     ENABLE_THUMBNAIL, STORAGE_CLASS_MAPPING_POLICY, \
     ENABLE_RESET_ENCRYPTED_REPO_PASSWORD, SHARE_LINK_EXPIRE_DAYS_MAX, \
         SHARE_LINK_EXPIRE_DAYS_MIN, SHARE_LINK_EXPIRE_DAYS_DEFAULT
+
+from seahub.alibaba.settings import ALIBABA_ENABLE_WATERMARK
+if ALIBABA_ENABLE_WATERMARK:
+    from seahub.alibaba.settings import ALIBABA_WATERMARK_SUPPORTED_FILEEXT
+    from seahub.alibaba.settings import ALIBABA_WATERMARK_FILE_SIZE_LIMIT
+    from seahub.alibaba.views import alibaba_get_file_download_url
 
 
 try:
@@ -2813,8 +2819,40 @@ class FileView(APIView):
                     "If you want to reuse file server access token for download file, you should set 'reuse' argument as '1'.")
 
         use_onetime = False if reuse == '1' else True
-        return get_repo_file(request, repo_id, file_id,
-                file_name, op, use_onetime)
+
+        if op != 'download':
+            return get_repo_file(request, repo_id, file_id,
+                    file_name, op, use_onetime)
+
+        try:
+            dirent = seafile_api.get_dirent_by_path(repo_id, path)
+            file_size = dirent.size
+        except Exception as e:
+            logger.error(e)
+            file_size = 0
+
+        filetype, fileext = get_file_type_and_ext(file_name)
+        if not ALIBABA_ENABLE_WATERMARK or \
+                fileext not in ALIBABA_WATERMARK_SUPPORTED_FILEEXT or \
+                file_size > ALIBABA_WATERMARK_FILE_SIZE_LIMIT * 1024 * 1024 or \
+                file_size <= 0:
+
+            return get_repo_file(request, repo_id, file_id,
+                    file_name, op, use_onetime)
+
+        token = seafile_api.get_fileserver_access_token(repo_id,
+                file_id, 'download', request.user.username,
+                use_onetime=False)
+        result = alibaba_get_file_download_url(request.user.username,
+                repo_id, path, file_id, token)
+        if not result['success']:
+            return get_repo_file(request, repo_id, file_id,
+                    file_name, op, use_onetime)
+
+        response = HttpResponse(json.dumps(result['url']), status=200,
+                                content_type=json_content_type)
+        response["oid"] = file_id
+        return response
 
     def post(self, request, repo_id, format=None):
         # rename, move, copy or create file

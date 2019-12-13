@@ -3,6 +3,8 @@ import logging
 import json
 import stat
 import posixpath
+import requests
+import urllib
 
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -11,6 +13,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from django.conf import settings
 from django.utils.translation import ugettext as _
+from django.core.urlresolvers import reverse
 
 from seahub.api2.throttling import UserRateThrottle
 from seahub.api2.authentication import TokenAuthentication
@@ -23,6 +26,13 @@ from seahub.utils.repo import parse_repo_perm
 
 import seaserv
 from seaserv import seafile_api
+
+from seahub.alibaba.settings import ALIBABA_ENABLE_WATERMARK
+if ALIBABA_ENABLE_WATERMARK:
+    from seahub.alibaba.settings import ALIBABA_WATERMARK_IS_DOWNLOAD_SERVER
+    from seahub.alibaba.settings import ALIBABA_WATERMARK_DOWNLOAD_SERVER_DOMAIN
+    from seahub.alibaba.settings import ALIBABA_WATERMARK_USE_EXTRA_DOWNLOAD_SERVER
+    from seahub.alibaba.views import alibaba_get_zip_download_url
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +161,23 @@ class ZipTaskView(APIView):
                 full_dirent_path = posixpath.join(parent_dir, dirent_name)
                 send_file_access_msg(request, repo, full_dirent_path, 'web')
 
-        return Response({'zip_token': zip_token})
+        if not ALIBABA_ENABLE_WATERMARK:
+            return Response({'zip_token': zip_token})
+
+        result = {}
+        alibbaba_resp = alibaba_get_zip_download_url(username, repo_id, parent_dir,
+                dirent_name_list, zip_token)
+        if alibbaba_resp['success']:
+            zip_download_url = alibbaba_resp['url']
+            result['download_url'] = zip_download_url
+        else:
+            zip_token = seafile_api.get_fileserver_access_token(
+                repo_id, json.dumps(fake_obj_id), download_type, username,
+                use_onetime=settings.FILESERVER_TOKEN_ONCE_ONLY
+            )
+            result['zip_token'] = zip_token
+
+        return Response(result)
 
     def post(self, request, repo_id, format=None):
         """ Get file server token for download-dir and download-multi.
@@ -193,6 +219,30 @@ class ZipTaskView(APIView):
         if parse_repo_perm(check_folder_permission(request, repo_id, parent_dir)).can_download is False:
             error_msg = 'Permission denied.'
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+        if ALIBABA_ENABLE_WATERMARK and \
+                ALIBABA_WATERMARK_USE_EXTRA_DOWNLOAD_SERVER and \
+                not ALIBABA_WATERMARK_IS_DOWNLOAD_SERVER:
+            params = '?parent_dir=%s' % urllib.quote(parent_dir.encode('utf-8'))
+            for dirent_name in dirent_name_list:
+                params += '&dirents=%s' % urllib.quote(dirent_name.encode('utf-8'))
+            zip_task_url = reverse('api-v2.1-zip-task', args=[repo_id]) + params
+            download_server_domain = ALIBABA_WATERMARK_DOWNLOAD_SERVER_DOMAIN.strip('/')
+            full_zip_task_url= download_server_domain + zip_task_url
+            resp = requests.get(full_zip_task_url, cookies=request.COOKIES)
+
+            resp_json = resp.json()
+            status_code = resp.status_code
+            if status_code == 400:
+                return api_error(status.HTTP_400_BAD_REQUEST, resp_json['error_msg'])
+            if status_code == 403:
+                return api_error(status.HTTP_403_FORBIDDEN, resp_json['error_msg'])
+            if status_code == 404:
+                return api_error(status.HTTP_404_NOT_FOUND, resp_json['error_msg'])
+            if status_code == 500:
+                return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, resp_json['error_msg'])
+
+            return Response(resp.json())
 
         # get file server access token
         is_windows = 0
@@ -269,4 +319,20 @@ class ZipTaskView(APIView):
                 full_dirent_path = posixpath.join(parent_dir, dirent_name)
                 send_file_access_msg(request, repo, full_dirent_path, 'web')
 
-        return Response({'zip_token': zip_token})
+        if not ALIBABA_ENABLE_WATERMARK:
+            return Response({'zip_token': zip_token})
+
+        result = {}
+        alibbaba_resp = alibaba_get_zip_download_url(username, repo_id, parent_dir,
+                dirent_name_list, zip_token)
+        if alibbaba_resp['success']:
+            zip_download_url = alibbaba_resp['url']
+            result['download_url'] = zip_download_url
+        else:
+            zip_token = seafile_api.get_fileserver_access_token(
+                repo_id, json.dumps(fake_obj_id), download_type, username,
+                use_onetime=settings.FILESERVER_TOKEN_ONCE_ONLY
+            )
+            result['zip_token'] = zip_token
+
+        return Response(result)
