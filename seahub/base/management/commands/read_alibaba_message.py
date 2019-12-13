@@ -298,6 +298,7 @@ class Command(BaseCommand):
                         print '\ntransfer group %s to %s' % (group.id, new_group_owner)
                         logging.error('transfer group %s to %s' % (group.id, new_group_owner))
                         ccnet_api.set_group_creator(group.id, new_group_owner)
+                        ccnet_api.group_set_admin(group_id, new_group_owner)
                     else:
                         print '\ndelete group %s' % group.id
                         logging.error('delete group %s' % group.id)
