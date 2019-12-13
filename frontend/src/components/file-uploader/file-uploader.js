@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import Resumablejs from '@seafile/resumablejs';
 import MD5 from 'MD5';
-import { resumableUploadFileBlockSize, maxUploadFileSize, maxNumberOfFilesForFileupload } from '../../utils/constants';
+import { enableResumableFileUpload, resumableUploadFileBlockSize, maxUploadFileSize, maxNumberOfFilesForFileupload } from '../../utils/constants';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
 import { gettext } from '../../utils/constants';
@@ -17,10 +17,12 @@ const propTypes = {
   filetypes: PropTypes.array,
   chunkSize: PropTypes.number,
   withCredentials: PropTypes.bool,
+  maxFiles: PropTypes.number,
   testMethod: PropTypes.string,
   testChunks: PropTypes.number,
   simultaneousUploads: PropTypes.number,
   fileParameterName: PropTypes.string,
+  maxFilesErrorCallback: PropTypes.func,
   minFileSizeErrorCallback: PropTypes.func,
   fileTypeErrorCallback: PropTypes.func,
   dragAndDrop: PropTypes.bool.isRequired,
@@ -102,7 +104,7 @@ class FileUploader extends React.Component {
   }
 
   bindCallbackHandler = () => {
-    let { minFileSizeErrorCallback, fileTypeErrorCallback } = this.props;
+    let { maxFilesErrorCallback, minFileSizeErrorCallback, fileTypeErrorCallback } = this.props;
 
     if (this.maxFilesErrorCallback) {
       this.resumable.opts.maxFilesErrorCallback = this.maxFilesErrorCallback;
