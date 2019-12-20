@@ -22,11 +22,13 @@ class LeaveGroupDialog extends React.Component {
   }
 
   render() {
+    let extraMsg = window.app.config.lang === 'zh-cn' ? '注意：退出后您共享到该团队的所有资料库都将会被取消共享。' : 'NOTE: If you leave this group, all libraries you shared to this group will be unshared.';
     return(
       <Modal isOpen={true} toggle={this.props.toggleLeaveGroupDialog}>
         <ModalHeader toggle={this.props.toggleLeaveGroupDialog}>{gettext('Leave Group')}</ModalHeader>
         <ModalBody>
           <p>{gettext('Really want to leave this group?')}</p>
+          {extraMsg}
         </ModalBody>
         <ModalFooter>
           <Button color="secondary" onClick={this.props.toggleLeaveGroupDialog}>{gettext('Cancel')}</Button>

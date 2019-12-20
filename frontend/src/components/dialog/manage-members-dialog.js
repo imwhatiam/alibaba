@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { gettext } from '../../utils/constants';
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Table } from 'reactstrap';
@@ -8,6 +8,7 @@ import UserSelect from '../user-select.js';
 import { Utils } from '../../utils/utils';
 import toaster from '../toast';
 import '../../css/manage-members-dialog.css';
+import AlibabaRemoveGroupMemberDialog from '../../components/dialog/alibaba-remove-group-member-dialog';
 
 const propTypes = {
   groupID: PropTypes.string.isRequired,
@@ -25,6 +26,7 @@ class ManageMembersDialog extends React.Component {
       selectedOption: null,
       errMessage: [],
       isItemFreezed: false,
+      isAlibabaRemoveGroupMemberDialogOpen: false,
     };
   }
 
@@ -218,10 +220,23 @@ class Member extends React.PureComponent {
     }
   }
 
+  handleDeleteMember = (e) => {
+    e.preventDefault();
+    this.toggleAlibabaRemoveGroupMemberDialog();
+  }
+
+  toggleAlibabaRemoveGroupMemberDialog = () => {
+    this.setState({
+      isAlibabaRemoveGroupMemberDialogOpen: !this.state.isAlibabaRemoveGroupMemberDialogOpen,
+    });
+  }
+
   render() {
     const { item, isOwner } = this.props;
     const deleteAuthority = (item.role !== 'Owner' && isOwner === true) || (item.role === 'Member' && isOwner === false);
+    const { isAlibabaRemoveGroupMemberDialogOpen } = this.state;
     return(
+      <Fragment>
       <tr onMouseOver={this.handleMouseOver} onMouseLeave={this.handleMouseLeave} className={this.state.highlight ? 'editing' : ''}>
         <th scope="row"><img className="avatar" src={item.avatar_url} alt=""/></th>
         <td>{item.name}</td>
@@ -245,11 +260,20 @@ class Member extends React.PureComponent {
             <i
               className="fa fa-times delete-group-member-icon"
               name={item.email}
-              onClick={this.deleteMember.bind(this, item.email)}>
+              onClick={this.handleDeleteMember}>
             </i>
           }
         </td>
       </tr>
+      {isAlibabaRemoveGroupMemberDialogOpen &&
+        <AlibabaRemoveGroupMemberDialog
+          toggleAlibabaRemoveGroupMemberDialog={this.toggleAlibabaRemoveGroupMemberDialog}
+          groupID={this.props.groupID}
+          email={item.email}
+          onGroupMembersChange={this.props.onGroupMembersChange}
+        />
+      }
+      </Fragment>
     );
   }
 }
