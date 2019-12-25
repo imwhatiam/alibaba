@@ -226,7 +226,7 @@ def alibaba_get_file_download_url(username, repo_id, file_path, file_id, access_
             "fileInfo": {
                 "fileId": file_uuid,
                 "fileName": filename,
-                "fileSize": dirent.size,
+                "fileSize": dirent.size if dirent else '',
                 "fileType": filename.split('.')[-1],
             },
         }
