@@ -1,6 +1,8 @@
 from django.conf import settings
 
 ALIBABA_ENABLE_CITRIX = getattr(settings, 'ALIBABA_ENABLE_CITRIX', False)
+ALIBABA_CITRIX_ICA_URL = getattr(settings, 'ALIBABA_CITRIX_ICA_URL',
+        'https://pilot-teamapp.alibaba-inc.com/teamspace/api/teamfile/getica')
 
 # for client download
 WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL = getattr(settings, 'WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL', '')

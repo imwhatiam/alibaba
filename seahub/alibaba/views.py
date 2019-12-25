@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import sys
-import base64
 import os
 import stat
 import json
@@ -17,6 +15,7 @@ import time
 import random
 import requests
 import posixpath
+import urllib
 
 import hashlib
 from datetime import datetime
@@ -24,7 +23,7 @@ from datetime import datetime
 from django.db.models import Q
 from django.shortcuts import render
 from django.utils.translation import ugettext as _
-from django.http import FileResponse
+from django.http import HttpResponseRedirect
 
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -61,18 +60,7 @@ from seahub.alibaba.settings import WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL, \
         WINDOWS_CLIENT_VERSION, APPLE_CLIENT_PUBLIC_DOWNLOAD_URL, \
         APPLE_CLIENT_VERSION, WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL_EN, \
         WINDOWS_CLIENT_VERSION_EN, APPLE_CLIENT_PUBLIC_DOWNLOAD_URL_EN, \
-        APPLE_CLIENT_VERSION_EN, ALIBABA_ENABLE_CITRIX
-
-try:
-    current_path = os.path.dirname(os.path.abspath(__file__))
-    seafile_conf_dir = os.path.join(current_path, \
-            '../../../../conf')
-    sys.path.append(seafile_conf_dir)
-    from seahub_custom_functions import get_citrix_file
-    has_get_citrix_file = True
-except ImportError:
-    has_get_citrix_file = False
-
+        APPLE_CLIENT_VERSION_EN, ALIBABA_ENABLE_CITRIX, ALIBABA_CITRIX_ICA_URL
 
 logger = logging.getLogger(__name__)
 
@@ -714,10 +702,6 @@ class AlibabaCitrix(APIView):
             error_msg = 'Citrix feature not enabled.'
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
-        if not has_get_citrix_file:
-            error_msg = 'get_citrix_file func not found.'
-            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
-
         # parameter check
         repo_id = request.GET.get('repo_id', '')
         if not repo_id:
@@ -752,11 +736,31 @@ class AlibabaCitrix(APIView):
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
         username = request.user.username
-        citrix_file = get_citrix_file(username, repo_id, path)
 
-        ica_file_name = base64.b64encode('%s_%s' % (repo_id, path))
-        response =FileResponse(citrix_file)
-        response['Content-Type']='application/octet-stream'
-        response['Content-Disposition']='attachment;filename="%s.ica"' % ica_file_name
+        def get_repo_type(username, repo_id):
 
-        return response
+            owned_repos = seafile_api.get_owned_repo_list(username)
+            if repo_id in [r.id for r in owned_repos]:
+                return 'owned'
+
+            shared_repos = seafile_api.get_share_in_repo_list(username, -1, -1)
+            if repo_id in [r.id for r in shared_repos]:
+                return 'shared'
+
+            group_repos = seafile_api.get_group_repos_by_user(username)
+            if repo_id in [r.id for r in group_repos]:
+                return 'group'
+
+            if seafile_api.is_inner_pub_repo(repo_id):
+                return 'public'
+
+        repo_type = get_repo_type(username, repo_id)
+        parameters = {
+            'username': username.split('@')[0],
+            'repoType': repo_type,
+            'file': path,
+            'repoName': repo.repo_name,
+        }
+        encoded_parameters = urllib.urlencode(parameters)
+        url = '%s?%s' % (ALIBABA_CITRIX_ICA_URL, encoded_parameters)
+        return HttpResponseRedirect(url)

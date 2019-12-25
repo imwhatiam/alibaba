@@ -517,9 +517,7 @@ class DirentListItem extends React.PureComponent {
               <div className="operations">
                 <ul className="operation-group">
                   {(dirent.type === 'file' && alibabaEnableCitrix) && (
-                    <li className="operation-group-item">
-                      <i className="op-icon sf2-icon-link" title={gettext('Citrix')} onClick={this.onItemAlibabaGetCitrix}></i>
-                    </li>
+                    <img src={mediaUrl + 'img/alibaba-teamapp.png'} width="24" style={{cursor: 'pointer'}} title={gettext('TeamApp')} onClick={this.onItemAlibabaGetCitrix}/>
                   )}
                   {(dirent.permission === 'rw' || dirent.permission === 'r') && (
                     <li className="operation-group-item">
@@ -556,9 +554,7 @@ class DirentListItem extends React.PureComponent {
               <div className="operations">
                 <ul className="operation-group">
                   {(dirent.type === 'file' && alibabaEnableCitrix) && (
-                    <li className="operation-group-item">
-                      <i className="op-icon sf2-icon-link" title={gettext('Citrix')} onClick={this.onItemAlibabaGetCitrix}></i>
-                    </li>
+                    <img src={mediaUrl + 'img/alibaba-teamapp.png'} width="24" style={{cursor: 'pointer'}} title={gettext('TeamApp')} onClick={this.onItemAlibabaGetCitrix}/>
                   )}
                   {(dirent.permission === 'rw' || dirent.permission === 'r') &&
                     <MediaQuery query="(min-device-width: 767.8px)">
