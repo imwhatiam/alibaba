@@ -1279,8 +1279,8 @@ def react_fake_view(request, **kwargs):
                 return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
             path = converted_repo_path['path']
-            dirent = seafile_api.get_dirent_by_path(repo_id, path)
-            if not dirent:
+            if not seafile_api.get_file_id_by_path(repo_id, path) and \
+                    not seafile_api.get_dir_id_by_path(repo_id, path):
                 error_msg = 'Dirent %s not found.' % path
                 return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
