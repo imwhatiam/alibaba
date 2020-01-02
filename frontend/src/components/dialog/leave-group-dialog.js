@@ -22,7 +22,7 @@ class LeaveGroupDialog extends React.Component {
   }
 
   render() {
-    let extraMsg = window.app.config.lang === 'zh-cn' ? '注意：退出后您共享到该团队的所有资料库都将会被取消共享。' : 'NOTE: If you leave this group, all libraries you shared to this group will be unshared.';
+    let extraMsg = window.app.config.lang === 'zh-cn' ? '注意：退出后您共享到该团队的所有资料库都将会被取消共享。' : 'NOTE: All shared libraries would be unshared once upon the corresponding user was deleted or left the group.';
     return(
       <Modal isOpen={true} toggle={this.props.toggleLeaveGroupDialog}>
         <ModalHeader toggle={this.props.toggleLeaveGroupDialog}>{gettext('Leave Group')}</ModalHeader>

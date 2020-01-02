@@ -23,7 +23,7 @@ class AlibabaRemoveGroupMemberDialog extends React.Component {
   }
 
   render() {
-    let extraMsg = window.app.config.lang === 'zh-cn' ? '注意：删除成员后，该成员共享到此团队的所有资料库都将被取消共享。' : 'Note: When delete an user, all libraries this user has shared to this group will be unshared.';
+    let extraMsg = window.app.config.lang === 'zh-cn' ? '注意：删除成员后，该成员共享到此团队的所有资料库都将被取消共享。' : 'Note: All shared libraries would be unshared once upon the corresponding user was deleted or left the group.';
     return(
       <Modal isOpen={true} toggle={this.props.toggleAlibabaRemoveGroupMemberDialog}>
         <ModalHeader toggle={this.props.toggleAlibabaRemoveGroupMemberDialog}>{gettext('Delete Member')}</ModalHeader>
