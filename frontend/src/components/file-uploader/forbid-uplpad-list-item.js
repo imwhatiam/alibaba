@@ -11,7 +11,7 @@ class ForbidUploadListItem extends React.Component {
   render() {
     let { file } = this.props;
     let isZHCN = window.app.config.lang === 'zh-cn';
-    let msg = isZHCN ? 'Files with size of more than 10G can not be uploaded on web, please use client to synchronize the files.' : '单个文件超过10G不支持网页上传，请通过客户端同步上传。';
+    let msg = isZHCN ? '单个文件超过10G不支持网页上传，请通过客户端同步上传。' : 'Files with size of more than 10G can not be uploaded on web, please use client to synchronize the files.';
     return (
       <tr className="file-upload-item">
         <td className="upload-name">
