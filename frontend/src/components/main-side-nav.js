@@ -164,7 +164,7 @@ class MainSideNav extends React.Component {
       customNavItems.map((item, idx) => {
         return (
           <li key={idx} className="nav-item">
-            <a href={item.link} className="nav-link ellipsis" title={item.desc}>
+            <a href={item.link} className="nav-link ellipsis" title={item.desc} target="_blank">
               <span className={item.icon} aria-hidden="true"></span>
               <span className="nav-text">{item.desc}</span>
             </a>
