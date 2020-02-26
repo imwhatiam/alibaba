@@ -25,12 +25,16 @@ class Content extends Component {
         </EmptyTip>
       );
 
+      let isZHCN = window.app.config.lang === 'zh-cn';
+      let parent_folder_title = isZHCN ? '父目录' : 'Parent Folder';
+
       const desktopThead = (
         <thead>
           <tr>
             <th width="4%"></th>
-            <th width="40%">{gettext('Name')}</th>
-            <th width="32%">{gettext('Library')}</th>
+            <th width="20%">{gettext('Name')}</th>
+            <th width="20%">{gettext('Library')}</th>
+            <th width="32%">{parent_folder_title}</th>
             <th width="18%">{gettext('Last Update')}</th>
             <th width="6%"></th>
           </tr>
@@ -116,6 +120,8 @@ class TableBody extends Component {
       item.thumbnail_url = item.encoded_thumbnail_src ? `${siteRoot}${item.encoded_thumbnail_src}` : '';
       item.dirent_view_url = item.is_dir ? `${siteRoot}library/${item.repo_id}/${item.repo_name}${item.encoded_path}` : `${siteRoot}lib/${item.repo_id}/file${item.encoded_path}`;
 
+      item.parent_folder_view_url = item.parent_folder_path == '/' ? `${siteRoot}library/${item.repo_id}/${item.repo_name}/` : `${siteRoot}library/${item.repo_id}/${item.repo_name}${Utils.encodePath(item.parent_folder_path)}`;
+
       item.mtime_relative = moment(item.mtime).fromNow();
 
 
@@ -196,6 +202,7 @@ class Item extends Component {
           }
         </td>
         <td>{data.repo_name}</td>
+        <td><a className="normal" href={data.parent_folder_view_url} target="_blank">{Utils.HTMLescape(data.parent_folder_name)}</a></td>
         <td dangerouslySetInnerHTML={{__html:data.mtime_relative}}></td>
         <td>
           <a href="#" className={opClasses} title={gettext('Unstar')} aria-label={gettext('Unstar')} onClick={this.unstar}></a>

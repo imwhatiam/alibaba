@@ -41,6 +41,17 @@ class StarredItems(APIView):
         item_info['is_dir'] = starred_item.is_dir
 
         path = starred_item.path
+        if path == '/':
+            item_info['parent_folder_path'] = ''
+            item_info['parent_folder_name'] = ''
+        else:
+            parent_folder_path = os.path.dirname(path.rstrip('/'))
+            if parent_folder_path == '/':
+                item_info['parent_folder_path'] = parent_folder_path
+                item_info['parent_folder_name'] = repo.repo_name
+            else:
+                item_info['parent_folder_path'] = parent_folder_path + '/'
+                item_info['parent_folder_name'] = os.path.basename(parent_folder_path.rstrip('/'))
 
         item_info['path'] = path
         if path == '/':
