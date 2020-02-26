@@ -1814,8 +1814,14 @@ class UploadLinkView(APIView):
 
         # permission check
         if check_folder_permission(request, repo_id, parent_dir) != 'rw':
-            return api_error(status.HTTP_403_FORBIDDEN,
-                    'You do not have permission to access this folder.')
+
+            if request.LANGUAGE_CODE == 'zh-cn':
+                error_msg = "您没有该文件库的写入权限，请联系文件库所有者进行授权。"
+            else:
+                error_msg = "You don't have the write permission of this library, \
+                        please contact the owner for authorization."
+
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
         if check_quota(repo_id) < 0:
             return api_error(HTTP_443_ABOVE_QUOTA, _(u"Out of quota."))
