@@ -124,6 +124,7 @@ class FileShareManager(models.Manager):
         """
         try:
             fs = self.get(token=token)
+            return fs
         except self.model.DoesNotExist:
             return None
 
@@ -439,6 +440,7 @@ class UploadLinkShareManager(models.Manager):
         """
         try:
             fs = self.get(token=token)
+            return fs
         except self.model.DoesNotExist:
             return None
 

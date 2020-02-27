@@ -1,11 +1,15 @@
 # Copyright (c) 2012-2016 Seafile Ltd.
+# encoding: utf-8
 from django.core.cache import cache
 from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render
+from django.utils import timezone
 
 from seahub.share.models import FileShare, UploadLinkShare
-from seahub.utils import normalize_cache_key, is_pro_version, redirect_to_login
+from seahub.utils import normalize_cache_key, is_pro_version, \
+        redirect_to_login, render_error
+
 
 def share_link_audit(func):
     def _decorated(request, token, *args, **kwargs):
@@ -16,6 +20,18 @@ def share_link_audit(func):
                     UploadLinkShare.objects.get_valid_upload_link_by_token(token)
         if fileshare is None:
             raise Http404
+
+        if fileshare.expire_date and timezone.now() > fileshare.expire_date:
+            from seahub.alibaba.models import AlibabaProfile
+            username = fileshare.username
+            profile = AlibabaProfile.objects.get_profile(username)
+            if request.LANGUAGE_CODE == 'zh-cn':
+                user_info = '%s（%s）' % (profile.emp_name, profile.work_no)
+                error_msg = '该共享链接已经过期，请联系链接所有者“%s”重新共享。' % user_info
+            else:
+                user_info = '%s(%s)' % (profile.emp_name, profile.work_no)
+                error_msg = 'The shared link has expired, please contact the owner "%s" to reshare it.' % user_info
+            return render_error(request, error_msg)
 
         if not is_pro_version() or not settings.ENABLE_SHARE_LINK_AUDIT:
             return func(request, fileshare, *args, **kwargs)
