@@ -4,6 +4,7 @@ import FileTag from './file-tag';
 
 class Dirent {
   constructor(json) {
+    this.show_citrix_icon = json.show_citrix_icon;
     this.id = json.id || '0000000000000000';
     this.name = json.name;
     this.type = json.type;

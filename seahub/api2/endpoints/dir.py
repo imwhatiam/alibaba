@@ -30,6 +30,8 @@ from seahub.base.templatetags.seahub_tags import email2nickname, \
 from seahub.settings import ENABLE_VIDEO_THUMBNAIL, \
         THUMBNAIL_ROOT
 
+from seahub.alibaba.settings import ALIBABA_CITRIX_SUPPORTED_FILEXT
+
 from seaserv import seafile_api
 from pysearpc import SearpcError
 
@@ -317,6 +319,11 @@ class DirView(APIView):
         response_dict = {}
         response_dict["user_perm"] = permission
         response_dict["dir_id"] = dir_id
+
+        for file_info in all_file_info_list:
+            file_info['show_citrix_icon'] = False
+            if file_info['name'].split('.')[-1] in ALIBABA_CITRIX_SUPPORTED_FILEXT:
+                file_info['show_citrix_icon'] = True
 
         if request_type == 'f':
             response_dict['dirent_list'] = all_file_info_list

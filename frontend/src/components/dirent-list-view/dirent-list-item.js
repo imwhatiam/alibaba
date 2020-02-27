@@ -516,7 +516,7 @@ class DirentListItem extends React.PureComponent {
             {this.state.isOperationShow && !dirent.isSelected &&
               <div className="operations">
                 <ul className="operation-group">
-                  {(dirent.type === 'file' && alibabaEnableCitrix) && (
+                  {(dirent.type === 'file' && alibabaEnableCitrix && dirent.show_citrix_icon) && (
                     <img src={mediaUrl + 'img/alibaba-teamapp.png'} width="24" style={{cursor: 'pointer'}} title={gettext('TeamApp')} onClick={this.onItemAlibabaGetCitrix}/>
                   )}
                   {(dirent.permission === 'rw' || dirent.permission === 'r') && (
@@ -553,7 +553,7 @@ class DirentListItem extends React.PureComponent {
             {this.state.isOperationShow && 
               <div className="operations">
                 <ul className="operation-group">
-                  {(dirent.type === 'file' && alibabaEnableCitrix) && (
+                  {(dirent.type === 'file' && alibabaEnableCitrix && dirent.show_citrix_icon) && (
                     <img src={mediaUrl + 'img/alibaba-teamapp.png'} width="24" style={{cursor: 'pointer'}} title={gettext('TeamApp')} onClick={this.onItemAlibabaGetCitrix}/>
                   )}
                   {(dirent.permission === 'rw' || dirent.permission === 'r') &&

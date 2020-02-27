@@ -3,6 +3,10 @@ from django.conf import settings
 ALIBABA_ENABLE_CITRIX = getattr(settings, 'ALIBABA_ENABLE_CITRIX', False)
 ALIBABA_CITRIX_ICA_URL = getattr(settings, 'ALIBABA_CITRIX_ICA_URL',
         'https://pilot-teamapp.alibaba-inc.com/teamspace/api/teamfile/getica')
+ALIBABA_CITRIX_SUPPORTED_FILEXT = getattr(settings,
+        'ALIBABA_CITRIX_SUPPORTED_FILEXT', ['doc', 'docx', 'xls', 'xlsx',
+            'ppt', 'pptx', 'csv', 'pdf', 'jpg', 'png', 'bmp', 'webp', 'zip',
+            'bz', 'gz'])
 
 # for client download
 WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL = getattr(settings, 'WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL', '')
@@ -56,5 +60,4 @@ ALIBABA_WATERMARK_SUPPORTED_FILEEXT = getattr(settings,
         'ALIBABA_WATERMARK_SUPPORTED_FILEEXT', ['doc', 'docx', 'xls', 'xlsx',
             'ppt', 'pptx', 'csv', 'pdf', 'jpg', 'png', 'bmp', 'webp', 'zip',
             'bz', 'gz'])
-
 ALIBABA_WATERMARK_FILE_SIZE_LIMIT = getattr(settings, 'ALIBABA_WATERMARK_FILE_SIZE_LIMIT', 50)
