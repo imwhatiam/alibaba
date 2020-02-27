@@ -84,7 +84,7 @@ class Item extends Component {
       unshared: false
     };
 
-    this.permissions = ['rw', 'r'];
+    this.permissions = ['rw', 'rw-no-sync', 'r'];
     if (isPro) {
       this.permissions.push('cloud-edit', 'preview');
     }

@@ -89,7 +89,7 @@ class Item extends Component {
       isPermSelectDialogOpen: false, // for mobile
       unshared: false
     };
-    let permissions = ['rw', 'r'];
+    let permissions = ['rw', 'rw-no-sync', 'r'];
     this.permissions = permissions;
     this.showAdmin = isPro && (item.share_type !== 'public');
     if (this.showAdmin) {
