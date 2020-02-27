@@ -689,78 +689,72 @@ class AlibabaUserEditFileView(APIView):
         return Response({'success': True})
 
 
-class AlibabaCitrix(APIView):
-    """
-    """
-    authentication_classes = (TokenAuthentication, SessionAuthentication)
-    permission_classes = (IsAuthenticated,)
-    throttle_classes = (UserRateThrottle,)
+@login_required
+def alibaba_citrix(request):
 
-    def get(self, request, format=None):
+    if not ALIBABA_ENABLE_CITRIX:
+        error_msg = 'Citrix feature not enabled.'
+        return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
-        if not ALIBABA_ENABLE_CITRIX:
-            error_msg = 'Citrix feature not enabled.'
-            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+    # parameter check
+    repo_id = request.GET.get('repo_id', '')
+    if not repo_id:
+        error_msg = 'repo_id invalid.'
+        return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
-        # parameter check
-        repo_id = request.GET.get('repo_id', '')
-        if not repo_id:
-            error_msg = 'repo_id invalid.'
-            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+    path = request.GET.get('path', '')
+    if not path:
+        error_msg = 'repo_id invalid.'
+        return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
-        path = request.GET.get('path', '')
-        if not path:
-            error_msg = 'repo_id invalid.'
-            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+    # resource check
+    repo = seafile_api.get_repo(repo_id)
+    if not repo:
+        error_msg = 'Library %s not found.' % repo_id
+        return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
-        # resource check
-        repo = seafile_api.get_repo(repo_id)
-        if not repo:
-            error_msg = 'Library %s not found.' % repo_id
-            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+    try:
+        dirent = seafile_api.get_dirent_by_path(repo_id, path)
+    except Exception as e:
+        logger.error(e)
+        error_msg = 'Internal Server Error'
+        return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
-        try:
-            dirent = seafile_api.get_dirent_by_path(repo_id, path)
-        except Exception as e:
-            logger.error(e)
-            error_msg = 'Internal Server Error'
-            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+    if not dirent:
+        error_msg = 'Dirent %s not found.' % path
+        return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
-        if not dirent:
-            error_msg = 'Dirent %s not found.' % path
-            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+    # permission check
+    if not check_folder_permission(request, repo_id, '/'):
+        error_msg = 'permission denied.'
+        return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
-        # permission check
-        if not check_folder_permission(request, repo_id, '/'):
-            error_msg = 'permission denied.'
-            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+    username = request.user.username
 
-        username = request.user.username
+    def get_repo_type(username, repo_id):
 
-        def get_repo_type(username, repo_id):
+        owned_repos = seafile_api.get_owned_repo_list(username)
+        if repo_id in [r.id for r in owned_repos]:
+            return 'owned'
 
-            owned_repos = seafile_api.get_owned_repo_list(username)
-            if repo_id in [r.id for r in owned_repos]:
-                return 'owned'
+        shared_repos = seafile_api.get_share_in_repo_list(username, -1, -1)
+        if repo_id in [r.id for r in shared_repos]:
+            return 'shared'
 
-            shared_repos = seafile_api.get_share_in_repo_list(username, -1, -1)
-            if repo_id in [r.id for r in shared_repos]:
-                return 'shared'
+        group_repos = seafile_api.get_group_repos_by_user(username)
+        if repo_id in [r.id for r in group_repos]:
+            return 'group'
 
-            group_repos = seafile_api.get_group_repos_by_user(username)
-            if repo_id in [r.id for r in group_repos]:
-                return 'group'
+        if seafile_api.is_inner_pub_repo(repo_id):
+            return 'public'
 
-            if seafile_api.is_inner_pub_repo(repo_id):
-                return 'public'
-
-        repo_type = get_repo_type(username, repo_id)
-        parameters = {
-            'username': username.split('@')[0],
-            'repoType': repo_type,
-            'file': path,
-            'repoName': repo.repo_name,
-        }
-        encoded_parameters = urllib.urlencode(parameters)
-        url = '%s?%s' % (ALIBABA_CITRIX_ICA_URL, encoded_parameters)
-        return HttpResponseRedirect(url)
+    repo_type = get_repo_type(username, repo_id)
+    parameters = {
+        'username': username.split('@')[0],
+        'repoType': repo_type,
+        'file': path,
+        'repoName': repo.repo_name,
+    }
+    encoded_parameters = urllib.urlencode(parameters)
+    url = '%s?%s' % (ALIBABA_CITRIX_ICA_URL, encoded_parameters)
+    return HttpResponseRedirect(url)

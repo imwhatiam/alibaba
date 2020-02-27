@@ -499,7 +499,7 @@ class DirentListItem extends React.PureComponent {
     let repoID = this.props.repoID;
     let direntPath = this.getDirentPath(dirent);
 
-    let url = seafileAPI.server + '/alibaba/api/citrix/';
+    let url = seafileAPI.server + '/alibaba/citrix/';
     window.open(url + '?repo_id=' + repoID + '&path=' + Utils.encodePath(direntPath));
   }
 
