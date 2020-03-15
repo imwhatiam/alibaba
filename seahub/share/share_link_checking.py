@@ -20,41 +20,9 @@ from seahub.utils import get_service_url, send_html_email
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
-def _symbol_link_file_for_dlp_check(username, repo, fileshare):
-    # Add symbol link for DLP check
-    old_cwd = os.getcwd()
-    fuse_file = os.path.join(FUSE_MOUNT_POINT, username,
-                             repo.id + '_' + repo.name,
-                             fileshare.path.lstrip('/')).encode('utf-8')  # for lartin system locale
-
-    if os.path.exists(fuse_file):
-        d_p = DetailedProfile.objects.get_detailed_profile_by_user(username)
-        if d_p and d_p.company:
-            dlp_prefix = './%s/' % base64.b64encode(d_p.company.encode('utf-8'))
-        else:
-            dlp_prefix = './'
-
-        symlink = fuse_file.replace(FUSE_MOUNT_POINT, dlp_prefix).rstrip('/')
-
-        try:
-            os.chdir(DLP_SCAN_POINT)
-            if not os.path.exists(os.path.dirname(symlink)):
-                os.makedirs(os.path.dirname(symlink))
-            os.symlink(fuse_file, symlink)
-            logger.info('Create symbol link %s for %s' % (symlink, fuse_file))
-        except OSError as e:
-            logger.error(e)
-    else:
-        logger.error('File %s not found in fuse.' % fuse_file)
-
-    os.chdir(old_cwd)  # restore previous current working dir
-
-
 def check_share_link(request, fileshare, repo):
     """DLP and huamn check share link when create share link.
     """
-    username = request.user.username
-
     # record share link approval info
     FileShareApprovalChain.objects.create_fs_approval_chain(fileshare)
 
@@ -68,9 +36,6 @@ def check_share_link(request, fileshare, repo):
         fs_v.DLP_status = STATUS_PASS
 
     fs_v.save()
-
-    if ENABLE_FILESHARE_DLP_CHECK:
-        _symbol_link_file_for_dlp_check(username, repo, fileshare)
 
 def is_file_link_reviser(username):
     """Check whether a user is a reviser.
