@@ -1,27 +1,25 @@
 # -*- coding: utf-8 -*-
 
-from django.conf import settings
-from django.http import HttpResponseRedirect, Http404
+import logging
 from django.shortcuts import render, get_object_or_404
-from django.utils.http import urlquote
-from django.utils.translation import ugettext as _
 
-from seahub.auth import REDIRECT_FIELD_NAME
-from seahub.base.templatetags.seahub_tags import email2nickname
-from seahub.share.constants import STATUS_VETO, STATUS_PASS, STATUS_BLOCK_HIGH_RISK
-from seahub.share.models import (FileShare, set_share_link_access,
-                                 check_share_link_access, FileShareExtraInfo,
-                                 FileShareApprovalStatus, get_chain_step_sibling_type)
-from seahub.share.forms import SharedLinkPasswordForm, CaptchaSharedLinkPasswordForm
-from seahub.share.utils import (incr_share_link_decrypt_failed_attempts,
-                                clear_share_link_decrypt_failed_attempts,
-                                show_captcha_share_link_password_form,
-                                enable_share_link_verify_code,
-                                get_unusable_verify_code)
-from seahub.share.signals import file_shared_link_decrypted
-from seahub.utils import render_error
+from seahub.utils import render_error, redirect_to_login
 from seahub.utils.ip import get_remote_ip
-from seahub.share.pingan_utils import user_in_chain
+
+from seahub.share.constants import STATUS_VETO, STATUS_BLOCK_HIGH_RISK
+from seahub.share.models import FileShare, set_share_link_access, \
+        check_share_link_access, FileShareExtraInfo, FileShareApprovalStatus
+from seahub.share.forms import SharedLinkPasswordForm, CaptchaSharedLinkPasswordForm
+from seahub.share.utils import incr_share_link_decrypt_failed_attempts, \
+        clear_share_link_decrypt_failed_attempts, \
+        show_captcha_share_link_password_form, enable_share_link_verify_code, \
+        get_unusable_verify_code
+from seahub.share.signals import file_shared_link_decrypted
+from seahub.share.pingan_utils import user_in_chain, get_dlp_approval_status, \
+        ita_get_all_event_detail
+from seahub.share.settings import PINGAN_IS_DMZ_SERVER
+
+logger = logging.getLogger(__name__)
 
 def share_link_approval_for_pingan(func):
     """Decorator for share link approval test for PingAn Group.
@@ -29,104 +27,71 @@ def share_link_approval_for_pingan(func):
     no mater encrypted or expired.
     """
     def _decorated(request, token, *args, **kwargs):
-        req_user = request.user.username
+
         fileshare = get_object_or_404(FileShare, token=token)
 
-        chain = fileshare.get_approval_chain(flat=False)
-        if fileshare.pass_verify() and not user_in_chain(req_user, chain):
-            if fileshare.is_expired():
-                raise Http404
+        if PINGAN_IS_DMZ_SERVER:
+            skip_encrypted = False
 
-            return func(request, fileshare, *args, **kwargs)
+            event_code = ''
+            status_list = FileShareApprovalStatus.objects.filter(share_link_id=fileshare.id)
+            for status in status_list:
+                msg = status.msg
+                if msg and msg.startswith('R'):
+                    event_code = msg
 
-        # verifier can view encrypted shared link without need to enter
-        # password if this shared link is not pass verify.
-        skip_encrypted = False
+            if event_code:
+                try:
+                    resp_json = ita_get_all_event_detail(fileshare.username, event_code)
+                except Exception as e:
+                    logger.error(e)
+                    return render_error(request, u'服务器内部错误，请联系管理员解决。')
 
-        # If a shared link is not pass verify, then it need to be verified and
-        # can only be viewed by verifiers.
-        need_verify = False
+                if not resp_json.get('success', False) or not resp_json.get('value', []):
+                    logger.error(resp_json)
+                    return render_error(request, resp_json.get('errorMsg', '服务器内部错误，请联系管理员解决。'))
 
-        user_pass, user_veto = False, False
-        show_dlp_veto_msg, other_pass, other_veto, other_info = False, False, False, None
-        if request.user.is_anonymous():
-            # show login page
-            path = urlquote(request.get_full_path())
-            tup = settings.LOGIN_URL, REDIRECT_FIELD_NAME, path
-            return HttpResponseRedirect('%s?%s=%s' % tup)
-        else:
-            if len(chain) == 0:
-                return render_error(request, _(u'权限不足：你无法访问该文件。'))
-
-            if not user_in_chain(req_user, chain):
-                return render_error(request, _(u'权限不足：你无法访问该文件。'))
-
-            chain_status_list = FileShareApprovalStatus.objects.\
-                                get_chain_status_by_share_link(fileshare)
-            show_dlp_veto_msg = chain_status_list[0].status in (STATUS_VETO,
-                    STATUS_BLOCK_HIGH_RISK)
-
-            for obj in chain_status_list:
-                if get_chain_step_sibling_type(obj):  # siblings
-                    siblings = obj[1:]
-                    if req_user not in [x.email for x in siblings]:
-                        # request user is not in current step, go to next step
-                        continue
-
-                    # User is in the current step, find the sibling who
-                    # approve or reject.
-                    target_sibling = None
-                    for sibling_obj in siblings:
-                        if sibling_obj.status == STATUS_PASS or \
-                           sibling_obj.status == STATUS_VETO:
-                            target_sibling = sibling_obj
-
-                    if target_sibling is not None:
-                        if req_user == target_sibling.email:
-                            # approved or rejected by me
-                            user_pass = target_sibling.status == STATUS_PASS
-                            user_veto = target_sibling.status == STATUS_VETO
-                        else:
-                            # approved or rejected by others
-                            other_pass = target_sibling.status == STATUS_PASS
-                            other_veto = target_sibling.status == STATUS_VETO
-                            other_info = '%s (%s)' % (
-                                email2nickname(target_sibling.email),
-                                target_sibling.email)
-                else:  # no siblings
-                    if req_user == obj.email:
-                        user_pass = obj.status == STATUS_PASS
-                        user_veto = obj.status == STATUS_VETO
-
-            skip_encrypted = True
-            need_verify = True
-            extra_info = FileShareExtraInfo.objects.filter(share_link=fileshare)
-            if len(extra_info) == 0:
-                share_to = ''
-                note = ''
+                ita_status = resp_json['value'][0]['status']
+                if ita_status in ('A', 'B', 'C'):
+                    return render_error(request, u'未审核通过，你无法访问该文件。')
             else:
-                share_to = ', '.join([e.sent_to for e in extra_info])
-                note = extra_info[0].note
+                if not fileshare.pass_verify():
+                    return render_error(request, u'未审核通过，你无法访问该文件。')
+        else:
+            skip_encrypted = True
+
+            if not request.user.is_authenticated():
+                return redirect_to_login(request)
+
+            username = request.user.username
+            chain = fileshare.get_approval_chain()
+            if not user_in_chain(username, chain):
+                return render_error(request, u'权限不足，你无法访问该文件。')
+
+            extra_info = FileShareExtraInfo.objects.filter(share_link=fileshare)
+            note = extra_info[0].note if extra_info else ''
+            sent_to_emails = ', '.join([e.sent_to for e in extra_info]) if extra_info else ''
+
+            dlp_msg_dict = {}
+            show_dlp_veto_msg = False
+            dlp_approval_status = get_dlp_approval_status(fileshare)
+            if dlp_approval_status:
+                show_dlp_veto_msg = get_dlp_approval_status(fileshare).status in (STATUS_VETO,
+                        STATUS_BLOCK_HIGH_RISK)
+                dlp_msg_dict = fileshare.get_dlp_msg()
+
             kwargs.update({
                 'skip_encrypted': skip_encrypted,
-                'need_verify': need_verify,
-                'user_pass': user_pass,
-                'user_veto': user_veto,
-                'other_pass': other_pass,
-                'other_veto': other_veto,
-                'other_info': other_info,
-                'share_to': share_to,
+                'share_to': sent_to_emails,
                 'note': note,
                 'show_dlp_veto_msg': show_dlp_veto_msg,
                 'download_cnt': fileshare.get_download_cnt(),
-            })
-            dlp_msg_dict = fileshare.get_dlp_msg()
-            kwargs.update({
                 'policy_categories': dlp_msg_dict['policy_categories'] if 'policy_categories' in dlp_msg_dict else '',
                 'breach_content': dlp_msg_dict['breach_content'] if 'breach_content' in dlp_msg_dict else '',
                 'total_matches': dlp_msg_dict['total_matches'] if 'total_matches' in dlp_msg_dict else '',
             })
-            return func(request, fileshare, *args, **kwargs)
+
+        return func(request, fileshare, *args, **kwargs)
 
     return _decorated
 

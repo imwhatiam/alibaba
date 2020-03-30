@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import copy from 'copy-to-clipboard';
 import { Button, Form, FormGroup, Label, Input, InputGroup, InputGroupAddon, Alert } from 'reactstrap';
-import { gettext, shareLinkExpireDaysMin, shareLinkExpireDaysMax, shareLinkExpireDaysDefault, shareLinkPasswordMinLength } from '../../utils/constants';
+import { gettext, shareLinkExpireDaysMin, shareLinkExpireDaysMax, shareLinkExpireDaysDefault } from '../../utils/constants';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
 import { Link } from '@reach/router';
@@ -24,11 +24,7 @@ class GenerateShareLinkPingan extends React.Component {
     super(props);
     this.state = {
       isValidate: false,
-      isShowPasswordInput: true,
-      isPasswordVisible: false,
       isExpireChecked: false,
-      password: '',
-      passwdnew: '',
       expireDays: shareLinkExpireDaysDefault,
       errorInfo: '',
       sharedLinkInfo: null,
@@ -70,39 +66,6 @@ class GenerateShareLinkPingan extends React.Component {
     });
   }
 
-  onPasswordInputChecked = () => {
-    this.setState({
-      isShowPasswordInput: !this.state.isShowPasswordInput,
-      password: '',
-      passwdnew: '',
-      errorInfo: ''
-    });
-  }
-
-  togglePasswordVisible = () => {
-    this.setState({
-      isPasswordVisible: !this.state.isPasswordVisible
-    });
-  }
-
-  generatePassword = () => {
-    let val = Utils.generatePassword(shareLinkPasswordMinLength);
-    this.setState({
-      password: val,
-      passwdnew: val
-    });
-  }
-
-  inputPassword = (e) => {
-    let passwd = e.target.value.trim();
-    this.setState({password: passwd});
-  }
-
-  inputPasswordNew = (e) => {
-    let passwd = e.target.value.trim();
-    this.setState({passwdnew: passwd});
-  }
-
   setPermission = (permission) => {
     if (permission == 'previewAndDownload') {
       this.permissions = {
@@ -122,10 +85,10 @@ class GenerateShareLinkPingan extends React.Component {
     if (isValid) {
       this.setState({errorInfo: ''});
       let { itemPath, repoID } = this.props;
-      let { password, expireDays, sendTo, note } = this.state;
+      let { expireDays, sendTo, note } = this.state;
       let permissions = this.permissions;
       permissions = JSON.stringify(permissions);
-      this.createShareLink(repoID, itemPath, password, expireDays, permissions, sendTo, note).then((res) => {
+      this.createShareLink(repoID, itemPath, expireDays, permissions, sendTo, note).then((res) => {
         let sharedLinkInfo = new ShareLink(res.data);
         this.setState({sharedLinkInfo: sharedLinkInfo});
       }).catch((error) => {
@@ -135,14 +98,13 @@ class GenerateShareLinkPingan extends React.Component {
     }
   }
 
-  createShareLink(repoID, path, password, expireDays, permissions, sendTo, note) {
+  createShareLink(repoID, path, expireDays, permissions, sendTo, note) {
     const url = seafileAPI.server + '/api/v2.1/share-links/';
     var FormData = require('form-data');
     let form = new FormData();
     form.append('path', path);
     form.append('repo_id', repoID);
     form.append('permissions', permissions);
-    form.append('password', password);
     form.append('expire_days', expireDays);
     form.append('sent_to', sendTo);
     form.append('note', note);
@@ -167,9 +129,6 @@ class GenerateShareLinkPingan extends React.Component {
     let sharedLinkInfo = this.state.sharedLinkInfo;
     seafileAPI.deleteShareLink(sharedLinkInfo.token).then(() => {
       this.setState({
-        password: '',
-        passwordnew: '',
-        isShowPasswordInput: true,
         expireDays: shareLinkExpireDaysDefault,
         isExpireChecked: false,
         errorInfo: '',
@@ -193,22 +152,7 @@ class GenerateShareLinkPingan extends React.Component {
   }
 
   validateParamsInput = () => {
-    let { isShowPasswordInput , password, passwdnew, isExpireChecked, expireDays } = this.state;
-    // validate password
-    if (isShowPasswordInput) {
-      if (password.length === 0) {
-        this.setState({errorInfo: 'Please enter password'});
-        return false;
-      }
-      if (password.length < shareLinkPasswordMinLength) {
-        this.setState({errorInfo: 'Password is too short'});
-        return false;
-      }
-      if (password !== passwdnew) {
-        this.setState({errorInfo: 'Passwords don\'t match'});
-        return false;
-      }
-    }
+    let { isExpireChecked, expireDays } = this.state;
 
     // validate days
     // no limit
@@ -344,9 +288,6 @@ class GenerateShareLinkPingan extends React.Component {
       return <Loading />;
     }
 
-    let passwordLengthTip = gettext('(at least {passwordLength} characters)');
-    passwordLengthTip = passwordLengthTip.replace('{passwordLength}', shareLinkPasswordMinLength);
-
     if (this.state.sharedLinkInfo) {
       let sharedLinkInfo = this.state.sharedLinkInfo;
       if (sharedLinkInfo.status === 'verifing') {
@@ -366,14 +307,6 @@ class GenerateShareLinkPingan extends React.Component {
           <div>
             <Label className="text font-weight-normal">{'该文件下载链接已通过外发至邮箱：' + sharedLinkInfo.receivers +'（发送于 ' + sharedLinkInfo.pass_time + '）'}</Label>
             <Form className='mb-4'>
-              {sharedLinkInfo.password && (
-                <FormGroup className="mb-0">
-                  <dt className="text-secondary font-weight-normal">{'密码：'}</dt>
-                  <dd className="d-flex">
-                    <span>{sharedLinkInfo.password}</span>{' '}
-                  </dd>
-                </FormGroup>
-              )}
               {sharedLinkInfo.expire_date && (
                 <FormGroup className="mb-0">
                   <dt className="text-secondary font-weight-normal">{gettext('Expiration Date:')}</dt>
@@ -433,25 +366,6 @@ class GenerateShareLinkPingan extends React.Component {
       } else {
       return (
         <Form className="generate-share-link">
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" onChange={this.onPasswordInputChecked} checked readOnly disabled/>{'  '}{gettext('Add password protection')}
-            </Label>
-          </FormGroup>
-          {this.state.isShowPasswordInput &&
-            <FormGroup className="link-operation-content" check>
-              <Label className="font-weight-bold">{gettext('Password')}</Label>{' '}<span className="tip">{passwordLengthTip}</span>
-              <InputGroup className="passwd">
-                <Input type={this.state.isPasswordVisible ? 'text' : 'password'} value={this.state.password || ''} onChange={this.inputPassword}/>
-                <InputGroupAddon addonType="append">
-                  <Button onClick={this.togglePasswordVisible}><i className={`link-operation-icon fas ${this.state.isPasswordVisible ? 'fa-eye': 'fa-eye-slash'}`}></i></Button>
-                  <Button onClick={this.generatePassword}><i className="link-operation-icon fas fa-magic"></i></Button>
-                </InputGroupAddon>
-              </InputGroup>
-              <Label className="font-weight-bold">{gettext('Password again')}</Label>
-              <Input className="passwd" type={this.state.isPasswordVisible ? 'text' : 'password'} value={this.state.passwdnew || ''} onChange={this.inputPasswordNew} />
-            </FormGroup>
-          }
           {this.isExpireDaysNoLimit && (
             <Fragment>
               <FormGroup check>

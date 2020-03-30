@@ -18,7 +18,7 @@ from django.http import HttpResponse
 
 from seaserv import seafile_api, ccnet_api
 
-from seahub.api2.utils import api_error
+from seahub.api2.utils import api_error, get_token_v1
 from seahub.api2.throttling import UserRateThrottle
 from seahub.api2.authentication import TokenAuthentication
 
@@ -40,7 +40,9 @@ from seahub.share.models import ApprovalChain, approval_chain_str2list, \
 from seahub.views.sysadmin_pingan import download_links_excel_report
 from seahub.share.settings import PINGAN_SHARE_LINK_BACKUP_LIBRARIES, \
         PINGAN_SHARE_LINKS_REPORT_ADMIN, PINGAN_COMPANY_ID_NAME, \
-        SHARE_LINK_BACKUP_LIBRARY
+        SHARE_LINK_BACKUP_LIBRARY, PINGAN_AUTH_TOKEN_USER_LIMIT, \
+        PINGAN_AUTH_TOKEN_SYSTEM_TOKEN_LIMIT
+
 from seahub.settings import SHARE_LINK_EXPIRE_DAYS_MAX
 from seahub.share.pingan_utils import is_company_member, get_company_id, \
         get_company_security
@@ -100,7 +102,7 @@ class ApprovalChainView(APIView):
 
             chain_list = approval_chain_str2list(chain)
             for e in chain_list:
-                if isinstance(e, basestring):
+                if not isinstance(e, tuple):
                     if not is_valid_email(e):
                         failed.append(ele)
                         continue
@@ -1018,3 +1020,29 @@ class PinganAdminUserApprovalChain(APIView):
         UserApprovalChain.objects.create_chain(email, chain_list)
         chain = UserApprovalChain.objects.get_by_user(email)
         return Response({'chain': chain})
+
+
+class PinganAuthToken(APIView):
+
+    throttle_classes = (UserRateThrottle,)
+
+    def post(self, request):
+
+        system_token = request.data.get('system_token', '').strip()
+        if not system_token or system_token not in PINGAN_AUTH_TOKEN_SYSTEM_TOKEN_LIMIT:
+            error_msg = 'Permission denied.'
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+        username = request.data.get('username', '').strip()
+        if not username or username not in PINGAN_AUTH_TOKEN_USER_LIMIT:
+            error_msg = "username invalid."
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        try:
+            User.objects.get(email=username)
+        except User.DoesNotExist:
+            error_msg = 'User %s not found.' % username
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        token = get_token_v1(username)
+        return Response({'token': token.key})

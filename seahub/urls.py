@@ -786,7 +786,7 @@ from seahub.share.api import ApprovalChainView, SysDownloadLinksReport, \
         PinganAdminShareLinksReport, PinganCompanySecurityShareLinksReport, \
         PinganCompanySecurityShareLinkDownloadInfo, PinganAdminShareLinkDownloadInfo, \
         PinganAdminShareLinkApprovalInfo, PinganCompanySecurityShareLinkApprovalInfo, \
-        PinganAdminUsers, PinganAdminUserApprovalChain
+        PinganAdminUsers, PinganAdminUserApprovalChain, PinganAuthToken
 
 
 urlpatterns += [
@@ -815,6 +815,8 @@ urlpatterns += [
     url(r'^api/v2.1/admin/download-link-excel/$', SysDownloadLinksReport.as_view(), name='api-v2.1-sys-download-links-report'),
 
     # pingan 7.0
+    url(r'^pingan-api/auth-token/$', PinganAuthToken.as_view(), name='pingan-api-auth-token'),
+
     url(r'^pingan-api/admin/share-links-report/$', PinganAdminShareLinksReport.as_view(), name='pingan-api-admin-share-links-report'),
     url(r'^pingan-api/company-security/share-links-report/$', PinganCompanySecurityShareLinksReport.as_view(), name='pingan-api-company-security-share-links-report'),
 

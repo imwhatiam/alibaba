@@ -1,9 +1,21 @@
+# encoding: utf-8
+import json
+import logging
+import requests
+
 from seaserv import ccnet_api
+
 from seahub.profile.models import DetailedProfile
 from seahub.group.utils import is_group_member, is_group_admin
-from seahub.share.models import UserApprovalChain
+from seahub.utils.hasher import AESPasswordHasher
+
+from seahub.share.models import UserApprovalChain, FileShareApprovalStatus
 from seahub.share.settings import PINGAN_COMPANY_SEAFILE_DEPT_MAP, \
-        PINGAN_COMPANY_ID_NAME
+        PINGAN_COMPANY_ID_NAME, PINGAN_ITA_AUTHKEY, \
+        PINGAN_ITA_GETALLEVENTDETAIL, PINGAN_ITA_HASEOAAUTH, \
+        PINGAN_ITA_AUTHKEY_FOR_CANCEL_EVENT, PINGAN_ITA_CANCELEVENTAPI
+
+logger = logging.getLogger(__name__)
 
 def get_all_company():
     return ccnet_api.get_top_groups(including_org=False)
@@ -64,6 +76,10 @@ def is_company_member(username):
         return False
 
 def has_security_in_chain_list(chain_list, company_security_list):
+
+    if not chain_list:
+        return False
+
     for security in company_security_list:
         if security in chain_list[-1]:
             return True
@@ -88,7 +104,6 @@ def update_chain_list_when_group_member_updated(company_id, old_company_security
             UserApprovalChain.objects.filter(user=user).delete()
             UserApprovalChain.objects.create_chain(user, new_chain_list)
 
-from seahub.utils.hasher import AESPasswordHasher
 def check_password(password, encoded):
     return AESPasswordHasher().verify(password, encoded)
 
@@ -109,3 +124,49 @@ def user_in_chain(username, chain):
             return True
 
     return False
+
+def get_dlp_approval_status(share_link):
+
+    status_list = FileShareApprovalStatus.objects.filter(share_link=share_link) \
+                                                 .filter(email='dlp')
+    if not status_list:
+        return None
+    else:
+        return status_list[0]
+
+def ita_get_all_event_detail(share_link_creator, event_code):
+    payload = {
+        "password": "password-not-used",
+        "authKey": PINGAN_ITA_AUTHKEY,
+        "eventList": [{
+            "um": share_link_creator.split('@')[0],
+            'eventCode': event_code}
+        ]
+    }
+    resp_json = requests.post(PINGAN_ITA_GETALLEVENTDETAIL, data=json.dumps(payload)).json()
+    resp_json['post_data'] = payload
+    resp_json['post_url'] = PINGAN_ITA_GETALLEVENTDETAIL
+    return resp_json
+
+def ita_has_eoa_auth(username):
+    payload = {
+        "password": "password-not-used",
+        "authKey": PINGAN_ITA_AUTHKEY,
+        "um": username.split('@')[0]
+    }
+    resp_json = requests.post(PINGAN_ITA_HASEOAAUTH, data=json.dumps(payload)).json()
+    resp_json['post_data'] = payload
+    resp_json['post_url'] = PINGAN_ITA_HASEOAAUTH
+    return resp_json
+
+def ita_cancel_event(share_link_creator, event_code):
+    payload = {
+        "password": "password-not-used",
+        "authKey": PINGAN_ITA_AUTHKEY_FOR_CANCEL_EVENT,
+        "um": share_link_creator.split('@')[0],
+        "eventCode": event_code
+    }
+    resp_json = requests.post(PINGAN_ITA_CANCELEVENTAPI, data=json.dumps(payload)).json()
+    resp_json['post_data'] = payload
+    resp_json['post_url'] = PINGAN_ITA_CANCELEVENTAPI
+    return resp_json

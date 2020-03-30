@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import stat
+import json
 import logging
 import posixpath
 from constance import config
@@ -25,11 +26,22 @@ from seahub.api2.authentication import TokenAuthentication
 from seahub.api2.throttling import UserRateThrottle
 from seahub.api2.permissions import CanGenerateShareLink, IsProVersion
 from seahub.constants import PERMISSION_READ_WRITE
-from seahub.share.models import FileShare, check_share_link_access
+
+from seahub.share.settings import ENABLE_FILESHARE_CHECK, \
+        ENABLE_FILESHARE_DLP_CHECK, SHARE_LINK_MIN_FILE_SIZE, \
+        PINGAN_USER_SPACE_QUOTA_LIMIT
+from seahub.share.models import FileShare, check_share_link_access, \
+        FileShareExtraInfo, FileShareApprovalStatus, UserApprovalChain
+from seahub.share.constants import STATUS_VERIFING, STATUS_PASS
+from seahub.share.pingan_utils import ita_get_all_event_detail, \
+        ita_has_eoa_auth, ita_cancel_event
+
 from seahub.utils import gen_shared_link, is_org_context, normalize_file_path, \
-        normalize_dir_path, is_pro_version, get_file_type_and_ext, is_user_password_strong
+        normalize_dir_path, is_pro_version, get_file_type_and_ext, \
+        is_user_password_strong, is_valid_email
 from seahub.utils.file_op import if_locked_by_online_office
 from seahub.utils.file_types import IMAGE, VIDEO, XMIND
+from seahub.utils.file_size import get_file_size_unit
 from seahub.utils.timeutils import datetime_to_isoformat_timestr, \
         timestamp_to_isoformat_timestr
 from seahub.utils.repo import parse_repo_perm
@@ -41,9 +53,6 @@ from seahub.settings import SHARE_LINK_EXPIRE_DAYS_MAX, \
         THUMBNAIL_ROOT
 from seahub.wiki.models import Wiki
 
-from seahub.share.settings import ENABLE_FILESHARE_CHECK
-from seahub.share.signals import file_shared_link_created
-from seahub.share.share_link_checking import check_share_link
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +101,6 @@ def get_share_link_info(fileshare):
     data['permissions'] = fileshare.get_permissions()
     data['password'] = fileshare.get_password()
 
-    from seahub.share.models import FileShareExtraInfo
     if fileshare.pass_verify():
         data['status'] = 'pass'
         data['pass_time'] = fileshare.get_pass_time()
@@ -118,7 +126,6 @@ def check_permissions_arg(request):
         if isinstance(permissions, dict):
             perm_dict = permissions
         elif isinstance(permissions, basestring):
-            import json
             try:
                 perm_dict = json.loads(permissions)
             except ValueError:
@@ -240,6 +247,30 @@ class ShareLinks(APIView):
         1. default(NOT guest) user;
         """
 
+        username = request.user.username
+        need_check_eoa = [username]
+
+        chain_list = UserApprovalChain.objects.get_by_user(username)
+        for chain in chain_list:
+            if not isinstance(chain, tuple):
+                need_check_eoa.append(chain)
+            else:
+                for email in chain[1:]:
+                    need_check_eoa.append(email)
+
+        eoa_error = False
+        eoa_error_email = username
+        for email in need_check_eoa:
+            resp_json = ita_has_eoa_auth(email)
+            if not resp_json.get('success', False):
+                eoa_error_email = email
+                eoa_error = True
+                break
+
+        if eoa_error:
+            error_msg = '%s 无EOA权限，请核实后重新发起外发' % eoa_error_email.split('@')[0]
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
         # argument check
         repo_id = request.data.get('repo_id', None)
         if not repo_id:
@@ -288,15 +319,14 @@ class ShareLinks(APIView):
             expire_date = timezone.now() + relativedelta(days=expire_days)
 
         sent_to = request.data.get('sent_to', '').split(',')
-        sent_emails = [x.strip() for x in sent_to if x.strip()]
-        if len(sent_emails) == 0:
+        sent_to_emails = [x.strip() for x in sent_to if x.strip()]
+        if len(sent_to_emails) == 0:
             error_msg = _("Please enter the recipient's email.")
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
-        from seahub.utils import is_valid_email
-        for e in sent_emails:
-            if not is_valid_email(e):
-                error_msg = u"非法邮箱地址：%s" % e
+        for email in sent_to_emails:
+            if not is_valid_email(email):
+                error_msg = u"非法邮箱地址：%s" % email
                 return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         note = request.data.get('note', '').strip()
@@ -333,7 +363,6 @@ class ShareLinks(APIView):
 
             return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
-        username = request.user.username
         permission_by_path = seafile_api.check_permission_by_path(repo_id, path, username)
         if parse_repo_perm(permission_by_path).can_generate_share_link is False:
             error_msg = 'Permission denied.'
@@ -345,14 +374,35 @@ class ShareLinks(APIView):
             if fs:
                 error_msg = _(u'Share link %s already exists.' % fs.token)
                 return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+            file_size = seafile_api.get_file_size(repo.store_id, repo.version, obj_id)
+            if file_size < SHARE_LINK_MIN_FILE_SIZE * get_file_size_unit('MB'):
+                error_msg = '文件过小，外发支持的文件应不小于 %d MB，建议通过邮件平台外发小文件。' % SHARE_LINK_MIN_FILE_SIZE
+                return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+#            if seafile_api.get_user_quota(username)/1000000 < PINGAN_USER_SPACE_QUOTA_LIMIT:
+#                error_msg = '没有外发权限。'
+#                return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+            import random
+            import string
+            password = ''.join(random.sample(string.ascii_letters + string.digits, 10))
             fs = FileShare.objects.create_file_link(username, repo_id, path,
-                                                    password, expire_date,
-                                                    permission=perm, org_id=org_id)
+                    password, expire_date, permission=perm, org_id=org_id)
 
             if ENABLE_FILESHARE_CHECK:
-                file_shared_link_created.send(
-                    sender=fs, sent_to=sent_emails, note=note)
-                check_share_link(request, fs, repo)
+
+                # save extra info: sent_to and note
+                for email in sent_to_emails:
+                    FileShareExtraInfo.objects.create(share_link=fs,
+                            sent_to=email, note=note)
+
+                # create DLP approval status
+                dlp_approval_status = FileShareApprovalStatus(share_link=fs,
+                        email=FileShareApprovalStatus.DLP_EMAIL)
+                if not ENABLE_FILESHARE_DLP_CHECK:
+                    dlp_approval_status.status = STATUS_PASS
+                dlp_approval_status.save()
 
         elif s_type == 'd':
             fs = FileShare.objects.get_dir_link_by_path(username, repo_id, path)
@@ -445,7 +495,24 @@ class ShareLink(APIView):
             error_msg = 'There is an associated published library.'
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
+        event_code = ''
+        approval_status_list = FileShareApprovalStatus.objects.filter(share_link_id=fs.id)
+        for approval_status in approval_status_list:
+            msg = approval_status.msg
+            if msg and msg.startswith('R'):
+                event_code = msg
+
         try:
+            if event_code:
+                event_detail = ita_get_all_event_detail(fs.username, event_code)
+                if event_detail.get('success', False) and \
+                        len(event_detail.get('value', [])) > 0 and \
+                        event_detail['value'][0]['status'] == 'A':
+                    resp_json = ita_cancel_event(fs.username, event_code)
+                    if not resp_json.get('success', False):
+                        logger.error('Error returned when cancel ita event')
+                        logger.error(resp_json)
+
             fs.delete()
         except Exception as e:
             logger.error(e)
@@ -505,7 +572,7 @@ class ShareLinkOnlineOfficeLock(APIView):
             # refresh lock file
             try:
                 seafile_api.refresh_file_lock(repo_id, path)
-            except SearpcError, e:
+            except SearpcError as e:
                 logger.error(e)
                 error_msg = 'Internal Server Error'
                 return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
@@ -651,7 +718,6 @@ class VerifyShareLinks(APIView):
         """
         username = request.user.username
         from seahub.share.views_pingan import get_verify_link_by_user
-        from seahub.share.constants import STATUS_VERIFING, STATUS_PASS
         verifing_links, verified_links = get_verify_link_by_user(username)
         cmp_func = lambda x, y: cmp(y.ctime, x.ctime)
         verifing_links = sorted(verifing_links, cmp=cmp_func)
@@ -689,8 +755,6 @@ class VerifyShareLink(APIView):
             return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
         username = request.user.username
-        from seahub.share.models import FileShareApprovalStatus
-        from seahub.share.constants import STATUS_VERIFING
         fs_s = FileShareApprovalStatus.objects.filter(share_link=fs, email=username)
         for ele in fs_s:
             if ele.status != STATUS_VERIFING:

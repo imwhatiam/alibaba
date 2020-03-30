@@ -1121,8 +1121,6 @@ def _download_file_from_share_link(request, fileshare):
     return HttpResponseRedirect(gen_file_get_url(dl_token, filename))
 
 @ensure_csrf_cookie
-# @share_link_audit
-# @share_link_login_required
 @share_link_approval_for_pingan
 @share_link_passwd_check_for_pingan
 def view_shared_file(request, fileshare, *args, **kwargs):
@@ -1136,11 +1134,9 @@ def view_shared_file(request, fileshare, *args, **kwargs):
 
     # recourse check
     repo_id = fileshare.repo_id
-    repo = get_repo(repo_id)
+    repo = seafile_api.get_repo(repo_id)
     if not repo:
-######################### Start PingAn Group related ########################
         return render_error(request, _(u'该文件外链已失效。'))
-######################### End PingAn Group related ##########################
 
     path = normalize_file_path(fileshare.path)
     obj_id = seafile_api.get_file_id_by_path(repo_id, path)

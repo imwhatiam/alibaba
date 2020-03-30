@@ -10,7 +10,8 @@
 
 <p style="font-size:14px;color:#434144;">
 {% blocktrans with escaped_nickname=email|email2nickname|escape %}{{ escaped_nickname }} 在 pafile 共享了{{ file_shared_type }} <span style="font-weight:bold;">{{ file_shared_name}}</span> 给你：{% endblocktrans%} <br />
-<a href="{{ file_shared_link }}">{{ file_shared_link }}</a>
+链接：<a href="{{ file_shared_link }}">{{ file_shared_link }}</a>
+密码：<span style="font-weight:bold;">{{ share_link_password}}</span>
 </p>
 
 {% if extra_msg %}

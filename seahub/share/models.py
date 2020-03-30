@@ -422,9 +422,18 @@ class FileShare(models.Model):
 
         return {}
 
-    def get_approval_chain(self, flat=False):
+    def get_approval_chain(self):
+        """
+        return:
+            1, []
+            2, [u'pa011-manager-1@1.com']
+            3, [u'pa011-manager-1@1.com', u'1@1.com']
+            4, [u'pa011-manager-1@1.com', ('op_or', u'1@1.com', u'2@2.com')]
+            5, [u'pa011-manager-1@1.com', ('op_or', u'1@1.com', u'2@2.com'), u'lian@lian.com']
+            6, [u'pa011-manager-1@1.com', ('op_or', u'1@1.com', u'2@2.com'), u'lian@lian.com', ('op_or', u'pa011-security-2@1.com', u'pa011-security-1@1.com')]
+        """
         username = self.username
-        chain_list = UserApprovalChain.objects.get_by_user(username, flat=flat)
+        chain_list = UserApprovalChain.objects.get_by_user(username)
         if not chain_list:
             return []
 
@@ -613,6 +622,7 @@ class FileShare(models.Model):
 
         for x in send_to:
             c = {
+                'share_link_password': self.get_password(),
                 'email': self.username,
                 'to_email': x,
                 'file_shared_link': self.get_full_url(),
@@ -1339,12 +1349,13 @@ class UserApprovalChainManager(models.Manager):
 
         return True
 
-    def get_by_user(self, user, flat=False):
+    def get_by_user(self, user):
         """
         e.g.
 
         [u'a@pingan.com.cn', ('op_or', u'b@pingan.com.cn', u'c@pingan.com.cn'), u'd@pingan.com.cn']
         """
+
         # find root node which has no parent
         def find_root(l):
             x = []
@@ -1369,39 +1380,35 @@ class UserApprovalChainManager(models.Manager):
                     x.append(ele)
             return x
 
-        if flat is True:
-            return super(UserApprovalChainManager, self).filter(user=user).\
-                values_list('email', flat=True)
-        else:
-            values = super(UserApprovalChainManager, self).filter(user=user)
+        values = super(UserApprovalChainManager, self).filter(user=user)
 
-            if len(values) == 0:
-                return []
+        if len(values) == 0:
+            return []
 
-            ret = []
-            root_node = find_root(values)
-            if root_node:
-                if len(root_node) > 1:
-                    ret.append(tuple(['op_or'] + [x.email for x in root_node]))
-                else:
-                    ret.append(root_node[0].email)
+        ret = []
+        root_node = find_root(values)
+        if root_node:
+            if len(root_node) > 1:
+                ret.append(tuple(['op_or'] + [x.email for x in root_node]))
             else:
-                logger.warn('No root node in user chain: %s' % user)
-                return []
+                ret.append(root_node[0].email)
+        else:
+            logger.warn('No root node in user chain: %s' % user)
+            return []
 
-            root = root_node[0]
-            while True:
-                child = find_child(values, root)
-                if not child:
-                    break
+        root = root_node[0]
+        while True:
+            child = find_child(values, root)
+            if not child:
+                break
 
-                if len(child) == 1:
-                    ret.append(child[0].email)
-                else:
-                    ret.append(tuple(['op_or'] + [x.email for x in child]))
-                root = child[0]
+            if len(child) == 1:
+                ret.append(child[0].email)
+            else:
+                ret.append(tuple(['op_or'] + [x.email for x in child]))
+            root = child[0]
 
-            return ret
+        return ret
 
     def get_emails(self):
         l = super(UserApprovalChainManager, self).values_list('email', flat=True)
@@ -1631,8 +1638,6 @@ class FileShareApprovalStatusManager(models.Manager):
                     }
                 else:
                     target_msg = _('%s passed') % target_name
-                if target.msg:  # add optional user approval msg
-                    target_msg += ' (' + target.msg + ')'
             else:
                 if get_chain_step_sibling_type(ele):
                     for x in ele[1:]:  # ignore 'op_or'
@@ -1650,8 +1655,6 @@ class FileShareApprovalStatusManager(models.Manager):
                     }
                 else:
                     target_msg = _('%s veto') % target_name
-                if target.msg:  # add optional user approval msg
-                    target_msg += ' (' + target.msg + ')'
             status_list.append((step_status, target_msg))
 
         return status_list
