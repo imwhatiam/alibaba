@@ -31,27 +31,25 @@ class SideNavFooter extends React.Component {
     if (sideNavFooterCustomHtml) {
       return (<div className='side-nav-footer' dangerouslySetInnerHTML={{__html: sideNavFooterCustomHtml}}></div>);
     }
-    return (
-      if (window.app.config.lang === 'zh-cn') {
-        return (
-          <div className="side-nav-footer">
-            <div rel="noopener noreferrer" className="item">
-              <img src={mediaUrl + 'img/alibaba-information-platfrom.png'}  height="22" style={{marginRight: 'auto',}} />
-            </div>
-            <a href={siteRoot + 'help/'} target="_blank" rel="noopener noreferrer" className="item last-item" style={{marginLeft: 'auto',}}>{'帮助'}</a>
+    if (window.app.config.lang === 'zh-cn') {
+      return (
+        <div className="side-nav-footer">
+          <div rel="noopener noreferrer" className="item">
+            <img src={mediaUrl + 'img/alibaba-information-platfrom.png'}  height="22" style={{marginRight: 'auto',}} />
           </div>
-        );
-      } else {
-        return (
-          <div className="side-nav-footer">
-            <div rel="noopener noreferrer" className="item">
-              <img src={mediaUrl + 'img/alibaba-information-platfrom.png'}  height="22" style={{marginRight: 'auto',}} />
-            </div>
-            <a href={siteRoot + 'help/'} target="_blank" rel="noopener noreferrer" className="item last-item" style={{marginLeft: 'auto',}}>{'Help'}</a>
+          <a href={siteRoot + 'help/'} target="_blank" rel="noopener noreferrer" className="item last-item" style={{marginLeft: 'auto',}}>{'帮助'}</a>
+        </div>
+      );
+    } else {
+      return (
+        <div className="side-nav-footer">
+          <div rel="noopener noreferrer" className="item">
+            <img src={mediaUrl + 'img/alibaba-information-platfrom.png'}  height="22" style={{marginRight: 'auto',}} />
           </div>
-        );
-      }
-    );
+          <a href={siteRoot + 'help/'} target="_blank" rel="noopener noreferrer" className="item last-item" style={{marginLeft: 'auto',}}>{'Help'}</a>
+        </div>
+      );
+    }
   }
 }
 
