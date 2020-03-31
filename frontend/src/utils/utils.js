@@ -428,6 +428,9 @@ export const Utils = {
         case 'preview':
           title = isZHCN ? '仅云端只读' : 'View-on-Cloud';
           break;
+        case 'rw-no-sync':
+          title = isZHCN ? '读写，不可同步' : 'Read-Write-no-Sync';
+          break;
       }
     }
     return title;
