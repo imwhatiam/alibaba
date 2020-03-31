@@ -36,10 +36,8 @@ class Command(BaseCommand):
 
         query_list = []
 
-        fs_verifies = FileShareApprovalStatus.objects.get_dlp_status()
+        fs_verifies = FileShareApprovalStatus.objects.filter(email='dlp').filter(status=STATUS_VERIFING)
         for fs_verify in fs_verifies:
-            if fs_verify.status != STATUS_VERIFING:
-                continue
 
             repo_id = fs_verify.share_link.repo_id
             repo = seafile_api.get_repo(repo_id)
