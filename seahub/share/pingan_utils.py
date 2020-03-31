@@ -5,7 +5,7 @@ import requests
 
 from seaserv import ccnet_api
 
-from seahub.profile.models import DetailedProfile
+from seahub.profile.models import DetailedProfile, Profile
 from seahub.group.utils import is_group_member, is_group_admin
 from seahub.utils.hasher import AESPasswordHasher
 
@@ -139,7 +139,7 @@ def ita_get_all_event_detail(share_link_creator, event_code):
         "password": "password-not-used",
         "authKey": PINGAN_ITA_AUTHKEY,
         "eventList": [{
-            "um": share_link_creator.split('@')[0],
+            "um": get_ad_user(share_link_creator),
             'eventCode': event_code}
         ]
     }
@@ -152,7 +152,7 @@ def ita_has_eoa_auth(username):
     payload = {
         "password": "password-not-used",
         "authKey": PINGAN_ITA_AUTHKEY,
-        "um": username.split('@')[0]
+        "um": get_ad_user(username)
     }
     resp_json = requests.post(PINGAN_ITA_HASEOAAUTH, data=json.dumps(payload)).json()
     resp_json['post_data'] = payload
@@ -163,10 +163,14 @@ def ita_cancel_event(share_link_creator, event_code):
     payload = {
         "password": "password-not-used",
         "authKey": PINGAN_ITA_AUTHKEY_FOR_CANCEL_EVENT,
-        "um": share_link_creator.split('@')[0],
+        "um": get_ad_user(share_link_creator),
         "eventCode": event_code
     }
     resp_json = requests.post(PINGAN_ITA_CANCELEVENTAPI, data=json.dumps(payload)).json()
     resp_json['post_data'] = payload
     resp_json['post_url'] = PINGAN_ITA_CANCELEVENTAPI
     return resp_json
+
+def get_ad_user(username):
+    return Profile.objects.get_login_id_by_user(username) or \
+            username.split('@')[0]

@@ -20,7 +20,8 @@ from seahub.share.constants import STATUS_VERIFING, STATUS_PASS, STATUS_VETO, \
         STATUS_BLOCK_HIGH_RISK
 from seahub.share.signals import file_shared_link_verify
 from seahub.share.share_link_checking import email_reviser, email_verify_result
-from seahub.share.pingan_utils import get_company_security, has_security_in_chain_list
+from seahub.share.pingan_utils import get_company_security, \
+        has_security_in_chain_list, get_ad_user
 from seahub.share.settings import DLP_SCAN_POINT, SHARE_LINK_BACKUP_LIBRARY, \
         PINGAN_SHARE_LINK_BACKUP_LIBRARIES, PINGAN_ITA_AUTHKEY, PINGAN_ITA_CHANNELID, \
         PINGAN_ITA_CHANNELNAME, PINGAN_ITA_EVENTNAME, PINGAN_ITA_FLOWFLAG, PINGAN_ITA_REPORTTYPE, \
@@ -166,7 +167,7 @@ class Command(BaseCommand):
                 post_chain_emails.append(reviser)
                 info["auditUserVo"] = [
                     {
-                        "auditUser": reviser.split('@')[0], # 审批人的um账号
+                        "auditUser": get_ad_user(reviser), # 审批人的um账号
                         "auditUserName": reviser_name, # 审批人的姓名
                         "isOtype": ""
                     }
@@ -189,7 +190,7 @@ class Command(BaseCommand):
                     post_chain_emails.append(reviser)
                     info["auditUserVo"].append(
                         {
-                            "auditUser": reviser.split('@')[0],
+                            "auditUser": get_ad_user(reviser), # 审批人的um账号
                             "auditUserName": reviser_name,
                             "isOtype": ""
                         }
@@ -224,7 +225,7 @@ class Command(BaseCommand):
                 post_chain_emails.append(reviser)
                 info["auditUserVo"].append(
                     {
-                        "auditUser": reviser.split('@')[0],
+                        "auditUser": get_ad_user(reviser), # 审批人的um账号
                         "auditUserName": reviser_name,
                         "isOtype": ""
                     }
@@ -247,7 +248,7 @@ class Command(BaseCommand):
 
         payload = {
             "password": "password-not-used",
-            "um": username.split('@')[0], # sunruili267
+            "um": get_ad_user(username), # sunruili267
             "authKey": PINGAN_ITA_AUTHKEY,
             "channelId": PINGAN_ITA_CHANNELID,
             "channelName": PINGAN_ITA_CHANNELNAME,
@@ -266,7 +267,7 @@ class Command(BaseCommand):
                 {
                     "inputorName": "submitUM",
                     "selectorType": "class",
-                    "values": username.split('@')[0] # sunruili267
+                    "values": get_ad_user(username) # sunruili267
                 },
                 {
                     "inputorName": "DLPStatus",
