@@ -746,10 +746,17 @@ class PinganAdminShareLinkDownloadInfo(APIView):
             end_date = timezone.now()
             start_date = end_date - timedelta(days=30)
         else:
+            if len(start_date_str) == 10:
+                start_date_str += 'T00:00:00'
+
+            if len(end_date_str) == 10:
+                end_date_str += 'T23:59:59'
+
             try:
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%S')
                 end_date = datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S')
-            except Exception:
+            except Exception as e:
+                logger.error(e)
                 error_msg = "date invalid."
                 return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
@@ -826,6 +833,13 @@ class PinganCompanySecurityShareLinkDownloadInfo(APIView):
             end_date = timezone.now()
             start_date = end_date - timedelta(days=30)
         else:
+
+            if len(start_date_str) == 10:
+                start_date_str += 'T00:00:00'
+
+            if len(end_date_str) == 10:
+                end_date_str += 'T23:59:59'
+
             try:
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%S')
                 end_date = datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S')
