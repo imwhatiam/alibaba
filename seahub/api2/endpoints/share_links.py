@@ -258,18 +258,13 @@ class ShareLinks(APIView):
                 for email in chain[1:]:
                     need_check_eoa.append(email)
 
-        eoa_error = False
-        eoa_error_email = username
         for email in need_check_eoa:
             resp_json = ita_has_eoa_auth(email)
             if not resp_json.get('success', False):
-                eoa_error_email = email
-                eoa_error = True
-                break
-
-        if eoa_error:
-            error_msg = '%s 无EOA权限，请核实后重新发起外发' % eoa_error_email.split('@')[0]
-            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+                logger.error(resp_json)
+                post_data = resp_json.get('post_data')
+                error_msg = '%s 无EOA权限，请核实后重新发起外发' % post_data.get('um')
+                return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
         # argument check
         repo_id = request.data.get('repo_id', None)
