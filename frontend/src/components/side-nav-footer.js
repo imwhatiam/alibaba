@@ -1,6 +1,5 @@
 import React, { Fragment } from 'react';
 import { gettext, mediaUrl, siteRoot, sideNavFooterCustomHtml, extraAppBottomLinks, additionalAppBottomLinks } from '../utils/constants';
-import { gettext, mediaUrl, siteRoot, sideNavFooterCustomHtml, extraAppBottomLinks } from '../utils/constants';
 import ModalPortal from './modal-portal';
 import AboutDialog from './dialog/about-dialog';
 
