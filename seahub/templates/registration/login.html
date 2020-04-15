@@ -26,6 +26,18 @@ html, body, #wrapper { height:100%; }
 #lang-context-selector {
     text-align:left;
 }
+.login-panel-footer-container {
+    margin-top: 40px;
+    text-align: center;
+}
+.login-panel-footer-container a {
+    color: #606060;
+    padding: 0 10px;
+    border-right: 1px solid #606060;
+}
+.login-panel-footer-container a:last-child {
+    border-right: none;
+}
 </style>
 {% endblock %}
 
@@ -33,39 +45,28 @@ html, body, #wrapper { height:100%; }
 <div class="login-panel-outer-container vh">
 <div class="login-panel">
     <h1 class="login-panel-hd">{% trans "Log In" %}</h1>
-    <form action="" method="post" id="login-form">{% csrf_token %}
-        <input type="text" name="login" placeholder="{% trans "Email or Username" %}" aria-label="{% trans "Email or Username" %}" title="{% trans "Email or Username" %}" value="" class="input name-input" /><br />
-        <input type="password" name="password" placeholder="{% trans "Password" %}" aria-label="{% trans "Password" %}" title="{% trans "Password" %}" value="" class="input passwd-input" autocomplete="off" />
+    <form name="form1" action="/pingan/pacas-login/" method="post" id="login-form">{% csrf_token %}
+        <input type="text" name="login" placeholder="请输入开机账号" aria-label="请输入开机账号" title="请输入开机账号" value="" class="input name-input" /><br />
+        <input type="password" name="password" placeholder="请输入开机密码" aria-label="请输入开机密码" title="请输入开机密码" value="" class="input passwd-input" autocomplete="off" />
 
-        {% if form.captcha %}
+        {% if valid_code %}
         <div class="ovhd">
-            <span id="refresh-captcha" title="{% trans "Refresh" %}" class="icon-refresh op-icon fright"></span>
-            {{ form.captcha }}
+            <span id="refresh-valid-code" title="{% trans "Refresh" %}" class="icon-refresh op-icon fright" style="margin: 10px 3px 0 5px;"></span>
+            <img src="{{ valid_code|escape }}" alt="captcha" class="captcha"" id="valid-code-img" >
+            <input id="request-id-for-valid-code" name="request_id_for_valid_code" type="hidden" value="{{ request_id_for_valid_code }}">
+            <input autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" id="valid-code" name="valid_code" type="text" tabindex="3" style="width: 122.844px; height: 36px; padding: 2px 10px; border-radius: 3px; margin: 0;">
         </div>
         {% endif %}
 
         <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
-        {% if form.errors %}
-        {% if form.captcha.errors %}
-        {{ form.captcha.errors}}
-        {% elif form.errors.freeze_account %}
-        <p class="error">{{ form.errors.freeze_account }}</p>
-        {% elif form.errors.inactive %}
-        <p class="error">{{ form.errors.inactive }}</p>
-        {% elif form.errors.not_found %}
-        <p class="error">{{ form.errors.not_found }}</p>
-        {% else %}
-        <p class="error">{% trans "Incorrect email or password" %}</p>
-        {% endif %}
-        {% else %}
-        <p class="error hide"></p>
+        {% if error_msg %}
+        <p class="error">{{ error_msg }}</p>
         {% endif %}
 
         <label class="checkbox-label remember">
             <input type="checkbox" name="remember_me" class="vam remember-input" />
             <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
         </label>
-        <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?" %}</a>
 
         <button type="submit" class="submit btn btn-primary btn-block">{% trans "Log In" %}</button>
     </form>
@@ -80,10 +81,16 @@ html, body, #wrapper { height:100%; }
         {% endif %}
     </div>
 </div>
+<div class="login-panel-footer-container">
+    <a href="http://fcloud.paic.com.cn/f/db1a8eed7b/?raw=1" target="_blank" class="normal">使用帮助</a>
+    <a href="http://fcloud.paic.com.cn/f/05c2b68bc4/?raw=1" target="_blank" class="normal">申请权限/注销</a>
+    <a href="mailto:dept_kjjcjgbyfzwpzc@pingan.com.cn" class="normal">联系我们</a>
+</div>
 </div>
 {% endblock %}
 
 {% block extra_script %}
+<script type="text/javascript" src="/media/assets/scripts/lib/union-sm2-1.0.js"></script>
 <script type="text/javascript">
 $('.login-panel-outer-container').prepend($($('#logo').html()).attr({'height': 40}).addClass('login-panel-logo'));
 $('.login-panel-bottom-container').append($('#lang').removeClass('fright'));
@@ -122,14 +129,14 @@ function setCaptchaInputWidth() {
 }
 $(window).on('load', setCaptchaInputWidth);
 $('.captcha').on('load', setCaptchaInputWidth);
-$('#refresh-captcha').on('click', function() {
+$('#refresh-valid-code').on('click', function() {
     $.ajax({
-        url: '{% url 'captcha-refresh' %}',
+        url: '{% url 'api_pingan_pacas_refresh_valid_code' %}',
         dataType:'json',
         cache:false,
         success: function(data) {
-            $('.captcha').attr('src', data['image_url']);
-            $('#id_captcha_0').val(data['key']);
+            $('#valid-code-img').attr('src', data['valid_code']);
+            $('#request-id-for-valid-code').val(data['request_id_for_valid_code']);
         },
         error: function() {
             $('.error').removeClass('hide').html("{% trans "Failed to refresh the CAPTCHA, please try again later." %}");
@@ -137,6 +144,29 @@ $('#refresh-captcha').on('click', function() {
     });
     return false;
 });
+
+function doEncrypt() {
+    var f1 = document.form1;
+    var curve = 'SM2';
+    var msg = f1.password.value;
+    var msgData = CryptoJS.enc.Utf8.parse(msg);
+
+    // 测试环境
+    // var xHex = '9D18DCF9A4C04E12FFFF68A5A43AE321D56E2E693B4DBAB6CBE263EA156B81B9';
+    // var yHex = '68864B894038382F7649B088733CB9F4DE322953CC81C58FC76F28BC96D43AE7';
+
+    // 生产环境
+    var xHex = 'CE334A29C0FDF7810D4BBB1C9917E54719E53394F947AC8B525CCDEFDDA44810';
+    var yHex = '649E2A9651401CC3251BCEDAD42CE1506841A7A31D3EE3DEADDE65D769BA4458';
+
+    var cipherMode = SM2CipherMode.C1C3C2;
+
+    var cipher = new SM2Cipher(cipherMode);
+    var userKey = cipher.CreatePoint(xHex, yHex);
+    msgData = cipher.GetWords(msgData.toString());
+    var encryptData = cipher.Encrypt(userKey, msgData);
+    f1.password.value = encryptData.toUpperCase();
+}
 
 $('#login-form').on('submit', function(){
     if (!$.trim($('input[name="login"]').val())) {
@@ -147,6 +177,7 @@ $('#login-form').on('submit', function(){
         $('.error').removeClass('hide').html("{% trans "Password cannot be blank" %}");
         return false;
     }
+    doEncrypt();
 });
 // set tabindex
 $(function() {

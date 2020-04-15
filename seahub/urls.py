@@ -143,7 +143,12 @@ from seahub.api2.endpoints.admin.notifications import AdminNotificationsView
 from seahub.api2.endpoints.admin.work_weixin import AdminWorkWeixinDepartments, \
     AdminWorkWeixinDepartmentMembers, AdminWorkWeixinUsersBatch, AdminWorkWeixinDepartmentsImport
 
+from seahub.pingan.pacas import pacas_login, api_pingan_pacas_refresh_valid_code
+
 urlpatterns = [
+    url(r'^pingan/pacas-login/', pacas_login, name='pingan_pacas_login'),
+    url(r'^api/pingan/pacas-refresh-valid-code/', api_pingan_pacas_refresh_valid_code, name='api_pingan_pacas_refresh_valid_code'),
+
     url(r'^accounts/', include('seahub.base.registration_urls')),
 
     url(r'^sso/$', sso, name='sso'),

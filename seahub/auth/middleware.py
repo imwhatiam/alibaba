@@ -8,6 +8,7 @@ from django.utils.deprecation import MiddlewareMixin
 from django.shortcuts import render
 
 from seahub import auth
+from seahub.profile.models import Profile
 from seahub.base.sudo_mode import update_sudo_mode_ts
 from seahub.auth.backends import SeafileRemoteUserBackend
 
@@ -85,7 +86,7 @@ class SeafileRemoteUserMiddleware(MiddlewareMixin):
                 " before the RemoteUserMiddleware class.")
 
         try:
-            username = request.META[self.header]
+            pingan_user = request.META[self.header]
         except KeyError:
             if settings.DEBUG:
                 assert False
@@ -97,8 +98,7 @@ class SeafileRemoteUserMiddleware(MiddlewareMixin):
                 self._remove_invalid_user(request)
             return
 
-        if self.remote_user_domain:
-            username = username.split('@')[0] + '@' + self.remote_user_domain
+        username = Profile.objects.get_username_by_login_id(pingan_user)
 
         # If the user is already authenticated and that user is the user we are
         # getting passed in the headers, then the correct user is already
@@ -122,7 +122,7 @@ class SeafileRemoteUserMiddleware(MiddlewareMixin):
         if not user:
             if not getattr(settings, 'REMOTE_USER_CREATE_UNKNOWN_USER', True):
                 return render(request, 'remote_user/create_unknown_user_false.html')
-	    return render(request, 'remote_user/error.html')
+            return render(request, 'remote_user/error.html')
 
         if user:
             if not user.is_active:

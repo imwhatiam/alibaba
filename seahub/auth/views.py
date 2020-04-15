@@ -274,6 +274,8 @@ def logout(request, next_page=None,
         response = HttpResponseRedirect(next_page or request.path)
 
     response.delete_cookie('seahub_auth')
+    response.delete_cookie('CAS_SSO_COOKIE')
+    response.delete_cookie('PASESSION')
     return response
 
 def logout_then_login(request, login_url=None):
