@@ -1261,6 +1261,11 @@ def react_fake_view(request, **kwargs):
         repo_id = kwargs.get('repo_id', '')
         path = kwargs.get('path', '')
 
+        if request.GET.get('spm', ''):
+            repo = seafile_api.get_repo(repo_id)
+            next_url = reverse('lib_view', args=[repo_id, repo.repo_name, path.strip('/')])
+            return HttpResponseRedirect(next_url)
+
         if repo_id and path and \
                 not check_folder_permission(request, repo_id, path):
 
