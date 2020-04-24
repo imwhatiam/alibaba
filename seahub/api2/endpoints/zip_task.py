@@ -5,13 +5,16 @@ import stat
 import posixpath
 import requests
 import urllib
+from datetime import datetime
 
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+
 from django.conf import settings
+from django.http import HttpResponse
 from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse
 
@@ -32,6 +35,8 @@ if ALIBABA_ENABLE_WATERMARK:
     from seahub.alibaba.settings import ALIBABA_WATERMARK_IS_DOWNLOAD_SERVER
     from seahub.alibaba.settings import ALIBABA_WATERMARK_DOWNLOAD_SERVER_DOMAIN
     from seahub.alibaba.settings import ALIBABA_WATERMARK_USE_EXTRA_DOWNLOAD_SERVER
+    from seahub.alibaba.settings import ALIBABA_WATERMARK_DOWNLOAD_FILE_TO_LOCAL
+    from seahub.alibaba.settings import ALIBABA_WATERMARK_PATH_FOR_DOWNLOAD_FILE_TO_LOCAL
     from seahub.alibaba.views import alibaba_get_zip_download_url
 
 logger = logging.getLogger(__name__)
@@ -327,6 +332,22 @@ class ZipTaskView(APIView):
                 dirent_name_list, zip_token)
         if alibbaba_resp['success']:
             zip_download_url = alibbaba_resp['url']
+
+#            if ALIBABA_WATERMARK_DOWNLOAD_FILE_TO_LOCAL and \
+#                    ALIBABA_WATERMARK_PATH_FOR_DOWNLOAD_FILE_TO_LOCAL != '':
+#                from seahub.alibaba.views import alibaba_download_file_to_local
+#                try:
+#                    local_filename = alibaba_download_file_to_local(username,
+#                            repo_id, parent_dir, zip_download_url)
+#                except Exception as e:
+#                    logger.error(e)
+#                else:
+#                    response = HttpResponse(open(local_filename, "rb").read())
+#                    zip_file_name = 'documents-export-%s' % datetime.now().strftime('%Y-%m-%d')
+#                    content_disposition = "attachment; filename*=UTF-8''" + zip_file_name
+#                    response['Content-Disposition'] = content_disposition
+#                    return response
+
             result['download_url'] = zip_download_url
         else:
             zip_token = seafile_api.get_fileserver_access_token(

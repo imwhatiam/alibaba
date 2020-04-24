@@ -60,7 +60,8 @@ from seahub.alibaba.settings import WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL, \
         WINDOWS_CLIENT_VERSION, APPLE_CLIENT_PUBLIC_DOWNLOAD_URL, \
         APPLE_CLIENT_VERSION, WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL_EN, \
         WINDOWS_CLIENT_VERSION_EN, APPLE_CLIENT_PUBLIC_DOWNLOAD_URL_EN, \
-        APPLE_CLIENT_VERSION_EN, ALIBABA_ENABLE_CITRIX, ALIBABA_CITRIX_ICA_URL
+        APPLE_CLIENT_VERSION_EN, ALIBABA_ENABLE_CITRIX, ALIBABA_CITRIX_ICA_URL, \
+        ALIBABA_WATERMARK_PATH_FOR_DOWNLOAD_FILE_TO_LOCAL
 
 logger = logging.getLogger(__name__)
 
@@ -271,6 +272,23 @@ def alibaba_get_file_download_url(username, repo_id, file_path, file_id, access_
         logger.error(e)
         logger.error(json_resp)
         return {'success': False, 'error_msg': json_resp['msg']}
+
+def alibaba_download_file_to_local(username, repo_id, file_path, download_url):
+
+    file_path = file_path.replace('/', '%2F')
+    local_filename = "%s_%s_%s_%s" % (username, repo_id, file_path,
+            datetime.now().strftime('%Y-%m-%dT%H:%M:%S'))
+    local_filename = posixpath.join(ALIBABA_WATERMARK_PATH_FOR_DOWNLOAD_FILE_TO_LOCAL,
+            local_filename)
+
+    with requests.get(download_url, stream=True) as r:
+        r.raise_for_status()
+        with open(local_filename, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=10240):
+                if chunk: # filter out keep-alive new chunks
+                    f.write(chunk)
+
+    return local_filename
 
 def alibaba_err_msg_when_unable_to_view_file(request, repo_id):
 
