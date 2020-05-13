@@ -140,8 +140,6 @@ from seahub.alibaba.settings import ALIBABA_ENABLE_WATERMARK
 if ALIBABA_ENABLE_WATERMARK:
     from seahub.alibaba.settings import ALIBABA_WATERMARK_SUPPORTED_FILEEXT
     from seahub.alibaba.settings import ALIBABA_WATERMARK_FILE_SIZE_LIMIT
-    from seahub.alibaba.settings import ALIBABA_WATERMARK_DOWNLOAD_FILE_TO_LOCAL
-    from seahub.alibaba.settings import ALIBABA_WATERMARK_PATH_FOR_DOWNLOAD_FILE_TO_LOCAL
     from seahub.alibaba.views import alibaba_get_file_download_url
 
 # Get an instance of a logger
@@ -536,28 +534,13 @@ def view_lib_file(request, repo_id, path):
             send_file_access_msg(request, repo, path, 'web')
             return HttpResponseRedirect(dl_or_raw_url)
 
-        token = seafile_api.get_fileserver_access_token(repo_id, file_id, operation,
-                username, use_onetime=False)
+        token = seafile_api.get_fileserver_access_token(
+            repo_id, file_id, operation, username,
+            use_onetime=False)
         result = alibaba_get_file_download_url(username, repo_id, path,
                 file_id, token)
-
         if result['success']:
             dl_or_raw_url = result['url']
-
-            if ALIBABA_WATERMARK_DOWNLOAD_FILE_TO_LOCAL and \
-                    ALIBABA_WATERMARK_PATH_FOR_DOWNLOAD_FILE_TO_LOCAL != '':
-                from seahub.alibaba.views import alibaba_download_file_to_local
-                try:
-                    local_filename = alibaba_download_file_to_local(username,
-                            repo_id, path, dl_or_raw_url)
-                except Exception as e:
-                    logger.error(e)
-                else:
-                    send_file_access_msg(request, repo, path, 'web')
-                    response = HttpResponse(open(local_filename, "rb").read())
-                    content_disposition = "attachment; filename*=UTF-8''" + urlquote(filename)
-                    response['Content-Disposition'] = content_disposition
-                    return response
 
         send_file_access_msg(request, repo, path, 'web')
         return HttpResponseRedirect(dl_or_raw_url)
