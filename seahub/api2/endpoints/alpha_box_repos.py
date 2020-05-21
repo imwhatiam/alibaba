@@ -8,8 +8,9 @@ from rest_framework import status
 
 from seaserv import seafile_api, seafserv_threaded_rpc
 
-from seahub.utils import is_org_context
-from seahub.utils.timeutils import timestamp_to_isoformat_timestr
+from seahub.utils import is_org_context, get_file_operation_records
+from seahub.utils.timeutils import timestamp_to_isoformat_timestr, \
+        utc_datetime_to_isoformat_timestr
 
 from seahub.api2.utils import api_error, to_python_boolean
 from seahub.api2.throttling import UserRateThrottle
@@ -495,3 +496,57 @@ class AlphaBoxReposSearch(APIView):
 
         return Response(owned_repos_info + shared_in_repos_info +
                 public_repos_info)
+
+
+class AlphaBoxFileOperationRecord(APIView):
+
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = (UserRateThrottle,)
+
+    def get(self, request, repo_id):
+        """ Search repo by name
+
+        Permission checking:
+        1. all authenticated user can perform this action.
+        """
+
+        file_path = request.GET.get('file_path', '')
+        if not file_path:
+            error_msg = 'file_path invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        repo = seafile_api.get_repo(repo_id)
+        if not repo:
+            error_msg = 'Library %s not found.' % repo_id
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        file_id = seafile_api.get_file_id_by_path(repo_id, file_path)
+        if not file_id:
+            error_msg = 'File %s not found.' % file_path
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        if not check_folder_permission(request, repo_id, '/'):
+            error_msg = 'Permission denied.'
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+        try:
+            records = get_file_operation_records(repo_id, file_path)
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        result = []
+        for record in records:
+            info = {}
+            info['username'] = record.username
+            info['repo_id'] = record.repo_id
+            info['operation'] = record.operation
+            info['path'] = record.path
+            info['other_path'] = record.other_path
+            info['time'] = utc_datetime_to_isoformat_timestr(record.timestamp)
+            result.append(info)
+
+        return Response(result)
+

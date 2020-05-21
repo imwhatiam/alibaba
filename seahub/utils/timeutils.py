@@ -83,6 +83,18 @@ def utc_datetime_to_isoformat_timestr(utc_datetime):
         logger.error(e)
         return ''
 
+def utc_datetime_to_isoformat_timestr(utc_datetime):
+    try:
+        # The second way of building a localized time is by converting an existing
+        # localized time using the standard astimezone() method:
+        utc_datetime = utc_datetime.replace(microsecond=0)
+        utc_datetime = pytz.utc.localize(utc_datetime)
+        isoformat_timestr = utc_datetime.astimezone(current_timezone).isoformat()
+        return isoformat_timestr
+    except Exception as e:
+        logger.error(e)
+        return ''
+
 def datetime_to_timestamp(datetime_obj):
     epoch = datetime.datetime(1970, 1, 1)
     local = utc_to_local(datetime_obj)
