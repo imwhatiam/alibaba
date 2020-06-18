@@ -38,7 +38,7 @@
         </li>
         {% endif %}
 
-        {% if user.admin_permissions.can_manage_library %}
+        {% if user.admin_permissions.can_manage_library or user.admin_permissions.can_manage_library_preview_only or user.admin_permissions.can_manage_library_preview_and_download %}
         <li class="tab<% if (cur_tab == 'libraries') { %> tab-cur<% } %>">
             <a href="{{ SITE_ROOT }}sysadmin/#all-libs/"><span class="sf2-icon-library"></span>{% trans "Libraries" %}</a>
         </li>
@@ -358,18 +358,22 @@
             <li class="tabnav-tab<% if (cur_tab == 'all') { %> tabnav-tab-cur<% } %>">
                 <a href="#all-libs/">{% trans "All" %}</a>
             </li>
+            {% if user.admin_permissions.can_manage_library %}
             <li class="tabnav-tab<% if (cur_tab == 'system') { %> tabnav-tab-cur<% } %>">
                 <a href="#system-lib/">{% trans "System" %}</a>
             </li>
             <li class="tabnav-tab<% if (cur_tab == 'trash') { %> tabnav-tab-cur<% } %>">
                 <a href="#trash-libs/">{% trans "Trash" %}</a>
             </li>
+            {% endif %}
         </ul>
         <% if (cur_tab == 'trash') { %>
         <button class="js-clean fright hide">{% trans "Clean" %}</button>
         <% } %>
         <% if (cur_tab == 'all') { %>
+        {% if user.admin_permissions.can_manage_library %}
         <button class="js-add-library fright">{% trans "New Library" %}</button>
+        {% endif %}
         <% } %>
     </div>
 </script>
@@ -459,13 +463,18 @@
     <td><%= file_count %> / <%= size_formatted %></td>
     <td style="font-size:11px;"><%= id %></td>
     <td>
+        {% if user.admin_permissions.can_manage_library %}
         <% if (owner.indexOf('@seafile_group') == -1) { %>
         <a href="{{ SITE_ROOT }}useradmin/info/<% print(encodeURIComponent(owner)); %>/"><%- owner_name %></a>
         <% } else { %>
         <a href="{{ SITE_ROOT }}sysadmin/#address-book/groups/<% print(owner_name); %>/"><%- group_name %></a>
         <% } %>
+        {% else %}
+        <%- owner_name %>
+        {% endif %}
     </td>
     <td>
+        {% if user.admin_permissions.can_manage_library %}
         <% if (owner && owner.indexOf('@seafile_group') == -1) { %>
         <a href="#" class="sf2-icon-delete sf2-x repo-delete-btn op-icon vh" title="{% trans "Delete" %}" aria-label="{% trans "Delete" %}"></a>
         <a href="#" class="sf2-icon-move sf2-x repo-transfer-btn op-icon vh" title="{% trans "Transfer" %}" aria-label="{% trans "Transfer" %}"></a>
@@ -479,6 +488,7 @@
             </ul>
         </div>
         <% } %>
+        {% endif %}
     </td>
 </script>
 
@@ -612,9 +622,11 @@
         <% if (is_system_library) { %>
         <a href="#" class="sf2-icon-delete sf2-x dirent-delete-btn op-icon vh" title="{% trans "Delete" %}" aria-label="{% trans "Delete" %}"></a>
         <% } %>
+        {% if user.admin_permissions.can_manage_library or user.admin_permissions.can_manage_library_preview_and_download %}
         <% if (is_file) { %>
         <a href="#" class="sf2-icon-download sf2-x dirent-download-btn op-icon vh" title="{% trans "Download" %}" aria-label="{% trans "Download" %}"></a>
         <% } %>
+        {% endif %}
     </td>
     <td><%= file_size %></td>
     <td><time title="<%= time %>"><%= time_from_now %></time></td>

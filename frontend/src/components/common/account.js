@@ -22,6 +22,7 @@ class Account extends Component {
       isStaff: false,
       isOrgStaff: false,
       usageRate: '',
+      adminRole: '',
     };
     this.isFirstMounted = true;
   }
@@ -80,6 +81,7 @@ class Account extends Component {
           isInstAdmin: resp.data.is_inst_admin,
           isOrgStaff: resp.data.is_org_staff === 1 ? true : false,
           showInfo: !this.state.showInfo,
+          adminRole: resp.data.admin_role,
         });
       }).catch(error => {
         let errMessage = Utils.getErrorMsg(error);
@@ -93,7 +95,7 @@ class Account extends Component {
 
   renderMenu = () => {
     let data;
-    const { isStaff, isOrgStaff, isInstAdmin } = this.state;
+    const { isStaff, isOrgStaff, isInstAdmin, adminRole } = this.state;
 
     if (this.props.isAdminPanel) {
       if (isStaff) {
@@ -115,10 +117,17 @@ class Account extends Component {
 
     } else {
       if (isStaff) {
-        data = {
-          url: `${siteRoot}sys/useradmin/`,
-          text: gettext('System Admin')
-        };
+        if (adminRole == 'alibaba_library_admin_preview_only' || adminRole == 'alibaba_library_admin_preview_and_download' || adminRole == 'alibaba_library_admin_preview_and_download_view_log' ) {
+          data = {
+            url: `${siteRoot}sysadmin/#all-libs/`,
+            text: gettext('System Admin')
+          };
+        } else {
+          data = {
+            url: `${siteRoot}sys/useradmin/`,
+            text: gettext('System Admin')
+          };
+        }
       } else if (isOrgStaff) {
         data = {
           url: `${siteRoot}org/useradmin/`,

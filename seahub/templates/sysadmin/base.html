@@ -49,7 +49,7 @@
             </li>
             {% endif %}
 
-            {% if user.admin_permissions.can_manage_library %}
+            {% if user.admin_permissions.can_manage_library or user.admin_permissions.can_manage_library_preview_only or user.admin_permissions.can_manage_library_preview_and_download %}
             <li class="tab {% block cur_repo %}{% endblock %}">
                 <a href="{{ SITE_ROOT }}sysadmin/#all-libs/"><span class="sf2-icon-library"></span>{% trans "Libraries" %}</a>
             </li>

@@ -28,6 +28,7 @@ define([
 
             data['time'] = created_at.format('LLLL');
             data['time_from_now'] = Common.getRelativeTimeStr(created_at);
+            data['time_from_now'] = created_at.format();
 
             var detail = this.model.get('detail');
 
@@ -96,6 +97,46 @@ define([
                     data.op_title = gettext("Delete User");
                     data.op_details = gettext("Deleted user {user}")
                         .replace('{user}', '<span class="bold">' + Common.HTMLescape(detail.email) + '</span>');
+                    break;
+
+                case 'download_file':
+
+                    if (detail.owner_email && detail.owner_name) {
+                        var email_name_str = '<span class="bold" title="' + Common.HTMLescape(detail.owner_email) + '">' + Common.HTMLescape(detail.owner_name) + '</span>' + "'s";
+                    } else {
+                        var email_name_str = ''
+                    }
+
+                    data.op_title = gettext("Download File");
+                    data.op_details = gettext("Download file {path} in {owner_name}'s {repo_id}")
+                        .replace("{owner_name}'s", email_name_str)
+                        .replace('{path}', '<span class="bold">' + Common.HTMLescape(detail.path) + '</span>');
+
+                    if (app.pageOptions.is_pro && app.pageOptions.enable_sys_admin_view_repo) {
+                        data.op_details = data.op_details.replace('{repo_id}', '<a href="#libs/' + encodeURIComponent(detail.id) + '/">' + Common.HTMLescape(detail.name) + '</a>');
+                    } else {
+                        data.op_details = data.op_details.replace('{repo_id}', '<span class="bold" title="' + detail.id + '">' + Common.HTMLescape(detail.name) + '</span>');
+                    }
+                    break;
+
+                case 'view_library':
+
+                    if (detail.owner_email && detail.owner_name) {
+                        var email_name_str = '<span class="bold" title="' + Common.HTMLescape(detail.owner_email) + '">' + Common.HTMLescape(detail.owner_name) + '</span>' + "'s";
+                    } else {
+                        var email_name_str = ''
+                    }
+
+                    data.op_title = gettext("View Library");
+                    data.op_details = gettext("View {path} in {owner_name}'s {repo_id}")
+                        .replace("{owner_name}'s", email_name_str)
+                        .replace('{path}', '<span class="bold">' + Common.HTMLescape(detail.path) + '</span>');
+
+                    if (app.pageOptions.is_pro && app.pageOptions.enable_sys_admin_view_repo) {
+                        data.op_details = data.op_details.replace('{repo_id}', '<a href="#libs/' + encodeURIComponent(detail.id) + '/">' + Common.HTMLescape(detail.name) + '</a>');
+                    } else {
+                        data.op_details = data.op_details.replace('{repo_id}', '<span class="bold" title="' + detail.id + '">' + Common.HTMLescape(detail.name) + '</span>');
+                    }
                     break;
             }
 

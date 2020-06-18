@@ -185,7 +185,7 @@ define([
         },
 
         showLibraries: function() {
-            if (!app.pageOptions.admin_permissions.can_manage_library) {
+            if (!app.pageOptions.admin_permissions.can_manage_library && !app.pageOptions.admin_permissions.can_manage_library_preview_only && !app.pageOptions.admin_permissions.can_manage_library_preview_and_download) {
                 this.showDashboard();
                 return false;
             }
@@ -200,7 +200,7 @@ define([
         },
 
         showSearchLibraries: function() {
-            if (!app.pageOptions.admin_permissions.can_manage_library) {
+            if (!app.pageOptions.admin_permissions.can_manage_library && !app.pageOptions.admin_permissions.can_manage_library_preview_only && !app.pageOptions.admin_permissions.can_manage_library_preview_and_download) {
                 this.showDashboard();
                 return false;
             }
@@ -219,7 +219,7 @@ define([
         },
 
         showLibraryDir: function(repo_id, path) {
-            if (!app.pageOptions.admin_permissions.can_manage_library) {
+            if (!app.pageOptions.admin_permissions.can_manage_library && !app.pageOptions.admin_permissions.can_manage_library_preview_only && !app.pageOptions.admin_permissions.can_manage_library_preview_and_download) {
                 this.showDashboard();
                 return false;
             }

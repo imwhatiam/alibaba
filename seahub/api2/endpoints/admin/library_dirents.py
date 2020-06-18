@@ -95,6 +95,24 @@ class AdminLibraryDirents(APIView):
             error_msg = 'Internal Server Error'
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
+        try:
+            # send admin operation log signal
+            from seahub.admin_log.models import VIEW_LIBRARY
+            from seahub.admin_log.signals import admin_operation
+            from seahub.base.templatetags.seahub_tags import email2nickname
+            owner_email = get_repo_owner(request, repo_id)
+            admin_op_detail = {
+                "id": repo_id,
+                "path": parent_dir,
+                "name": repo.name,
+                "owner_email": owner_email,
+                "owner_name": email2nickname(owner_email),
+            }
+            admin_operation.send(sender=None, admin_name=request.user.username,
+                    operation=VIEW_LIBRARY, detail=admin_op_detail)
+        except Exception as e:
+            logger.error(e)
+
         return_results = {}
         return_results['repo_name'] = repo.repo_name
         return_results['repo_id'] = repo.repo_id
@@ -191,6 +209,24 @@ class AdminLibraryDirent(APIView):
 
             dl_url = gen_file_get_url(token, dirent.obj_name)
             send_file_access_msg(request, repo, path, 'web')
+            try:
+                # send admin operation log signal
+                from seahub.admin_log.models import DOWNLOAD_FILE
+                from seahub.admin_log.signals import admin_operation
+                from seahub.base.templatetags.seahub_tags import email2nickname
+                owner_email = get_repo_owner(request, repo_id)
+                admin_op_detail = {
+                    "id": repo_id,
+                    "path": path,
+                    "name": repo.name,
+                    "owner_email": owner_email,
+                    "owner_name": email2nickname(owner_email),
+                }
+                admin_operation.send(sender=None, admin_name=request.user.username,
+                        operation=DOWNLOAD_FILE, detail=admin_op_detail)
+            except Exception as e:
+                logger.error(e)
+
             return Response({'download_url': dl_url})
 
         dirent_info = get_dirent_info(dirent)

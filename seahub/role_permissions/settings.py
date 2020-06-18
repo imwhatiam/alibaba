@@ -86,6 +86,8 @@ DEFAULT_ENABLED_ADMIN_ROLE_PERMISSIONS = {
         'can_view_statistic': True,
         'can_config_system': True,
         'can_manage_library': True,
+        'can_manage_library_preview_only': True,
+        'can_manage_library_preview_and_download': True,
         'can_manage_user': True,
         'can_manage_group': True,
         'can_view_user_log': True,
@@ -109,6 +111,16 @@ DEFAULT_ENABLED_ADMIN_ROLE_PERMISSIONS = {
     # AUDIT_ADMIN can ONLY view system-info(without upload licence), admin-logs pages.
     AUDIT_ADMIN: {
         'can_view_system_info': True,
+        'can_view_admin_log': True,
+    },
+    'alibaba_library_admin_preview_only': {
+        'can_manage_library_preview_only': True,
+    },
+    'alibaba_library_admin_preview_and_download': {
+        'can_manage_library_preview_and_download': True,
+    },
+    'alibaba_library_admin_preview_and_download_view_log': {
+        'can_manage_library_preview_and_download': True,
         'can_view_admin_log': True,
     },
 }

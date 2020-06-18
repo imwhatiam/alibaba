@@ -114,6 +114,8 @@ app["pageOptions"] = {
         "can_view_statistic": {% if user.admin_permissions.can_view_statistic %} true {% else %} false {% endif %},
         "can_config_system": {% if user.admin_permissions.can_config_system %} true {% else %} false {% endif %},
         "can_manage_library": {% if user.admin_permissions.can_manage_library %} true {% else %} false {% endif %},
+        "can_manage_library_preview_only": {% if user.admin_permissions.can_manage_library_preview_only %} true {% else %} false {% endif %},
+        "can_manage_library_preview_and_download": {% if user.admin_permissions.can_manage_library_preview_and_download %} true {% else %} false {% endif %},
         "can_manage_user": {% if user.admin_permissions.can_manage_user %} true {% else %} false {% endif %},
         "can_manage_group": {% if user.admin_permissions.can_manage_group %} true {% else %} false {% endif %},
         "can_view_user_log": {% if user.admin_permissions.can_view_user_log %} true {% else %} false {% endif %},

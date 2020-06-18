@@ -336,6 +336,7 @@ class AccountInfo(APIView):
         info['contact_email'] = p.contact_email if p else ""
         info['institution'] = p.institution if p and p.institution else ""
         info['is_staff'] = request.user.is_staff
+        info['admin_role'] = request.user.admin_role
 
         if getattr(settings, 'MULTI_INSTITUTION', False):
             info['is_inst_admin'] = request.user.inst_admin

@@ -28,9 +28,15 @@ USER_ADD = 'user_add'
 # 'user_delete': {'email': deleted_user}
 USER_DELETE = 'user_delete'
 
+# 'download_file': {'id': repo_id, 'name': repo_name, 'owner': repo_owner, 'path': file_path}
+DOWNLOAD_FILE = 'download_file'
+
+# 'download_file': {'id': repo_id, 'name': repo_name, 'owner': repo_owner, 'path': path}
+VIEW_LIBRARY = 'view_library'
+
 ADMIN_LOG_OPERATION_TYPE = (REPO_TRANSFER, REPO_DELETE,
         GROUP_CREATE, GROUP_TRANSFER, GROUP_DELETE,
-        USER_ADD, USER_DELETE)
+        USER_ADD, USER_DELETE, DOWNLOAD_FILE, VIEW_LIBRARY)
 
 
 class AdminLogManager(models.Manager):

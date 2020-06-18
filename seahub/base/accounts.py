@@ -259,6 +259,12 @@ class AdminPermissions(object):
     def can_manage_library(self):
         return get_enabled_admin_role_permissions_by_role(self.user.admin_role)['can_manage_library']
 
+    def can_manage_library_preview_only(self):
+        return get_enabled_admin_role_permissions_by_role(self.user.admin_role)['can_manage_library_preview_only']
+
+    def can_manage_library_preview_and_download(self):
+        return get_enabled_admin_role_permissions_by_role(self.user.admin_role)['can_manage_library_preview_and_download']
+
     def can_manage_user(self):
         return get_enabled_admin_role_permissions_by_role(self.user.admin_role)['can_manage_user']
 

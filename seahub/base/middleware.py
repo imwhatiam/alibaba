@@ -203,7 +203,9 @@ class UserPermissionMiddleware(object):
             if not request.user.admin_permissions.can_config_system():
                 return HttpResponseForbidden()
         elif permission == 'can_manage_library':
-            if not request.user.admin_permissions.can_manage_library():
+            if not request.user.admin_permissions.can_manage_library() and \
+                    not request.user.admin_permissions.can_manage_library_preview_only() and \
+                    not request.user.admin_permissions.can_manage_library_preview_and_download():
                 return HttpResponseForbidden()
         elif permission == 'can_manage_user':
             if not request.user.admin_permissions.can_manage_user():
