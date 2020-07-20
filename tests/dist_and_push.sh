@@ -16,7 +16,7 @@ set +x
 
 function commit_dist_files() {
     echo 'commit seahub'
-    git checkout -b dist-$GITHUB_BRANCH
+    git checkout -b xjtlu-dist
     git add -u . && git add -A media/assets && git add -A static/scripts && git add -A frontend && git add -A locale
     git config --global user.email "github_actions@seafile.com"
     git config --global user.name "GitHub Actions CI"
@@ -25,8 +25,8 @@ function commit_dist_files() {
 
 function upload_files() {
     echo 'push dist to seahub'
-    git remote add token-origin https://x-access-token:$GITHUB_TOKEN@github.com/haiwen/seahub.git
-    git push -f token-origin dist-$GITHUB_BRANCH
+    git remote add seahub-priv https://$TOKEN_FOR_PUSH_TO_SEAHUB_PRIV@github.com/seafileltd/seahub-priv.git
+    git push -f seahub-priv xjtlu-dist
 }
 
 function make_dist() {
@@ -37,7 +37,6 @@ function make_dist() {
 function build_frontend() {
     echo "Building frontend/src files ..."
     cd ./frontend && npm install && CI=false npm run build && cd ..
-
 }
 
 build_frontend
