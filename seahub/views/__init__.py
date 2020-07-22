@@ -1194,6 +1194,7 @@ def react_fake_view(request, **kwargs):
         'upload_link_expire_days_default': UPLOAD_LINK_EXPIRE_DAYS_DEFAULT,
         'upload_link_expire_days_min': UPLOAD_LINK_EXPIRE_DAYS_MIN,
         'upload_link_expire_days_max': UPLOAD_LINK_EXPIRE_DAYS_MAX,
+        'share_link_count_limit': request.user.permissions.share_link_count_limit(),
         'enable_encrypted_library': config.ENABLE_ENCRYPTED_LIBRARY,
         'enable_repo_history_setting': config.ENABLE_REPO_HISTORY_SETTING,
         'enable_reset_encrypted_repo_password': ENABLE_RESET_ENCRYPTED_REPO_PASSWORD,

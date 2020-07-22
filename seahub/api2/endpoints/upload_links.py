@@ -31,6 +31,7 @@ from seahub.utils.timeutils import datetime_to_isoformat_timestr
 
 from seahub.settings import UPLOAD_LINK_EXPIRE_DAYS_DEFAULT, \
         UPLOAD_LINK_EXPIRE_DAYS_MIN, UPLOAD_LINK_EXPIRE_DAYS_MAX
+from seahub.api2.endpoints.share_upload_link_count import get_share_upload_link_count
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +142,13 @@ class UploadLinks(APIView):
         1. default(NOT guest) user;
         2. user with 'rw' permission;
         """
+
+        username = request.user.username
+        link_count = get_share_upload_link_count(username)
+        count_limit = request.user.permissions.share_link_count_limit()
+        if count_limit > 0 and link_count >= count_limit:
+            error_msg = _('The number of links has exceeded the limit.')
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
         # argument check
         repo_id = request.data.get('repo_id', None)

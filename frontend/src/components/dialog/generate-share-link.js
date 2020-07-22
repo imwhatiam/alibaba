@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import copy from 'copy-to-clipboard';
 import { Button, Form, FormGroup, Label, Input, InputGroup, InputGroupAddon, InputGroupText, Alert, FormText } from 'reactstrap';
-import { isPro, gettext, shareLinkExpireDaysMin, shareLinkExpireDaysMax, shareLinkExpireDaysDefault, shareLinkPasswordMinLength, canSendShareLinkEmail } from '../../utils/constants';
+import { isPro, gettext, shareLinkExpireDaysMin, shareLinkExpireDaysMax, shareLinkExpireDaysDefault, shareLinkPasswordMinLength, canSendShareLinkEmail, shareLinkCountLimit } from '../../utils/constants';
 import ShareLinkPermissionEditor from '../../components/select-editor/share-link-permission-editor';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
@@ -44,6 +44,7 @@ class GenerateShareLink extends React.Component {
     this.expirationLimitTip = expirationLimitTip;
 
     this.state = {
+      isLinkCountExceedLimit: false,
       isOpIconShown: false,
       isValidate: false,
       isShowPasswordInput: false,
@@ -67,6 +68,16 @@ class GenerateShareLink extends React.Component {
   componentDidMount() {
     let path = this.props.itemPath;
     let repoID = this.props.repoID;
+
+    seafileAPI.req.get('/api/v2.1/share-upload-link-count/').then((res) => {
+      if (shareLinkCountLimit > 0 && res.data.count >= shareLinkCountLimit) {
+        this.setState({isLinkCountExceedLimit: true});
+      }
+    }).catch(error => {
+      let errMessage = Utils.getErrorMsg(error);
+      toaster.danger(errMessage);
+    });
+
     seafileAPI.getShareLink(repoID, path).then((res) => {
       if (res.data.length !== 0) {
         let sharedLinkInfo = new ShareLink(res.data[0]);
@@ -438,6 +449,8 @@ class GenerateShareLink extends React.Component {
       );
     } else {
       return (
+        <div>
+        {!this.state.isLinkCountExceedLimit && (
         <Form className="generate-share-link">
           <FormGroup check>
             <Label check>
@@ -531,6 +544,11 @@ class GenerateShareLink extends React.Component {
           {this.state.errorInfo && <Alert color="danger" className="mt-2">{gettext(this.state.errorInfo)}</Alert>}
           <Button onClick={this.generateShareLink} className="mt-2">{gettext('Generate')}</Button>
         </Form>
+        )}
+        {this.state.isLinkCountExceedLimit &&
+          <span className="err-message">{gettext('The number of links has exceeded the limit.')}</span>
+        }
+        </div>
       );
     }
   }

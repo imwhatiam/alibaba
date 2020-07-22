@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import copy from 'copy-to-clipboard';
 import moment from 'moment';
 import { Button, Form, FormGroup, Label, Input, InputGroup, InputGroupAddon, InputGroupText, Alert, FormText } from 'reactstrap';
-import { gettext, shareLinkPasswordMinLength, canSendShareLinkEmail, uploadLinkExpireDaysMin, uploadLinkExpireDaysMax, uploadLinkExpireDaysDefault } from '../../utils/constants';
+import { gettext, shareLinkPasswordMinLength, canSendShareLinkEmail, uploadLinkExpireDaysMin, uploadLinkExpireDaysMax, uploadLinkExpireDaysDefault, shareLinkCountLimit } from '../../utils/constants';
 import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
 import UploadLink from '../../models/upload-link';
@@ -41,6 +41,7 @@ class GenerateUploadLink extends React.Component {
     this.expirationLimitTip = expirationLimitTip;
 
     this.state = {
+      isLinkCountExceedLimit: false,
       showPasswordInput: false,
       passwordVisible: false,
       password: '',
@@ -55,6 +56,14 @@ class GenerateUploadLink extends React.Component {
   }
 
   componentDidMount() {
+    seafileAPI.req.get('/api/v2.1/share-upload-link-count/').then((res) => {
+      if (shareLinkCountLimit > 0 && res.data.count >= shareLinkCountLimit) {
+        this.setState({isLinkCountExceedLimit: true});
+      }
+    }).catch(error => {
+      let errMessage = Utils.getErrorMsg(error);
+      toaster.danger(errMessage);
+    });
     this.getUploadLink();
   }
 
@@ -290,6 +299,8 @@ class GenerateUploadLink extends React.Component {
       );
     }
     return (
+      <div>
+      {!this.state.isLinkCountExceedLimit && (
       <Form className="generate-upload-link">
         <FormGroup check>
           <Label check>
@@ -366,6 +377,11 @@ class GenerateUploadLink extends React.Component {
         {this.state.errorInfo && <Alert color="danger" className="mt-2">{this.state.errorInfo}</Alert>}
         <Button className="generate-link-btn" onClick={this.generateUploadLink}>{gettext('Generate')}</Button>
       </Form>
+      )}
+      {this.state.isLinkCountExceedLimit &&
+        <span className="err-message">{gettext('The number of links has exceeded the limit.')}</span>
+      }
+      </div>
     );
   }
 }
