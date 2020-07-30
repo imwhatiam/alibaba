@@ -41,6 +41,9 @@ class SharedRepoListItem extends React.Component {
       isFolderPermissionDialogOpen: false,
       isHistorySettingDialogShow: false,
       isDeleteDialogShow: false,
+      isAPITokenDialogShow: false,
+      isRepoShareUploadLinksDialogOpen: false,
+      isRepoDeleted: false,
     };
 
     this.isCurrentDepartmentRepo = false;  // is current department owned repo
@@ -177,6 +180,37 @@ class SharedRepoListItem extends React.Component {
 
   onItemDeleteToggle = () => {
     this.setState({isDeleteDialogShow: !this.state.isDeleteDialogShow});
+  }
+
+  onItemDelete = () => {
+    const { currentGroup, repo } = this.props;
+    if (!currentGroup) {  // repo can not be deleted in share all module
+      return;
+    }
+
+    const groupID = currentGroup.id;
+
+    seafileAPI.deleteGroupOwnedLibrary(groupID, repo.repo_id).then(() => {
+      
+      this.setState({
+        isRepoDeleted: true,
+        isDeleteDialogShow: false,
+      });
+      
+      this.props.onItemDelete(repo);
+      let name = repo.repo_name;
+      var msg = gettext('Successfully deleted {name}.').replace('{name}', name);
+      toaster.success(msg);
+    }).catch((error) => {
+      let errMessage = Utils.getErrorMsg(error);
+      if (errMessage === gettext('Error')) {
+        let name = repo.repo_name;
+        errMessage = gettext('Failed to delete {name}.').replace('{name}', name);
+      }
+      toaster.danger(errMessage);
+
+      this.setState({isRepoDeleted: false});
+    });
   }
 
   toggleShareDialog = () => {
@@ -424,7 +458,8 @@ class SharedRepoListItem extends React.Component {
           <ModalPortal>
             <DeleteRepoDialog
               repo={this.props.repo}
-              onDeleteRepo={this.props.onItemDelete}
+              isRepoDeleted={this.state.isRepoDeleted}
+              onDeleteRepo={this.onItemDelete}
               toggle={this.onItemDeleteToggle}
             />
           </ModalPortal>

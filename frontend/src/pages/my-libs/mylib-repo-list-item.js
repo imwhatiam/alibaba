@@ -46,6 +46,9 @@ class MylibRepoListItem extends React.Component {
       isResetPasswordDialogShow: false,
       isLabelRepoStateDialogOpen: false,
       isFolderPermissionDialogShow: false,
+      isAPITokenDialogShow: false,
+      isRepoShareUploadLinksDialogOpen: false,
+      isRepoDeleted: false,
     };
   }
 
@@ -214,6 +217,12 @@ class MylibRepoListItem extends React.Component {
 
   onDeleteRepo = (repo) => {
     seafileAPI.deleteRepo(repo.repo_id).then((res) => {
+      
+      this.setState({
+        isRepoDeleted: true,
+        isDeleteDialogShow: false,
+      });
+      
       this.props.onDeleteRepo(repo);
       let name = repo.repo_name;
       var msg = gettext('Successfully deleted {name}.').replace('{name}', name);
@@ -225,6 +234,8 @@ class MylibRepoListItem extends React.Component {
         errMessage = gettext('Failed to delete {name}.').replace('{name}', name);
       }
       toaster.danger(errMessage);
+
+      this.setState({isRepoDeleted: false});
     });
   }
 
@@ -346,6 +357,7 @@ class MylibRepoListItem extends React.Component {
           <ModalPortal>
             <DeleteRepoDialog
               repo={repo}
+              isRepoDeleted={this.state.isRepoDeleted}
               onDeleteRepo={this.onDeleteRepo}
               toggle={this.onDeleteToggle}
             />
