@@ -5,7 +5,7 @@ import moment from 'moment';
 import { Link } from '@reach/router';
 import { Utils } from '../../utils/utils';
 import { seafileAPI } from '../../utils/seafile-api';
-import { gettext, siteRoot, storages } from '../../utils/constants';
+import { gettext, siteRoot, storages, canGenerateShareLink, canGenerateUploadLink, canShareRepo } from '../../utils/constants';
 import ModalPortal from '../../components/modal-portal';
 import ShareDialog from '../../components/dialog/share-dialog';
 import toaster from '../../components/toast';
@@ -285,7 +285,9 @@ class MylibRepoListItem extends React.Component {
         <td>
           {(repo.repo_name && this.state.isOpIconShow) && (
             <div>
+              {(canGenerateShareLink || canGenerateUploadLink || canShareRepo) && (
               <a href="#" className="op-icon sf2-icon-share" title={gettext('Share')} onClick={this.onShareToggle}></a>
+              )}
               <a href="#" className="op-icon sf2-icon-delete" title={gettext('Delete')} onClick={this.onDeleteToggle}></a>
               <MylibRepoMenu
                 isPC={true}

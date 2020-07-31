@@ -42,6 +42,7 @@ DEFAULT_ENABLED_ROLE_PERMISSIONS = {
         'role_quota': '',
         'can_publish_repo': True,
         'share_link_count_limit': -1,
+        'can_share_repo': True,
     },
     GUEST_USER: {
         'can_add_repo': False,
@@ -62,6 +63,7 @@ DEFAULT_ENABLED_ROLE_PERMISSIONS = {
         'role_quota': '',
         'can_publish_repo': False,
         'share_link_count_limit': -1,
+        'can_share_repo': False,
     },
 }
 

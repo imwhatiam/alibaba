@@ -4,7 +4,7 @@ import moment from 'moment';
 import { Dropdown, DropdownMenu, DropdownToggle, DropdownItem } from 'reactstrap';
 import { Link } from '@reach/router';
 import { Utils } from '../../utils/utils';
-import { gettext, siteRoot, isPro, username, folderPermEnabled, isSystemStaff, enableResetEncryptedRepoPassword, isEmailConfigured } from '../../utils/constants';
+import { gettext, siteRoot, isPro, username, folderPermEnabled, isSystemStaff, enableResetEncryptedRepoPassword, isEmailConfigured, canGenerateShareLink, canGenerateUploadLink, canShareRepo } from '../../utils/constants';
 import ModalPortal from '../../components/modal-portal';
 import ShareDialog from '../../components/dialog/share-dialog';
 import LibSubFolderPermissionDialog from '../../components/dialog/lib-sub-folder-permission-dialog';
@@ -419,12 +419,12 @@ class SharedRepoListItem extends React.Component {
       if (operations.length == 2) {
         return (
           <Fragment>
-            {shareOperation}
+            {(canGenerateShareLink || canGenerateUploadLink || canShareRepo) && shareOperation}
             {unshareOperation}
           </Fragment>
         );
       }
-      if (operations.length == 1 && operations[0] === 'Share') {
+      if ((canGenerateShareLink || canGenerateUploadLink || canShareRepo) && operations.length == 1 && operations[0] === 'Share') {
         return shareOperation;
       }
 

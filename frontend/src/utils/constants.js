@@ -27,6 +27,7 @@ export const seafileCollabServer = window.app.pageOptions.seafileCollabServer;
 export const name = window.app.pageOptions.name;
 export const contactEmail = window.app.pageOptions.contactEmail;
 export const username = window.app.pageOptions.username;
+export const canShareRepo = window.app.pageOptions.canShareRepo;
 export const canAddRepo = window.app.pageOptions.canAddRepo;
 export const canAddGroup = window.app.pageOptions.canAddGroup;
 export const canGenerateShareLink = window.app.pageOptions.canGenerateShareLink;
