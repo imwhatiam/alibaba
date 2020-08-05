@@ -53,7 +53,7 @@ def get_group_repo_info(request, group_repo):
     group_repo_info['permission'] = group_repo.permission
     group_repo_info['size'] = group_repo.size
     group_repo_info['encrypted'] = group_repo.encrypted
-    group_repo_info['is_admin'] = True if is_admin else False
+    group_repo_info['is_admin'] = is_repo_admin(request.user.username, repo_id)
 
     return group_repo_info
 

@@ -16,6 +16,7 @@ import '../../css/share-link-dialog.css';
 
 const propTypes = {
   isGroupOwnedRepo: PropTypes.bool,
+  isAdmin: PropTypes.bool,
   itemType: PropTypes.string.isRequired, // there will be three choose: ['library', 'dir', 'file']
   itemName: PropTypes.string.isRequired,
   itemPath: PropTypes.string.isRequired,
@@ -52,8 +53,22 @@ class ShareDialog extends React.Component {
 
   getInitialActiveTab = () => {
     let { repoEncrypted, userPerm, enableDirPrivateShare, itemType } = this.props;
-    const enableShareLink = !repoEncrypted && canGenerateShareLink;
-    const enableUploadLink = !repoEncrypted && canGenerateUploadLink && userPerm == 'rw';
+
+    let enableShareLink = true;
+    let enableUploadLink = true;
+
+    if (!this.props.isGroupOwnedRepo) {
+      enableShareLink = !repoEncrypted && canGenerateShareLink;
+      enableUploadLink = !repoEncrypted && canGenerateUploadLink && userPerm == 'rw';
+    } else {
+      if (this.props.isAdmin) {
+        enableShareLink = !repoEncrypted && canGenerateShareLink;
+        enableUploadLink = !repoEncrypted && canGenerateUploadLink && userPerm == 'rw';
+      } else {
+        enableShareLink = false;
+        enableUploadLink = false;
+      }
+    }
 
     // for encrypted repo, 'dir private share' is only enabled for the repo itself,
     // not for the folders in it.
@@ -65,10 +80,8 @@ class ShareDialog extends React.Component {
       return 'shareLink';
     } else if (enableUploadLink) {
       return 'uploadLink';
-    } else if (itemType == 'file' || itemType == 'dir') {
-      return 'internalLink';
-    } else if (enableDirPrivateShare) {
-      return 'shareToUser';
+    } else {
+        return 'internalLink';
     }
   }
 
@@ -86,8 +99,22 @@ class ShareDialog extends React.Component {
 
     let activeTab = this.state.activeTab;
     let { repoEncrypted, userPerm, enableDirPrivateShare, itemType } = this.props;
-    const enableShareLink = !repoEncrypted && canGenerateShareLink;
-    const enableUploadLink = !repoEncrypted && canGenerateUploadLink && userPerm == 'rw';
+
+    let enableShareLink = true;
+    let enableUploadLink = true;
+
+    if (!this.props.isGroupOwnedRepo) {
+      enableShareLink = !repoEncrypted && canGenerateShareLink;
+      enableUploadLink = !repoEncrypted && canGenerateUploadLink && userPerm == 'rw';
+    } else {
+      if (this.props.isAdmin) {
+        enableShareLink = !repoEncrypted && canGenerateShareLink;
+        enableUploadLink = !repoEncrypted && canGenerateUploadLink && userPerm == 'rw';
+      } else {
+        enableShareLink = false;
+        enableUploadLink = false;
+      }
+    }
 
     // for encrypted repo, 'dir private share' is only enabled for the repo itself,
     // not for the folders in it.
@@ -199,7 +226,18 @@ class ShareDialog extends React.Component {
   renderFileContent = () => {
     let activeTab = this.state.activeTab;
     const { itemType, itemName, repoEncrypted } = this.props;
-    const enableShareLink = !repoEncrypted && canGenerateShareLink;
+
+    let enableShareLink = true;
+
+    if (!this.props.isGroupOwnedRepo) {
+      enableShareLink = !repoEncrypted && canGenerateShareLink;
+    } else {
+      if (this.props.isAdmin) {
+        enableShareLink = !repoEncrypted && canGenerateShareLink;
+      } else {
+        enableShareLink = false;
+      }
+    }
 
     return (
       <Fragment>

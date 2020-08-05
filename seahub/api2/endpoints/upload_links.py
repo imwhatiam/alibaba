@@ -28,6 +28,7 @@ from seahub.share.models import UploadLinkShare
 from seahub.utils import gen_shared_upload_link, gen_file_upload_url
 from seahub.views import check_folder_permission
 from seahub.utils.timeutils import datetime_to_isoformat_timestr
+from seahub.utils.repo import is_group_repo_staff
 
 from seahub.settings import UPLOAD_LINK_EXPIRE_DAYS_DEFAULT, \
         UPLOAD_LINK_EXPIRE_DAYS_MIN, UPLOAD_LINK_EXPIRE_DAYS_MAX
@@ -247,6 +248,11 @@ class UploadLinks(APIView):
         if not dir_id:
             error_msg = 'folder %s not found.' % path
             return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        # permission check
+        if '@seafile_group' in seafile_api.get_repo_owner(repo_id) and \
+                not is_group_repo_staff(request, repo_id, username):
+            return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied')
 
         if check_folder_permission(request, repo_id, path) != 'rw':
             error_msg = 'Permission denied.'

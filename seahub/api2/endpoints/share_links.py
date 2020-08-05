@@ -36,7 +36,7 @@ from seahub.utils.file_op import if_locked_by_online_office
 from seahub.utils.file_types import IMAGE, VIDEO, XMIND
 from seahub.utils.timeutils import datetime_to_isoformat_timestr, \
         timestamp_to_isoformat_timestr
-from seahub.utils.repo import parse_repo_perm
+from seahub.utils.repo import parse_repo_perm, is_group_repo_staff
 from seahub.thumbnail.utils import get_share_link_thumbnail_src
 from seahub.settings import SHARE_LINK_EXPIRE_DAYS_MAX, \
         SHARE_LINK_EXPIRE_DAYS_MIN, SHARE_LINK_LOGIN_REQUIRED, \
@@ -352,6 +352,10 @@ class ShareLinks(APIView):
                 return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
         # permission check
+        if '@seafile_group' in seafile_api.get_repo_owner(repo_id) and \
+                not is_group_repo_staff(request, repo_id, username):
+            return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied')
+
         if repo.encrypted:
             error_msg = 'Permission denied.'
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)

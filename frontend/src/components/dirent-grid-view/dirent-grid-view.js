@@ -544,6 +544,7 @@ class DirentGridView extends React.Component{
               repoEncrypted={false}
               enableDirPrivateShare={this.props.enableDirPrivateShare}
               isGroupOwnedRepo={this.props.isGroupOwnedRepo}
+              isAdmin={this.props.currentRepoInfo.is_admin}
               toggleDialog={this.closeSharedDialog}
             />
           </ModalPortal>
