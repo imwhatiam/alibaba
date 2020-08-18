@@ -29,7 +29,7 @@ class Content extends Component {
           </div>
           <div>
             <h3>{isZHCN ? 'Mac 客户端' : 'Client for Mac'}</h3>
-            <p>{isZHCN ? '支持 Mac OS X 10.7+' : 'Runs on Mac OS X 10.7 or above'}</p>
+            <p>{isZHCN ? '支持 Mac OS X 10.13+' : 'Runs on Mac OS X 10.13 or above'}</p>
             <a href={isZHCN ? window.app.pageOptions.appleClientPublicDownloadUrl : window.app.pageOptions.appleClientPublicDownloadUrlEn} className="download-op">{isZHCN ? '下载 '+window.app.pageOptions.appleClientVersion : 'Download '+window.app.pageOptions.appleClientVersionEn}</a>
           </div>
         </div>
