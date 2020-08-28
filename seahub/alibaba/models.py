@@ -34,7 +34,6 @@ class AlibabaProfileManager(models.Manager):
         profile_dict = {
             "work_no": '',
             "dept_name": '',
-            "post_name": '',
         }
 
         profile_list = super(AlibabaProfileManager, self).filter(uid=email)
@@ -51,10 +50,8 @@ class AlibabaProfileManager(models.Manager):
 
                 if translation.get_language() in ('zh-cn', 'zh-tw'):
                     profile_dict['dept_name'] = profile.dept_name or ''
-                    profile_dict['post_name'] = profile.post_name or ''
                 else:
                     profile_dict['dept_name'] = profile.dept_name_en or ''
-                    profile_dict['post_name'] = profile.post_name_en or ''
 
                 return profile_dict
 

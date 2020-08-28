@@ -14,8 +14,6 @@ class UserBasicInfoForm extends React.Component {
     const {
       emp_name,
       nick_name,
-      post_name,
-      post_name_en,
       dept_name,
       dept_name_en,
       contact_email,
@@ -25,8 +23,6 @@ class UserBasicInfoForm extends React.Component {
     this.state = {
       emp_name: emp_name,
       nick_name: nick_name,
-      post_name: post_name,
-      post_name_en: post_name_en,
       dept_name: dept_name,
       dept_name_en: dept_name_en,
       contactEmail: contact_email,
@@ -62,8 +58,6 @@ class UserBasicInfoForm extends React.Component {
     const {
       emp_name,
       nick_name,
-      post_name,
-      post_name_en,
       dept_name,
       dept_name_en,
       contactEmail,
@@ -86,13 +80,6 @@ class UserBasicInfoForm extends React.Component {
           <label className="col-sm-1 col-form-label" htmlFor="nickname">{isZHCN ? '花名：' : 'Nickname:'}</label>
           <div className="col-sm-5">
             <input className="form-control" id="nickname" type="text" name="nickname" value={nick_name} disabled />
-          </div>
-        </div>
-
-        <div className="form-group row">
-          <label className="col-sm-1 col-form-label" htmlFor="position">{isZHCN ? '职位：' : 'Position:'}</label>
-          <div className="col-sm-5">
-            <input className="form-control" id="position" type="text" name="position" value={isZHCN ? post_name : post_name_en} disabled />
           </div>
         </div>
 

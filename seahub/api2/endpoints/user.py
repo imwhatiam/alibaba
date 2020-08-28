@@ -72,8 +72,6 @@ class User(APIView):
             info['personal_photo_url'] = get_alibaba_user_avatar_url(email)
             info['emp_name'] = profile.emp_name or ''
             info['nick_name'] = profile.nick_name or ''
-            info['post_name'] = profile.post_name or ''
-            info['post_name_en'] = profile.post_name_en or ''
             info['dept_name'] = profile.dept_name or ''
             info['dept_name_en'] = profile.dept_name_en or ''
 

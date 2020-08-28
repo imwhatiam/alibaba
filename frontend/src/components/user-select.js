@@ -41,9 +41,9 @@ class UserSelect extends React.Component {
           let obj = {};
           obj.value = item.emp_name;
           obj.email = item.uid;
-          let emp_info = item.emp_name + '(' + item.nick_name +')' + '-' + item.work_no + '-' + item.post_name + '-' + item.dept_name;
+          let emp_info = item.emp_name + '(' + item.nick_name +')' + '-' + item.work_no + '-' + item.dept_name;
           if(item.nick_name == ''){
-            emp_info = item.emp_name + '-' + item.work_no + '-' + item.post_name + '-' + item.dept_name;
+            emp_info = item.emp_name + '-' + item.work_no + '-' + '-' + item.dept_name;
           }
           obj.label =
             <React.Fragment>

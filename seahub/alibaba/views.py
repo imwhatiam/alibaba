@@ -308,8 +308,6 @@ def alibaba_edit_profile(request):
         init_dict['personal_photo_url'] = get_alibaba_user_avatar_url(username)
         init_dict['emp_name'] = profile.emp_name or ''
         init_dict['nick_name'] = profile.nick_name or ''
-        init_dict['post_name'] = profile.post_name or ''
-        init_dict['post_name_en'] = profile.post_name_en or ''
         init_dict['dept_name'] = profile.dept_name or ''
         init_dict['dept_name_en'] = profile.dept_name_en or ''
 
@@ -325,8 +323,6 @@ def alibaba_user_profile(request, username):
         init_dict['emp_name'] = profile.emp_name or ''
         init_dict['nick_name'] = profile.nick_name or ''
         init_dict['work_no'] = profile.work_no or ''
-        init_dict['post_name'] = profile.post_name or ''
-        init_dict['post_name_en'] = profile.post_name_en or ''
         init_dict['dept_name'] = profile.dept_name or ''
         init_dict['dept_name_en'] = profile.dept_name_en or ''
 
@@ -543,10 +539,8 @@ class AlibabaSearchUser(APIView):
             user_info['work_no'] = user.work_no or ''
 
             if request.LANGUAGE_CODE == 'zh-cn':
-                user_info['post_name'] = user.post_name or ''
                 user_info['dept_name'] = user.dept_name or ''
             else:
-                user_info['post_name'] = user.post_name_en or ''
                 user_info['dept_name'] = user.dept_name_en or ''
 
             result.append(user_info)

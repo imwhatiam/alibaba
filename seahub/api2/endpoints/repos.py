@@ -351,19 +351,16 @@ class RepoView(APIView):
                 "operator_name": email2nickname(operator),
                 "operator_work_no": operator_dict['work_no'],
                 "operator_department": operator_dict['dept_name'],
-                "operator_position": operator_dict['post_name'],
 
                 "from_user": from_user,
                 "from_user_name": email2nickname(from_user),
                 "from_user_work_no": from_user_dict['work_no'],
                 "from_user_department": from_user_dict['dept_name'],
-                "from_user_position": from_user_dict['post_name'],
 
                 "to_user": to_user,
                 "to_user_name": email2nickname(to_user),
                 "to_user_work_no": to_user_dict['work_no'],
                 "to_user_department": to_user_dict['dept_name'],
-                "to_user_position": to_user_dict['post_name'],
             }
 
             owner_chain.append(info)

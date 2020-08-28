@@ -20,17 +20,11 @@
 
     {% if request.LANGUAGE_CODE == 'zh-cn' or request.LANGUAGE_CODE == 'zh-tw' %}
 
-    <li title="{{ post_name }}" class="user-profile-info ellipsis">
-        <span class="vam">{{ post_name }}</span>
-    </li>
     <li title="{{ dept_name }}" class="user-profile-info ellipsis">
         <span class="vam">{{ dept_name }}</span>
     </li>
 
     {% else %}
-    <li title="{{ post_name_en }}" class="user-profile-info ellipsis">
-        <span class="vam">{{ post_name_en }}</span>
-    </li>
     <li title="{{ dept_name_en }}" class="user-profile-info ellipsis">
         <span class="vam">{{ dept_name_en }}</span>
     </li>
