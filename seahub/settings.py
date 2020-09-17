@@ -861,7 +861,16 @@ else:
 try:
     if os.path.exists(central_conf_dir):
         sys.path.insert(0, central_conf_dir)
+
     import seahub_settings
+
+    if getattr(seahub_settings, 'USE_CRYPT', False):
+        from seaserv import seafile_api
+        enc_data = seahub_settings.DATABASES['default']['PASSWORD']
+        dec_data = seafile_api.seafile_decrypt(enc_data)
+        seahub_settings.DATABASES['default']['PASSWORD'] = dec_data
+
+
 except ImportError:
     pass
 else:
