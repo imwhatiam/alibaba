@@ -1273,7 +1273,7 @@ def react_fake_view(request, **kwargs):
             converted_repo_path = seafile_api.convert_repo_path(repo_id, path, username)
             if not converted_repo_path:
                 error_msg = 'Permission denied.'
-                return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+                return render_error(request, error_msg)
 
             converted_repo_path = json.loads(converted_repo_path)
 
@@ -1281,17 +1281,17 @@ def react_fake_view(request, **kwargs):
             repo = seafile_api.get_repo(repo_id)
             if not repo:
                 error_msg = 'Library %s not found.' % repo_id
-                return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+                return render_error(request, error_msg)
 
             path = converted_repo_path['path']
             if not seafile_api.get_file_id_by_path(repo_id, path) and \
                     not seafile_api.get_dir_id_by_path(repo_id, path):
                 error_msg = 'Dirent %s not found.' % path
-                return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+                return render_error(request, error_msg)
 
             if not check_folder_permission(request, repo_id, path):
                 error_msg = 'Permission denied.'
-                return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+                return render_error(request, error_msg)
 
             next_url = reverse('lib_view', args=[repo_id, repo.repo_name, path.strip('/')])
             return HttpResponseRedirect(next_url)
