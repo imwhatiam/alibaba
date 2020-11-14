@@ -512,11 +512,11 @@ class AdminUsers(APIView):
 
         # SHEN HANG CUSTOM
         gh = request.data.get('gh')
-        if not gh:
-            return api_error(status.HTTP_400_BAD_REQUEST, 'gh invalid.')
-        email = get_email_by_GH(gh)
-        if not email:
+        if gh:
+            email = get_email_by_GH(gh)
+        else:
             email = request.data.get('email', None)
+
         if not email or not is_valid_email(email):
             error_msg = 'email invalid.'
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
