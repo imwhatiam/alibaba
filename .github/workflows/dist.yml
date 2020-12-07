@@ -3,12 +3,12 @@ name: Seahub Dist CI
 on:
   push:
     branches:
-      - master
-      - "7.1"
+      - shenhang-7.1
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  TOKEN_FOR_PUSH_TO_SEAHUB_PRIV: ${{ secrets.TOKEN_FOR_PUSH_TO_SEAHUB_PRIV }}
 
 jobs:
   build:
@@ -28,6 +28,6 @@ jobs:
 
       - name: Build dist branch
         run: |
-          cd $GITHUB_WORKSPACE/tests/ 
-          chmod +x github_actions_dist.sh 
+          cd $GITHUB_WORKSPACE/tests/
+          chmod +x github_actions_dist.sh
           ./github_actions_dist.sh
