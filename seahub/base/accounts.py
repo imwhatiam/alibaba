@@ -30,8 +30,19 @@ from seahub.utils import is_user_password_strong, get_site_name, \
 from seahub.utils.mail import send_html_email_with_dj_template, MAIL_PRIORITY
 from seahub.utils.licenseparse import user_number_over_limit
 from seahub.share.models import ExtraSharePermission
-from seahub.settings import CAS_SERVER_API_URL, CAS_3DES_KEY, CAS_API_METHOD, \
-    CAS_3DES_KEY, DES_MODE, DES_INIT_BYTES, DES_PAD, DES_PAD_MODE
+
+
+try:
+    from seahub.settings import CAS_SERVER_API_URL, CAS_3DES_KEY, CAS_API_METHOD, \
+        DES_MODE, DES_INIT_BYTES, DES_PAD, DES_PAD_MODE
+except ImportError:
+    CAS_SERVER_API_URL = 'http://i.sau.edu.cn/dcp/ifs?sysid=mdcp&param='
+    CAS_API_METHOD = 'checkUserLoginIFS'
+    CAS_3DES_KEY = 'neusofteducationplatform'
+    DES_MODE = 1  # 0 for ECB, 1 for CBC
+    DES_INIT_BYTES = '01234567'
+    DES_PAD = None
+    DES_PAD_MODE = 2  # 1 for PAD_NORMAL, 2 for PAD_PKCS5
 
 try:
     from seahub.settings import CLOUD_MODE
