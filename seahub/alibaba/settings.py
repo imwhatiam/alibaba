@@ -61,3 +61,5 @@ ALIBABA_WATERMARK_SUPPORTED_FILEEXT = getattr(settings,
             'ppt', 'pptx', 'csv', 'pdf', 'jpg', 'png', 'bmp', 'webp', 'zip',
             'bz', 'gz'])
 ALIBABA_WATERMARK_FILE_SIZE_LIMIT = getattr(settings, 'ALIBABA_WATERMARK_FILE_SIZE_LIMIT', 50)
+
+ALIBABA_SEND_SIGNAL_WHEN_IMPORT_GROUP_MEMBERS = getattr(settings, 'ALIBABA_SEND_SIGNAL_WHEN_IMPORT_GROUP_MEMBERS', False)

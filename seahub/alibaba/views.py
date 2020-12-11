@@ -54,7 +54,7 @@ from seahub.alibaba.settings import ALIBABA_WATERMARK_KEY_ID, \
         ALIBABA_WATERMARK_SECRET, ALIBABA_WATERMARK_SERVER_NAME, \
         ALIBABA_WATERMARK_BASE_URL, ALIBABA_WATERMARK_MARK_MODE, \
         ALIBABA_WATERMARK_VISIBLE_TEXT, ALIBABA_WATERMARK_EXTEND_PARAMS, \
-        ALIBABA_WATERMARK_FILE_SIZE_LIMIT
+        ALIBABA_WATERMARK_FILE_SIZE_LIMIT, ALIBABA_SEND_SIGNAL_WHEN_IMPORT_GROUP_MEMBERS
 
 from seahub.alibaba.settings import WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL, \
         WINDOWS_CLIENT_VERSION, APPLE_CLIENT_PUBLIC_DOWNLOAD_URL, \
@@ -65,6 +65,7 @@ from seahub.alibaba.settings import WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL, \
 logger = logging.getLogger(__name__)
 
 ### utils ###
+
 
 def get_dir_file_recursively(username, repo_id, path, all_dirs):
     dir_id = seafile_api.get_dir_id_by_path(repo_id, path)
@@ -440,10 +441,9 @@ class AlibabaImportGroupMembers(APIView):
                     'error_msg': _('Internal Server Error')
                     })
 
-            add_user_to_group.send(sender=None,
-                                group_staff=username,
-                                group_id=group_id,
-                                added_user=ccnet_email)
+            if ALIBABA_SEND_SIGNAL_WHEN_IMPORT_GROUP_MEMBERS:
+                add_user_to_group.send(sender=None, group_staff=username,
+                                       group_id=group_id, added_user=ccnet_email)
 
         return Response(result)
 
