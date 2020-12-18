@@ -1305,33 +1305,6 @@ def sys_org_admin(request):
         current_page = 1
         per_page = 25
 
-    try:
-        from seahub_extra.plan.models import OrgPlan
-        enable_org_plan = True
-    except ImportError:
-        enable_org_plan = False
-
-    if enable_org_plan and request.GET.get('filter', '') == 'paid':
-        orgs = []
-        ops = OrgPlan.objects.all()
-        for e in ops:
-            o = ccnet_threaded_rpc.get_org_by_id(e.org_id)
-            if not o:
-                continue
-
-            o.quota_usage = seafserv_threaded_rpc.get_org_quota_usage(o.org_id)
-            o.total_quota = seafserv_threaded_rpc.get_org_quota(o.org_id)
-            o.expiration = e.expire_date
-            o.is_expired = True if e.expire_date < timezone.now() else False
-            orgs.append(o)
-
-        return render(request, 'sysadmin/sys_org_admin.html', {
-            'orgs': orgs,
-            'enable_org_plan': enable_org_plan,
-            'hide_paginator': True,
-            'paid_page': True,
-            })
-
     orgs_plus_one = ccnet_threaded_rpc.get_all_orgs(per_page * (current_page - 1),
                                                     per_page + 1)
     if len(orgs_plus_one) == per_page + 1:
@@ -1384,7 +1357,7 @@ def sys_org_admin(request):
             'next_page': current_page+1,
             'per_page': per_page,
             'page_next': page_next,
-            'enable_org_plan': enable_org_plan,
+            'enable_org_plan': False,
             'all_page': True,
             'extra_org_roles': extra_org_roles,
             'default_org': DEFAULT_ORG,

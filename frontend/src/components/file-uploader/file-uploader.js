@@ -8,6 +8,7 @@ import { Utils } from '../../utils/utils';
 import { gettext } from '../../utils/constants';
 import UploadProgressDialog from './upload-progress-dialog';
 import UploadRemindDialog from '../dialog/upload-remind-dialog';
+import FolderUploadRemindDialog from '../dialog/folder-upload-remind-dialog';
 import toaster from '../toast';
 import '../../css/file-uploader.css';
 
@@ -41,6 +42,7 @@ class FileUploader extends React.Component {
       totalProgress: 0,
       isUploadProgressDialogShow: false,
       isUploadRemindDialogShow: false,
+      isFolderUploadRemindDialogShow: false,
       currentResumableFile: null,
       uploadBitrate: 0,
       allFilesUploaded: false,
@@ -96,8 +98,8 @@ class FileUploader extends React.Component {
   }
 
   onbeforeunload = () => {
-    if (window.uploader && 
-        window.uploader.isUploadProgressDialogShow && 
+    if (window.uploader &&
+        window.uploader.isUploadProgressDialogShow &&
         window.uploader.totalProgress !== 100) {
       return '';
     }
@@ -159,7 +161,7 @@ class FileUploader extends React.Component {
     let allFilesUploaded = this.state.allFilesUploaded;
     if (allFilesUploaded === true) {
       this.setState({allFilesUploaded: false});
-    } 
+    }
 
     //get parent_dir relative_path
     let path = this.props.path === '/' ? '/' : this.props.path + '/';
@@ -183,8 +185,21 @@ class FileUploader extends React.Component {
   }
 
   onFileAdded = (resumableFile, files) => {
+
     let isFile = resumableFile.fileName === resumableFile.relativePath;
-    // uploading is file and only upload one file
+
+    let onlyOneFolder = true;
+    if (!isFile) {
+      let folderName = files[0].relativePath.split("/")[0];
+      for (let i = 1; i < files.length; i++) {
+        if (folderName !== files[i].relativePath.split("/")[0]) {
+          onlyOneFolder = false;
+          break;
+        }
+      }
+    }
+
+    // only one file
     if (isFile && files.length === 1) {
       let hasRepetition = false;
       let direntList = this.props.direntList;
@@ -210,7 +225,49 @@ class FileUploader extends React.Component {
           toaster.danger(errMessage);
         });
       }
-    } else { 
+    } else if (isFile && files.length > 1) {
+      // two or more files
+      this.setUploadFileList(this.resumable.files);
+      if (!this.isUploadLinkLoaded) {
+        this.isUploadLinkLoaded = true;
+        let { repoID, path } = this.props;
+        seafileAPI.getFileServerUploadLink(repoID, path).then(res => {
+          this.resumable.opts.target = res.data + '?ret-json=1';
+          this.resumable.upload();
+        }).catch(error => {
+          let errMessage = Utils.getErrorMsg(error);
+          toaster.danger(errMessage);
+        });
+      }
+    } else if (!isFile && onlyOneFolder) {
+      // only one folder
+      let hasRepetition = false;
+      let direntList = this.props.direntList;
+      for (let i = 0; i < direntList.length; i++) {
+        if (direntList[i].type === 'dir' && direntList[i].name === resumableFile.relativePath.split("/")[0]) {
+          hasRepetition = true;
+          break;
+        }
+      }
+
+      if (hasRepetition) {
+        this.setState({
+          isFolderUploadRemindDialogShow: true,
+          currentResumableFile: resumableFile,
+        });
+      } else {
+        this.setUploadFileList(this.resumable.files);
+        let { repoID, path } = this.props;
+        seafileAPI.getFileServerUploadLink(repoID, path).then(res => {
+          this.resumable.opts.target = res.data + '?ret-json=1';
+          this.resumableUpload(resumableFile);
+        }).catch(error => {
+          let errMessage = Utils.getErrorMsg(error);
+          toaster.danger(errMessage);
+        });
+      }
+    } else {
+      // two or more folders
       this.setUploadFileList(this.resumable.files);
       if (!this.isUploadLinkLoaded) {
         this.isUploadLinkLoaded = true;
@@ -290,7 +347,7 @@ class FileUploader extends React.Component {
     if (this.timestamp) {
       let timeDiff = (now - this.timestamp);
       if (timeDiff < this.bitrateInterval) {
-        return this.state.uploadBitrate; 
+        return this.state.uploadBitrate;
       }
 
       // 1. Cancel will produce loaded greater than this.loaded
@@ -304,10 +361,10 @@ class FileUploader extends React.Component {
 
     this.timestamp = now;
     this.loaded = loaded;
-    
+
     return uploadBitrate;
   }
-  
+
   onProgress = () => {
     let progress = Math.round(this.resumable.progress() * 100);
     this.setState({totalProgress: progress});
@@ -333,6 +390,21 @@ class FileUploader extends React.Component {
       if (!isExist) {
         this.notifiedFolders.push(dirent);
         this.props.onFileUploadSuccess(dirent);
+      }
+
+      if (formData.replace) { // upload folder -- replace exist file
+        let fileName = resumableFile.fileName;
+
+        let uploadFileList = this.state.uploadFileList.map(item => {
+          if (item.uniqueIdentifier === resumableFile.uniqueIdentifier) {
+            item.newFileName = fileName;
+            item.isSaved = true;
+          }
+          return item;
+        });
+        this.setState({uploadFileList: uploadFileList});
+
+        return;
       }
 
       // update uploadFileList
@@ -397,7 +469,7 @@ class FileUploader extends React.Component {
     } else {
       // eg: '{"error": "Internal error" \n }'
       let errorMessage = message.replace(/\n/g, '');
-      errorMessage  = JSON.parse(errorMessage); 
+      errorMessage  = JSON.parse(errorMessage);
       error = errorMessage.error;
       if (error === 'File locked by others.') {
         error = gettext('File Locked by others.');
@@ -536,7 +608,7 @@ class FileUploader extends React.Component {
   onCancelAllUploading = () => {
     let uploadFileList = this.state.uploadFileList.filter(item => {
       if (Math.round(item.progress() !== 1)) {
-        item.cancel(); 
+        item.cancel();
         return false;
       }
       return true;
@@ -557,7 +629,7 @@ class FileUploader extends React.Component {
 
     seafileAPI.getFileServerUploadLink(this.props.repoID, this.props.path).then(res => {
       this.resumable.opts.target = res.data + '?ret-json=1';
-      
+
       let retryFileList = this.state.retryFileList.filter(item => {
         return item.uniqueIdentifier !== resumableFile.uniqueIdentifier;
       });
@@ -568,7 +640,7 @@ class FileUploader extends React.Component {
         }
         return item;
       });
-  
+
       this.setState({
         retryFileList: retryFileList,
         uploadFileList: uploadFileList
@@ -587,7 +659,7 @@ class FileUploader extends React.Component {
         item.error = false;
         this.retryUploadFile(item);
       });
-      
+
       let uploadFileList = this.state.uploadFileList.slice(0);
       this.setState({
         retryFileList: [],
@@ -609,7 +681,7 @@ class FileUploader extends React.Component {
       let prefix = path === '/' ? (path + relative_path) : (path + '/' + relative_path);
       fileName = prefix + fileName;
     }
-    
+
     resumableFile.bootstrap();
     var firedRetry = false;
     resumableFile.resumableObj.on('chunkingComplete', () => {
@@ -619,9 +691,9 @@ class FileUploader extends React.Component {
           let blockSize = parseInt(resumableUploadFileBlockSize) * 1024 * 1024 || 1024 * 1024;
           let offset = Math.floor(uploadedBytes / blockSize);
           resumableFile.markChunksCompleted(offset);
-    
+
           resumableFile.resumableObj.upload();
-    
+
         }).catch(error => {
           let errMessage = Utils.getErrorMsg(error);
           toaster.danger(errMessage);
@@ -629,7 +701,7 @@ class FileUploader extends React.Component {
       }
       firedRetry = true;
     });
-    
+
   }
 
   replaceRepetitionFile = () => {
@@ -648,7 +720,31 @@ class FileUploader extends React.Component {
       toaster.danger(errMessage);
     });
   }
-  
+
+  replaceRepetitionFolder = () => {
+    let { repoID, path } = this.props;
+    seafileAPI.getUpdateLink(repoID, path).then(res => {
+      this.resumable.opts.target = res.data;
+
+      for (let i = 0; i < this.resumable.files.length; i++) {
+
+        let resumableFile = this.resumable.files[i];
+
+        let targetFile = resumableFile.formData.parent_dir + resumableFile.relativePath;
+        resumableFile.formData['replace'] = 1;
+        resumableFile.formData['target_file'] = targetFile;
+        resumableFile.formData['parent_dir'] = targetFile.substring(0, targetFile.lastIndexOf('/')) + '/';
+      }
+
+      this.setState({isFolderUploadRemindDialogShow: false});
+      this.setUploadFileList(this.resumable.files);
+      this.resumable.upload();
+    }).catch(error => {
+      let errMessage = Utils.getErrorMsg(error);
+      toaster.danger(errMessage);
+    });
+  }
+
   uploadFile = () => {
     let resumableFile = this.resumable.files[this.resumable.files.length - 1];
     let { repoID, path } = this.props;
@@ -669,9 +765,34 @@ class FileUploader extends React.Component {
     });
   }
 
+  uploadFolder = () => {
+    let resumableFile = this.resumable.files[this.resumable.files.length - 1];
+    let { repoID, path } = this.props;
+    seafileAPI.getFileServerUploadLink(repoID, path).then((res) => {  // get upload link
+      this.resumable.opts.target = res.data + '?ret-json=1';
+      this.setState({
+        isFolderUploadRemindDialogShow: false,
+        isUploadProgressDialogShow: true,
+        uploadFileList: this.resumable.files
+      }, () => {
+        this.resumable.upload();
+      });
+      Utils.registerGlobalVariable('uploader', 'isUploadProgressDialogShow', true);
+
+    }).catch(error => {
+      let errMessage = Utils.getErrorMsg(error);
+      toaster.danger(errMessage);
+    });
+  }
+
   cancelFileUpload = () => {
     this.resumable.files.pop(); //delete latest file；
     this.setState({isUploadRemindDialogShow: false});
+  }
+
+  cancelFolderUpload = () => {
+    this.resumable.files.pop(); //delete latest file；
+    this.setState({isFolderUploadRemindDialogShow: false});
   }
 
   render() {
@@ -688,6 +809,14 @@ class FileUploader extends React.Component {
             replaceRepetitionFile={this.replaceRepetitionFile}
             uploadFile={this.uploadFile}
             cancelFileUpload={this.cancelFileUpload}
+          />
+        }
+        {this.state.isFolderUploadRemindDialogShow &&
+          <FolderUploadRemindDialog
+            currentResumableFile={this.state.currentResumableFile}
+            replaceRepetitionFolder={this.replaceRepetitionFolder}
+            uploadFolder={this.uploadFolder}
+            cancelFolderUpload={this.cancelFolderUpload}
           />
         }
         {this.state.isUploadProgressDialogShow &&
