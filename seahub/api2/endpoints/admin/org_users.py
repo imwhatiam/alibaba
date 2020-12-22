@@ -160,8 +160,11 @@ class AdminOrgUsers(APIView):
             user_exists = False
 
         if user_exists:
-            error_msg = 'User %s already exists.' % email
-            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+            tmp_orgs = ccnet_api.get_orgs_by_user(email)
+            if tmp_orgs:
+                tmp_org = tmp_orgs[0]
+                error_msg = 'User already exists in %s.' % tmp_org.org_name
+                return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         # check user number limit by license
         if user_number_over_limit():
@@ -178,18 +181,24 @@ class AdminOrgUsers(APIView):
                 return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
         # create user
-        try:
-            User.objects.create_user(email, password, is_staff=False,
-                    is_active=is_active)
-        except User.DoesNotExist as e:
-            logger.error(e)
-            error_msg = 'Fail to add user %s.' % email
-            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+        if not user_exists:
+            try:
+                User.objects.create_user(email, password, is_staff=False,
+                        is_active=is_active)
+            except User.DoesNotExist as e:
+                logger.error(e)
+                error_msg = 'Fail to add user %s.' % email
+                return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
         # add user to org
         # set `is_staff` parameter as `0`
         try:
             ccnet_api.add_org_user(org_id, email, 0)
+
+            owned_repos = seafile_api.get_owned_repo_list(email)
+            for owned_repo in owned_repos:
+                seafile_api.migrate_repo_to_org(org_id, owned_repo.id, email)
+
         except Exception as e:
             logger.error(e)
             error_msg = 'Internal Server Error'
