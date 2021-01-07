@@ -1501,3 +1501,22 @@ def repo_transfer_cb(sender, **kwargs):
                 operator, from_user, to_user)
     except Exception as e:
         logger.error(e)
+
+    record = {
+        'op_type': 'transfer',
+        'obj_type': 'repo',
+        'timestamp': datetime.datetime.utcnow(),
+        'repo_id': repo_id,
+        'repo_name': repo_name,
+        'path': '/',
+        'op_user': operator,
+        'to_user': to_user,
+        'related_users': [repo_owner],
+        'org_id': org_id if org_id > 0 else -1,
+    }
+
+    import seafevents
+    from seahub.utils import SeafEventsSession
+    session = SeafEventsSession()
+    seafevents.save_user_activity(session, record)
+    session.close()

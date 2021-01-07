@@ -121,6 +121,14 @@ class ActivityItem extends Component {
           op = gettext('Restored library');
           details = libLink;
           break;
+        case 'transfer':
+          op = gettext('Transfer library');
+          if (item.to_user_name != undefined) {
+            details = gettext('Transfer {repo_name} to {to_user}').replace('{repo_name}', item.repo_name).replace('{to_user}', item.to_user_name);
+          } else {
+            details = gettext('Transfer {repo_name} to ""').replace('{repo_name}', item.repo_name);
+          }
+          break;
         case 'clean-up-trash':
           op = gettext('Cleaned trash');
           if (item.days == 0) {

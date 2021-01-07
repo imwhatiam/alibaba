@@ -66,6 +66,15 @@ class ActivitiesView(APIView):
             d['author_name'] = email2nickname(e.op_user)
             d['author_contact_email'] = email2contact_email(e.op_user)
 
+            d['to_user_email'] = ''
+            d['to_user_name'] = ''
+            d['to_user_email'] = ''
+            if e.op_type == 'transfer' and hasattr(e, 'to_user'):
+                to_user = e.to_user
+                d['to_user_email'] = to_user
+                d['to_user_name'] = email2nickname(to_user)
+                d['to_user_email'] = email2contact_email(to_user)
+
             try:
                 avatar_size = int(request.GET.get('avatar_size', 72))
             except ValueError as e:
