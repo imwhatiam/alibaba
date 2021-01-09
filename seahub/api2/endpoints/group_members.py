@@ -16,6 +16,7 @@ from pysearpc import SearpcError
 from seahub.api2.utils import api_error
 from seahub.api2.throttling import UserRateThrottle
 from seahub.api2.authentication import TokenAuthentication
+from seahub.api2.endpoints.utils import is_org_user
 from seahub.avatar.settings import AVATAR_DEFAULT_SIZE
 from seahub.base.templatetags.seahub_tags import email2nickname
 from seahub.utils import string2list, is_org_context
@@ -301,6 +302,14 @@ class GroupMembersBulk(APIView):
                     'email': email,
                     'email_name': email_name,
                     'error_msg': _(u'User %s not found in organization.') % email_name
+                    })
+                continue
+
+            if not org_id and is_org_user(email):
+                result['failed'].append({
+                    'email': email,
+                    'email_name': email_name,
+                    'error_msg': _(u'User %s is an organization user.') % email_name
                     })
                 continue
 

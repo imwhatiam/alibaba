@@ -36,9 +36,10 @@ from seaserv import seafile_api, ccnet_api
 from seahub.api2.throttling import UserRateThrottle
 from seahub.api2.authentication import TokenAuthentication
 from seahub.api2.utils import api_error
+from seahub.api2.endpoints.utils import is_org_user
 
 from seahub.utils import normalize_file_path, gen_file_get_url, \
-        get_fileserver_root
+        get_fileserver_root, is_org_context
 from seahub.views import check_folder_permission
 from seahub.auth.decorators import login_required
 from seahub.group.utils import is_group_member, is_group_admin_or_owner
@@ -64,7 +65,7 @@ from seahub.alibaba.settings import WINDOWS_CLIENT_PUBLIC_DOWNLOAD_URL, \
 
 logger = logging.getLogger(__name__)
 
-### utils ###
+# utils
 
 
 def get_dir_file_recursively(username, repo_id, path, all_dirs):
@@ -72,8 +73,7 @@ def get_dir_file_recursively(username, repo_id, path, all_dirs):
     if not dir_id:
         return [{'parent_dir': '/', 'name': os.path.basename(path)}]
 
-    dirs = seafile_api.list_dir_with_perm(repo_id, path,
-            dir_id, username, -1, -1)
+    dirs = seafile_api.list_dir_with_perm(repo_id, path, dir_id, username, -1, -1)
 
     for dirent in dirs:
         entry = {}
@@ -88,8 +88,9 @@ def get_dir_file_recursively(username, repo_id, path, all_dirs):
 
     return all_dirs
 
-def alibaba_get_zip_download_url(username, repo_id, parent_path,
-        dirent_name_list, zip_token):
+
+def alibaba_get_zip_download_url(username, repo_id,
+                                 parent_path, dirent_name_list, zip_token):
 
     # generate zip file name
     now = datetime.now()
@@ -132,7 +133,7 @@ def alibaba_get_zip_download_url(username, repo_id, parent_path,
     for dirent_name in dirent_name_list:
         dirent_name = dirent_name.strip('/')
         sub_item_list = get_dir_file_recursively(username, repo_id,
-                posixpath.join(parent_path, dirent_name), [])
+                                                 posixpath.join(parent_path, dirent_name), [])
 
         for item in sub_item_list:
             sub_item_path_list.append(posixpath.join(item['parent_dir'], item['name']))
@@ -160,8 +161,8 @@ def alibaba_get_zip_download_url(username, repo_id, parent_path,
 
     extend_params = ALIBABA_WATERMARK_EXTEND_PARAMS
     extend_params.update({
-        "Content-Disposition":"attachment;filename=%s" % filename
-        })
+        "Content-Disposition": "attachment;filename=%s" % filename
+    })
 
     # make watermark
     body = json.dumps({
@@ -184,7 +185,8 @@ def alibaba_get_zip_download_url(username, repo_id, parent_path,
         'Content-Type': 'application/json; charset=utf-8'
     }
     url = '%s/%s?key=%s' % (ALIBABA_WATERMARK_BASE_URL,
-            ALIBABA_WATERMARK_SERVER_NAME, ALIBABA_WATERMARK_KEY_ID)
+                            ALIBABA_WATERMARK_SERVER_NAME,
+                            ALIBABA_WATERMARK_KEY_ID)
 
     try:
         resp = requests.post(url, data=body, headers=headers)
@@ -194,6 +196,7 @@ def alibaba_get_zip_download_url(username, repo_id, parent_path,
         logger.error(e)
         logger.error(json_resp)
         return {'success': False, 'error_msg': json_resp['msg']}
+
 
 def alibaba_get_file_download_url(username, repo_id, file_path, file_id, access_token):
 
@@ -206,7 +209,9 @@ def alibaba_get_file_download_url(username, repo_id, file_path, file_id, access_
     parent_dir = os.path.dirname(file_path)
     filename = os.path.basename(file_path)
     file_uuid_map = FileUUIDMap.objects.get_or_create_fileuuidmap(repo_id,
-                    parent_dir, filename, False)
+                                                                  parent_dir,
+                                                                  filename,
+                                                                  False)
     file_uuid = file_uuid_map.uuid.hex
 
     download_url = gen_file_get_url(access_token, filename)
@@ -262,7 +267,8 @@ def alibaba_get_file_download_url(username, repo_id, file_path, file_id, access_
         'Content-Type': 'application/json; charset=utf-8'
     }
     url = '%s/%s?key=%s' % (ALIBABA_WATERMARK_BASE_URL,
-            ALIBABA_WATERMARK_SERVER_NAME, ALIBABA_WATERMARK_KEY_ID)
+                            ALIBABA_WATERMARK_SERVER_NAME,
+                            ALIBABA_WATERMARK_KEY_ID)
 
     try:
         resp = requests.post(url, data=body, headers=headers)
@@ -273,6 +279,7 @@ def alibaba_get_file_download_url(username, repo_id, file_path, file_id, access_
         logger.error(json_resp)
         return {'success': False, 'error_msg': json_resp['msg']}
 
+
 def alibaba_err_msg_when_unable_to_view_file(request, repo_id):
 
     repo_owner = seafile_api.get_repo_owner(repo_id)
@@ -282,7 +289,8 @@ def alibaba_err_msg_when_unable_to_view_file(request, repo_id):
         return "You don't have permission to view this file, \
                 please contact %s to add permission" % email2nickname(repo_owner)
 
-### page view ###
+
+# page view
 @login_required
 def alibaba_client_download_view(request):
 
@@ -296,6 +304,7 @@ def alibaba_client_download_view(request):
             'apple_client_public_download_url_en': APPLE_CLIENT_PUBLIC_DOWNLOAD_URL_EN,
             'apple_client_version_en': APPLE_CLIENT_VERSION_EN,
         })
+
 
 @login_required
 def alibaba_edit_profile(request):
@@ -314,6 +323,7 @@ def alibaba_edit_profile(request):
 
     return render(request, 'alibaba/set_profile.html', init_dict)
 
+
 @login_required
 def alibaba_user_profile(request, username):
 
@@ -329,7 +339,8 @@ def alibaba_user_profile(request, username):
 
     return render(request, 'alibaba/user_profile.html', init_dict)
 
-### alibaba api ###
+
+# alibaba api
 class AlibabaImportGroupMembers(APIView):
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated,)
@@ -406,6 +417,10 @@ class AlibabaImportGroupMembers(APIView):
         result['failed'] = []
         result['success'] = []
 
+        org_id = None
+        if is_org_context(request):
+            org_id = request.user.org.org_id
+
         # check work_no validation
         for work_no in work_no_list:
 
@@ -429,10 +444,23 @@ class AlibabaImportGroupMembers(APIView):
                     })
                 continue
 
+            if not org_id and is_org_user(ccnet_email):
+                result['failed'].append({
+                    'email': work_no,
+                    'error_msg': '是租户用户.' if is_cn else 'Is an organization user.'
+                    })
+                continue
+
+            if org_id and not ccnet_api.org_user_exists(org_id, ccnet_email):
+                result['failed'].append({
+                    'email': work_no,
+                    'error_msg': '不在同一租户.' if is_cn else 'Is not in the same organization.'
+                    })
+                continue
+
             try:
                 ccnet_api.group_add_member(group_id, username, ccnet_email)
-                member_info = alibaba_get_group_member_info(group_id,
-                        alibaba_profile)
+                member_info = alibaba_get_group_member_info(group_id, alibaba_profile)
                 result['success'].append(member_info)
             except Exception as e:
                 logger.error(e)
@@ -480,8 +508,7 @@ class AlibabaSearchUser(APIView):
                     Q(uid__startswith=q) | Q(emp_name_en__icontains=q) |
                     Q(nick_name__icontains=q) | Q(pinyin_nick=q)).order_by('dept_name')[:50]
 
-            sorted_users = sorted(users,
-                    key=lambda user: len(user.dept_name.split('-')), reverse=True)
+            sorted_users = sorted(users, key=lambda user: len(user.dept_name.split('-')), reverse=True)
         else:
             users = AlibabaProfile.objects.filter(work_status='A').filter(
                     Q(emp_name__icontains=q) | Q(pinyin_name=q) | Q(work_no=q) |
@@ -511,8 +538,7 @@ class AlibabaSearchUser(APIView):
                     if user_dept_name.startswith(item):
                         dept_match_list.append(user)
 
-                dept_match_list = sorted(dept_match_list,
-                        key=lambda user: len(user.dept_name.split('-')))
+                dept_match_list = sorted(dept_match_list, key=lambda user: len(user.dept_name.split('-')))
 
                 sorted_users.extend(dept_match_list)
 
@@ -522,13 +548,23 @@ class AlibabaSearchUser(APIView):
                     dept_unmatch_list.append(user)
 
             dept_unmatch_list = sorted(dept_unmatch_list,
-                    key=lambda user: len(user.dept_name.split('-')))
+                                       key=lambda user: len(user.dept_name.split('-')))
             sorted_users.extend(dept_unmatch_list)
+
+        org_id = None
+        if is_org_context(request):
+            org_id = request.user.org.org_id
 
         result = []
         for user in sorted_users:
 
             if user.uid == username:
+                continue
+
+            if not org_id and is_org_user(user.uid):
+                continue
+
+            if org_id and not ccnet_api.org_user_exists(org_id, user.uid):
                 continue
 
             user_info = {}
@@ -619,8 +655,7 @@ class AlibabaUserEditFileView(APIView):
         # add user view/edit file start time info
         username = request.user.username
         try:
-            AlibabaUserEditFile.objects.add_start_edit_info(username, repo_id,
-                    path, unique_id)
+            AlibabaUserEditFile.objects.add_start_edit_info(username, repo_id, path, unique_id)
         except Exception as e:
             logger.error(e)
             error_msg = 'Internal Server Error'
